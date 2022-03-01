@@ -18,9 +18,16 @@
   "homepage": "https://github.com/noahfradin/picket-js#readme",
   "dependencies": {
     "@walletconnect/web3-provider": "^1.7.1",
+    "assert": "^2.0.0",
     "esbuild": "^0.14.23",
     "ethers": "^5.5.4",
     "evm-chains": "^0.2.0",
+    "http": "^0.0.1-security",
+    "https": "^1.0.0",
+    "os": "^0.1.2",
+    "stream": "^0.0.2",
+    "url": "^0.11.0",
+    "util": "^0.12.4",
     "web3modal": "^1.9.5"
   }
 }
