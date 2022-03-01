@@ -1,0 +1,26 @@
+{
+  "name": "picket",
+  "version": "1.0.0",
+  "description": "",
+  "main": "picket.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noahfradin/picket-js.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/noahfradin/picket-js/issues"
+  },
+  "homepage": "https://github.com/noahfradin/picket-js#readme",
+  "dependencies": {
+    "@walletconnect/web3-provider": "^1.7.1",
+    "esbuild": "^0.14.23",
+    "ethers": "^5.5.4",
+    "evm-chains": "^0.2.0",
+    "web3modal": "^1.9.5"
+  }
+}

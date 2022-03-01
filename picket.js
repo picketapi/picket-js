@@ -1,8 +1,8 @@
-const Web3Modal = window.Web3Modal.default;
-const WalletConnectProvider = window.WalletConnectProvider.default;
-const ethers = window.ethers;
+import Web3Modal from "web3modal";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import { ethers } from "ethers";
 
-class Picket{
+export class Picket{
     #apiKey;
 
     constructor(apiKey){
