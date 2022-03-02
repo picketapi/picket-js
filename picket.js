@@ -1,12 +1,8 @@
-// import Web3Modal from "web3modal";
-// import WalletConnectProvider from "@walletconnect/web3-provider";
-// import { ethers } from "ethers";
-
 const Web3Modal = window.Web3Modal.default;
 const WalletConnectProvider = window.WalletConnectProvider.default;
 const ethers = window.ethers;
 
-export class Picket{
+class Picket{
     #apiKey;
 
     constructor(apiKey){
@@ -26,12 +22,10 @@ export class Picket{
      * 
      */
     async getNonce(walletAddress){
-        // const url = "https://picket-devstein.vercel.app/api/nonce/" + walletAddress
+        const url = "https://picket-picketauth.vercel.app/api/v1/nonce/" + walletAddress
     
-        // const res = await fetch(url);
-        // return res.json();
-
-        return "7c3a842d-061a-43ad-87ea-5f121758f736"//Temporary until getNonce API is working
+        const res = await fetch(url);
+        return res.json();
     }
 
     /**
@@ -49,10 +43,10 @@ export class Picket{
         let walletAddress = await signer.getAddress()
 
         //Get Nonce
-        let nonce = await this.getNonce(walletAddress)
+        let nonceObject = await this.getNonce(walletAddress)
 
         //Sign the nonce to get signature
-        let signature = await signer.signMessage(nonce)
+        let signature = await signer.signMessage(nonceObject.nonce)
         
         //Construct response object
         let responseObject = {}
@@ -109,7 +103,17 @@ export class Picket{
             throw new Error("signature parameter is required - see https://google.com for reference.")
         }else{
             //TODO make call to API
-            return true 
+            // return true
+            const url = "https://picket-picketauth.vercel.app/api/auth"
+            const reqOptions = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ walletAddress: walletAddress, signature: signature})
+            };
+            const res = await fetch(url, reqOptions);
+            return res.json();
+
+
         }
     }
     
