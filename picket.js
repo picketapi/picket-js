@@ -102,13 +102,16 @@ class Picket{
         }else if(! signature){
             throw new Error("signature parameter is required - see https://google.com for reference.")
         }else{
-            //TODO make call to API
-            // return true
-            const url = "https://picket-picketauth.vercel.app/api/auth"
+            var requestBody = {walletAddress: walletAddress, signature: signature}
+            if(contractAddress && minBalance){
+                requestBody = {walletAddress: walletAddress, signature: signature, contractAddress: contractAddress, minBalance: minBalance}
+            }
+
+            const url = "https://picket-sage.vercel.app/api/v1/auth"
             const reqOptions = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ walletAddress: walletAddress, signature: signature})
+                body: await JSON.stringify(requestBody)
             };
             const res = await fetch(url, reqOptions);
             return res.json();

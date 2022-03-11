@@ -19,6 +19,10 @@
 
         window.connectWallet= async ()=>{
                 var walletObject = await picket.connect()
-                console.log(walletObject)
+                
+                document.getElementById("walletAddressLabel").innerHTML = "Wallet Address: " + walletObject.walletAddress
+                document.getElementById("signatureLabel").innerHTML = "Signature: " + walletObject.signature
+
+                console.log(await picket.auth(walletObject.walletAddress, walletObject.signature, "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", 1))
         }
 </script>
