@@ -25,7 +25,11 @@ class Picket {
    */
   async getNonce(walletAddress) {
     const url = `${BASE_API_URL}/nonce/${walletAddress}`;
-    const res = await fetch(url);
+    const headers = {
+      "Content-Type": "application/json",
+      "X-API-KEY": this.#apiKey,
+    };
+    const res = await fetch(url, { headers });
     return res.json();
   }
 
@@ -41,20 +45,18 @@ class Picket {
   async connect() {
     //Initiate signature request
     const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
-    let walletAddress = await signer.getAddress();
+    const walletAddress = await signer.getAddress();
 
     //Get Nonce
-    let nonceObject = await this.getNonce(walletAddress);
+    const nonceObject = await this.getNonce(walletAddress);
 
     //Sign the nonce to get signature
-    let signature = await signer.signMessage(nonceObject.nonce);
+    const signature = await signer.signMessage(nonceObject.nonce);
 
-    //Construct response object
-    let responseObject = {};
-    responseObject.walletAddress = walletAddress;
-    responseObject.signature = signature;
-
-    return responseObject;
+    return {
+      walletAddress,
+      signature,
+    };
   }
 
   /**
@@ -81,7 +83,7 @@ class Picket {
       disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
     });
 
-    let provider = await web3Modal.connect();
+    const provider = await web3Modal.connect();
     const wallet = await new ethers.providers.Web3Provider(provider);
     const signer = await wallet.getSigner();
 
@@ -97,43 +99,38 @@ class Picket {
    * @returns {Object} Signer
    *
    */
-  async auth(walletAddress, signature, contractAddress, minBalance, chain) {
+  async auth({ walletAddress, signature, contractAddress, minTokenBalance }) {
     if (!walletAddress) {
       throw new Error(
-        "walletAddress parameter is required - see https://google.com for reference."
+        "walletAddress parameter is required - see docs for reference."
       );
-    } else if (!signature) {
-      throw new Error(
-        "signature parameter is required - see https://google.com for reference."
-      );
-    } else {
-      var requestBody = { walletAddress: walletAddress, signature: signature };
-      if (contractAddress && minBalance) {
-        requestBody = {
-          walletAddress: walletAddress,
-          signature: signature,
-          contractAddress: contractAddress,
-          minBalance: minBalance,
-        };
-      }
-
-      const url = `${BASE_API_URL}/auth`;
-      const reqOptions = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      };
-      const res = await fetch(url, reqOptions);
-      return res.json();
     }
-  }
+    if (!signature) {
+      throw new Error(
+        "signature parameter is required - see docs for reference."
+      );
+    }
+    const requestBody = { walletAddress, signature };
+    if (contractAddress && minTokenBalance) {
+      requestBody = {
+        walletAddress,
+        signature,
+        contractAddress,
+        minTokenBalance,
+      };
+    }
 
-  //Temp test function for retrieving NEO from nasa haha. Used while waiting for out API to go up
-  async getNeo() {
-    const url =
-      "https://api.nasa.gov/neo/rest/v1/feed?start_date=2015-09-07&end_date=2015-09-08&api_key=DEMO_KEY";
-
-    const res = await fetch(url);
+    const url = `${BASE_API_URL}/auth`;
+    const headers = {
+      "Content-Type": "application/json",
+      "X-API-KEY": this.#apiKey,
+    };
+    const reqOptions = {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
+    };
+    const res = await fetch(url, reqOptions);
     return res.json();
   }
 }
