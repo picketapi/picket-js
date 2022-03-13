@@ -48,10 +48,10 @@ class Picket {
     const walletAddress = await signer.getAddress();
 
     //Get Nonce
-    const nonceObject = await this.getNonce(walletAddress);
+    const { nonce } = await this.getNonce(walletAddress);
 
     //Sign the nonce to get signature
-    const signature = await signer.signMessage(nonceObject.nonce);
+    const signature = await signer.signMessage(nonce);
 
     return {
       walletAddress,
@@ -134,4 +134,3 @@ class Picket {
     return res.json();
   }
 }
-
