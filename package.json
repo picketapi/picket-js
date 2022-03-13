@@ -20,7 +20,6 @@
   },
   "homepage": "https://github.com/noahfradin/picket-js#readme",
   "dependencies": {
-    "@walletconnect/web3-provider": "^1.7.4",
     "ethers": "^5.6.0",
     "web3modal": "^1.9.5"
   },

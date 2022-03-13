@@ -1,6 +1,5 @@
 import ethers, { providers } from "ethers";
-import WalletConnectProvider from "@walletconnect/web3-provider";
-import Web3Modal from "web3modal";
+import Web3Modal, { IProviderOptions } from "web3modal";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picket-picketauth.vercel.app/api/${API_VERSION}`;
@@ -9,11 +8,24 @@ export interface NonceResponse {
   nonce: string;
 }
 
-export interface AuthRequest {
-  walletAddress: string;
-  signature: string;
+export interface AuthRequirements {
   contractAddress?: string;
   minTokenBalance?: number;
+}
+
+export interface AuthRequest extends AuthRequirements {
+  walletAddress: string;
+  signature: string;
+}
+
+export interface OwnershipRequest {
+  walletAddress: string;
+  contractAddress: string;
+  minTokenBalance?: number;
+}
+
+export interface OwnershipResponse {
+  allowed: boolean;
 }
 
 export interface AuthResponse {
@@ -22,17 +34,22 @@ export interface AuthResponse {
 
 export class Picket {
   #apiKey;
+  #providerOptions;
 
-  constructor(apiKey: string) {
+  // TODO: Add optional wallet connect options
+  constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
     if (!apiKey) {
       throw new Error("Missing API Key");
     }
     this.#apiKey = apiKey;
+    this.#providerOptions = providerOptions;
 
     // TODO: Do API key validation and get the associated wallet address
   }
 
+  // -------------
   // API SDK
+  // -------------
 
   /**
    * getNonce
@@ -45,7 +62,7 @@ export class Picket {
       "X-API-KEY": this.#apiKey,
     };
     const res = await fetch(url, { headers });
-    return res.json();
+    return await res.json();
   }
 
   /**
@@ -83,7 +100,66 @@ export class Picket {
       body: JSON.stringify(requestBody),
     };
     const res = await fetch(url, reqOptions);
-    return res.json();
+    return await res.json();
+  }
+
+  /**
+   * Ownership
+   * Function for initiating auth / token gating
+   */
+  async ownership({
+    walletAddress,
+    contractAddress,
+    minTokenBalance,
+  }: OwnershipRequest): Promise<OwnershipResponse> {
+    if (!walletAddress) {
+      throw new Error(
+        "walletAddress parameter is required - see docs for reference."
+      );
+    }
+    if (!contractAddress) {
+      throw new Error(
+        "contractAddress parameter is required - see docs for reference."
+      );
+    }
+
+    const requestBody = { walletAddress, contractAddress, minTokenBalance };
+    const url = `${BASE_API_URL}/ownership`;
+    const headers = {
+      "Content-Type": "application/json",
+      "X-API-KEY": this.#apiKey,
+    };
+    const reqOptions = {
+      method: "POST",
+      headers,
+      body: JSON.stringify(requestBody),
+    };
+    const res = await fetch(url, reqOptions);
+    return await res.json();
+  }
+
+  /**
+   * Verify
+   * Function for initiating auth / token gating
+   */
+  async verify(jwt: string): Promise<boolean> {
+    if (!jwt) return false;
+
+    const url = `${BASE_API_URL}/verify`;
+
+    const headers = {
+      "Content-Type": "application/json",
+      "X-API-KEY": this.#apiKey,
+      Authorization: `Bearer ${jwt}`,
+    };
+
+    const res = await fetch(url, {
+      headers,
+    });
+
+    const { valid }: { valid: boolean } = await res.json();
+
+    return valid;
   }
 
   // -----------
@@ -95,17 +171,9 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    const providerOptions = {
-      walletconnect: {
-        package: WalletConnectProvider,
-        options: {
-          infuraId: "8f98cc81f4be40439b2bbd92f4995f48",
-        },
-      },
-    };
     const web3Modal = new Web3Modal({
-      cacheProvider: false, // optional
-      providerOptions, // required
+      cacheProvider: true,
+      providerOptions: this.#providerOptions, // required
       disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
     });
 
@@ -117,10 +185,10 @@ export class Picket {
   }
 
   /**
-   * Connect
+   * getSignature
    * Initiates signature request
    */
-  async connect(): Promise<{ walletAddress: string; signature: string }> {
+  async getSignature(): Promise<string> {
     //Initiate signature request
     const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
@@ -131,9 +199,29 @@ export class Picket {
     //Sign the nonce to get signature
     const signature = await signer.signMessage(nonce);
 
-    return {
+    return signature;
+  }
+
+  /**
+   * login
+   * Login with your wallet, and optionally, specify login requirements
+   */
+  async login({
+    contractAddress,
+    minTokenBalance,
+  }: AuthRequirements = {}): Promise<string> {
+    //Initiate signature request
+    const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
+    const walletAddress = await signer.getAddress();
+    const signature = await this.getSignature();
+
+    const { token } = await this.auth({
       walletAddress,
       signature,
-    };
+      contractAddress,
+      minTokenBalance,
+    });
+
+    return token;
   }
 }
