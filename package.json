@@ -5,6 +5,7 @@
   "main": "picket.js",
   "scripts": {
     "build": "npx swc picket.js -d dist",
+    "run": "npm rum build && node dist/picket.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
