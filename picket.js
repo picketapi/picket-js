@@ -1,10 +1,10 @@
-const Web3Modal = window.Web3Modal.default;
-const WalletConnectProvider = window.WalletConnectProvider.default;
-const ethers = window.ethers;
+import ethers from "ethers";
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import Web3Modal from "web3modal";
 
 const BASE_API_URL = "https://picket-picketauth.vercel.app/api/v1";
 
-class Picket {
+export class Picket {
   #apiKey;
 
   constructor(apiKey) {
@@ -84,8 +84,8 @@ class Picket {
     });
 
     const provider = await web3Modal.connect();
-    const wallet = await new ethers.providers.Web3Provider(provider);
-    const signer = await wallet.getSigner();
+    const wallet = new ethers.providers.Web3Provider(provider);
+    const signer = wallet.getSigner();
 
     return signer;
   }
@@ -110,7 +110,8 @@ class Picket {
         "signature parameter is required - see docs for reference."
       );
     }
-    const requestBody = { walletAddress, signature };
+
+    let requestBody = { walletAddress, signature };
     if (contractAddress && minTokenBalance) {
       requestBody = {
         walletAddress,
