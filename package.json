@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "picket.js",
+  "type": "module",
   "scripts": {
-    "build": "npx swc picket.js -d dist",
-    "run": "npm run build && node dist/picket.js",
+    "build": "npx swc picket.ts -d dist",
+    "build-verify": "npm run build && node dist/picket.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
