@@ -2,6 +2,8 @@ const Web3Modal = window.Web3Modal.default;
 const WalletConnectProvider = window.WalletConnectProvider.default;
 const ethers = window.ethers;
 
+const BASE_API_URL = "https://picket-picketauth.vercel.app/api/v1";
+
 class Picket {
   #apiKey;
 
@@ -22,9 +24,7 @@ class Picket {
    *
    */
   async getNonce(walletAddress) {
-    const url =
-      "https://picket-picketauth.vercel.app/api/v1/nonce/" + walletAddress;
-
+    const url = `${BASE_API_URL}/nonce/${walletAddress}`;
     const res = await fetch(url);
     return res.json();
   }
@@ -117,11 +117,11 @@ class Picket {
         };
       }
 
-      const url = "https://picket-sage.vercel.app/api/v1/auth";
+      const url = `${BASE_API_URL}/auth`;
       const reqOptions = {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: await JSON.stringify(requestBody),
+        body: JSON.stringify(requestBody),
       };
       const res = await fetch(url, reqOptions);
       return res.json();
