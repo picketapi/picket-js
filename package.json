@@ -1,7 +1,7 @@
 {
-  "name": "picket",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@picketapi/picket-js",
+  "version": "0.0.1",
+  "description": "Javascript client for the Picket API",
   "main": "picket.js",
   "type": "module",
   "scripts": {
@@ -13,7 +13,7 @@
     "type": "git",
     "url": "git+https://github.com/noahfradin/picket-js.git"
   },
-  "author": "",
+  "author": "picket",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/noahfradin/picket-js/issues"
@@ -27,5 +27,9 @@
     "@swc/cli": "^0.1.55",
     "@swc/core": "^1.2.154",
     "typescript": "^4.6.2"
-  }
+  },
+  "keywords": [
+    "web3",
+    "authentication"
+  ]
 }
