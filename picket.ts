@@ -2,7 +2,7 @@ import ethers, { providers } from "ethers";
 import Web3Modal, { IProviderOptions } from "web3modal";
 
 export const API_VERSION = "v1";
-const BASE_API_URL = `https://picket-picketauth.vercel.app/api/${API_VERSION}`;
+const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
 export interface NonceResponse {
   nonce: string;
@@ -36,7 +36,6 @@ export class Picket {
   #apiKey;
   #providerOptions;
 
-  // TODO: Add optional wallet connect options
   constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
     if (!apiKey) {
       throw new Error("Missing API Key");
