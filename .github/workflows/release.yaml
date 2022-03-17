@@ -1,0 +1,22 @@
+name: Publish package to npm
+on:
+  push:
+    branches: [main]
+  # Once stable, only publish on releases
+  # release:
+    # types: [published]
+jobs:
+  publish:
+    runs-on: ubuntu-latest 
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+          registry-url: https://registry.npmjs.org/
+          scope: '@picketapi'
+      - run: npm ci
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+
