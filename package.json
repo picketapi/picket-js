@@ -1,6 +1,6 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Javascript client for the Picket API",
   "main": "picket.js",
   "type": "module",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/noahfradin/picket-js.git"
+    "url": "git+https://github.com/picketapi/picket-js.git"
   },
   "author": "picket",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/noahfradin/picket-js/issues"
+    "url": "https://github.com/picketapi/picket-js/issues"
   },
-  "homepage": "https://github.com/noahfradin/picket-js#readme",
+  "homepage": "https://github.com/picketapi/picket-js#readme",
   "dependencies": {
     "ethers": "^5.6.0",
     "web3modal": "^1.9.5"
