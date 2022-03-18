@@ -224,3 +224,5 @@ export class Picket {
     return token;
   }
 }
+
+export default Picket;
