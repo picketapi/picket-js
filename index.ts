@@ -1,4 +1,4 @@
-import ethers, { providers } from "ethers";
+import { ethers, providers } from "ethers";
 import Web3Modal, { IProviderOptions } from "web3modal";
 
 export const API_VERSION = "v1";
