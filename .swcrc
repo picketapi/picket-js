@@ -1,11 +1,13 @@
 {
   "jsc": {
+    "target": "es2016",
     "parser": {
       "syntax": "typescript",
       "tsx": false,
       "decorators": false,
       "dynamicImport": false
-    }
+    },
+    "keepClassNames": true
   },
   "module": {
     "type": "es6",
