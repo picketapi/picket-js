@@ -10,11 +10,11 @@
     "keepClassNames": true
   },
   "module": {
-    "type": "es6",
-      "strict": false,
-      "strictMode": true,
-      "lazy": false,
-      "noInterop": false,
-      "ignoreDynamic": false
+    "type": "umd",
+    "strict": false,
+    "strictMode": true,
+    "lazy": false,
+    "noInterop": false,
+    "ignoreDynamic": false
   }
 }
