@@ -1,5 +1,7 @@
 import { ethers, providers } from "ethers";
-import Web3Modal, { IProviderOptions } from "web3modal";
+// import Web3Modal, { IProviderOptions } from "web3modal";
+import { IProviderOptions } from "web3modal";
+import detectEthereumProvider from "@metamask/detect-provider";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
@@ -170,13 +172,14 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    const web3Modal = new Web3Modal({
-      cacheProvider: true,
-      providerOptions: this.#providerOptions, // required
-      disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
-    });
+    // const web3Modal = new Web3Modal({
+    // cacheProvider: true,
+    // providerOptions: this.#providerOptions, // required
+    // disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
+    // });
 
-    const provider = await web3Modal.connect();
+    // const provider = await web3Modal.connect();
+    const provider = await detectEthereumProvider();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
