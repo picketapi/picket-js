@@ -37,6 +37,11 @@ export interface AuthenticatedUser {
   // TODO: Add more
 }
 
+export interface AuthState {
+  accessToken: string;
+  user: AuthenticatedUser;
+}
+
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 
@@ -221,7 +226,7 @@ export class Picket {
   async login({
     contractAddress,
     minTokenBalance,
-  }: AuthRequirements = {}): Promise<string> {
+  }: AuthRequirements = {}): Promise<AuthState> {
     //Initiate signature request
     const signer = await this.getSigner();
     // Invokes client side wallet for user to connect wallet
@@ -235,18 +240,17 @@ export class Picket {
       minTokenBalance,
     });
 
-    window.localStorage.setItem(
-      LOCAL_STORAGE_KEY,
-      JSON.stringify({
-        accessToken,
-        // TODO: Derive user from auth response (or include in auth response)
-        user: {
-          walletAddress,
-        },
-      })
-    );
+    const authState = {
+      accessToken,
+      // TODO: Derive user from auth response (or include in auth response)
+      user: {
+        walletAddress,
+      },
+    };
 
-    return accessToken;
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));
+
+    return authState;
   }
 
   /**
@@ -272,7 +276,7 @@ export class Picket {
 
     // TODO: if JWT is expired deleted it!
 
-    const { user }: { user: AuthenticatedUser } = JSON.parse(stored);
+    const { user }: AuthState = JSON.parse(stored);
     this.user = user;
 
     return Promise.resolve(user);
