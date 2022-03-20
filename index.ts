@@ -272,7 +272,7 @@ export class Picket {
 
     // TODO: if JWT is expired deleted it!
 
-    const { user }: AuthenticatedUser = JSON.parse(stored);
+    const { user }: { user: AuthenticatedUser } = JSON.parse(stored);
     this.user = user;
 
     return Promise.resolve(user);
