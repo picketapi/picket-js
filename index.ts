@@ -52,9 +52,6 @@ export class Picket {
     this.#apiKey = apiKey;
     this.#providerOptions = providerOptions;
 
-    // check for user
-    // if JWT is expired deleted it!
-
     // TODO: Do API key validation and get the associated wallet address
   }
 
@@ -273,7 +270,11 @@ export class Picket {
     const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) return Promise.resolve(null);
 
-    const user = JSON.parse(stored);
+    // TODO: if JWT is expired deleted it!
+
+    const { user }: AuthenticatedUser = JSON.parse(stored);
+    this.user = user;
+
     return Promise.resolve(user);
   }
 }
