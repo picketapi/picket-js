@@ -11,7 +11,7 @@ npm install @picketapi/picket-js
 
 ## Usage
 
-```
+```ts
 Picket()
 ```
 The Picket funcion creates and returns a promise that resolves to a new instance of the Picket class. It takes an API key as a parameter.
