@@ -24,7 +24,7 @@ const picket = await Picket("pk-1234-2938-18fs-sj87")
 We’ve placed a random API key in this example. Replace it with your [actual api keys](https://picketapi.com/dashboard).
 
 
-```
+```ts
 connect()
 ```
 The `connect` function triggers a wallet connection request to the user as well as a signing request. It returns a promise that resolves to a wallet object containing walletAddress and signature. It takes no parameters. If you call connect server-side it will resolve to null.
