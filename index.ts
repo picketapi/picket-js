@@ -29,7 +29,7 @@ export interface OwnershipResponse {
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
 }
 
 export interface AuthenticatedUser {
@@ -173,7 +173,7 @@ export class Picket {
   }
 
   // -----------
-  // SDK Utilities
+  // Client-side SDK Utilities
   // -----------
 
   /**
@@ -228,7 +228,7 @@ export class Picket {
     const walletAddress = await signer.getAddress();
     const signature = await this.getSignature();
 
-    const { token } = await this.auth({
+    const { accessToken } = await this.auth({
       walletAddress,
       signature,
       contractAddress,
@@ -238,7 +238,7 @@ export class Picket {
     window.localStorage.setItem(
       LOCAL_STORAGE_KEY,
       JSON.stringify({
-        jwt: token,
+        accessToken,
         // TODO: Derive user from auth response (or include in auth response)
         user: {
           walletAddress,
@@ -246,7 +246,7 @@ export class Picket {
       })
     );
 
-    return token;
+    return accessToken;
   }
 
   /**
