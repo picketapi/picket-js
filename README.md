@@ -5,7 +5,7 @@ Use picket as an ES module.
 
 ## Installation
 
-```
+```shell
 npm install @picketapi/picket-js
 ```
 
