@@ -1,10 +1,8 @@
 import { ethers, providers } from "ethers";
-// import Web3Modal, { IProviderOptions } from "web3modal";
-import { IProviderOptions } from "web3modal";
-import detectEthereumProvider from "@metamask/detect-provider";
+import Web3Modal, { IProviderOptions } from "web3modal";
 
 export const API_VERSION = "v1";
-const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
+const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
 
 export interface NonceResponse {
   nonce: string;
@@ -34,9 +32,18 @@ export interface AuthResponse {
   token: string;
 }
 
+export interface AuthenticatedUser {
+  walletAddress: string;
+  // TODO: Add more
+}
+
+// Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
+const LOCAL_STORAGE_KEY = "_picketauth";
+
 export class Picket {
   #apiKey;
   #providerOptions;
+  user?: AuthenticatedUser;
 
   constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
     if (!apiKey) {
@@ -44,6 +51,9 @@ export class Picket {
     }
     this.#apiKey = apiKey;
     this.#providerOptions = providerOptions;
+
+    // check for user
+    // if JWT is expired deleted it!
 
     // TODO: Do API key validation and get the associated wallet address
   }
@@ -62,7 +72,9 @@ export class Picket {
       "Content-Type": "application/json",
       "X-API-KEY": this.#apiKey,
     };
-    const res = await fetch(url, { headers });
+    const res = await fetch(url, {
+      headers,
+    });
     return await res.json();
   }
 
@@ -172,14 +184,15 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    // const web3Modal = new Web3Modal({
-    // cacheProvider: true,
-    // providerOptions: this.#providerOptions, // required
-    // disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
-    // });
+    // Temporary workaround for issues with Web3Modal bundling w/ swc
+    // @ts-ignore
+    const web3Modal = new Web3Modal.default({
+      cacheProvider: true,
+      providerOptions: this.#providerOptions, // required
+      disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
+    });
 
-    // const provider = await web3Modal.connect();
-    const provider = await detectEthereumProvider();
+    const provider = await web3Modal.connect();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
@@ -213,7 +226,8 @@ export class Picket {
     minTokenBalance,
   }: AuthRequirements = {}): Promise<string> {
     //Initiate signature request
-    const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
+    const signer = await this.getSigner();
+    // Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
     const signature = await this.getSignature();
 
@@ -224,7 +238,43 @@ export class Picket {
       minTokenBalance,
     });
 
+    window.localStorage.setItem(
+      LOCAL_STORAGE_KEY,
+      JSON.stringify({
+        jwt: token,
+        // TODO: Derive user from auth response (or include in auth response)
+        user: {
+          walletAddress,
+        },
+      })
+    );
+
     return token;
+  }
+
+  /**
+   * logout
+   * Clears authentication information
+   */
+  async logout(): Promise<void> {
+    window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+    return Promise.resolve();
+  }
+
+  /**
+   * getUser
+   * getUser information if it exists
+   */
+  async getUser(): Promise<AuthenticatedUser | null> {
+    // check memory
+    // check state
+    if (this.user) return this.user;
+
+    const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!stored) return Promise.resolve(null);
+
+    const user = JSON.parse(stored);
+    return Promise.resolve(user);
   }
 }
 
