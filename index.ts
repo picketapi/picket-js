@@ -46,9 +46,10 @@ export interface AuthState {
 const LOCAL_STORAGE_KEY = "_picketauth";
 
 export class Picket {
+  baseURL = BASE_API_URL;
   #apiKey;
   #providerOptions;
-  user?: AuthenticatedUser;
+  #authState?: AuthState;
 
   constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
     if (!apiKey) {
@@ -69,13 +70,17 @@ export class Picket {
    * Function for retrieving nonce for a given user
    */
   async getNonce(walletAddress: string): Promise<NonceResponse> {
-    const url = `${BASE_API_URL}/nonce/${walletAddress}`;
+    const url = `${this.baseURL}/auth/nonce`;
     const headers = {
       "Content-Type": "application/json",
       "X-API-KEY": this.#apiKey,
     };
     const res = await fetch(url, {
+      method: "POST",
       headers,
+      body: JSON.stringify({
+        walletAddress,
+      }),
     });
     return await res.json();
   }
@@ -104,7 +109,7 @@ export class Picket {
     const requestBody = Boolean(contractAddress)
       ? { walletAddress, signature, contractAddress, minTokenBalance }
       : { walletAddress, signature };
-    const url = `${BASE_API_URL}/auth`;
+    const url = `${this.baseURL}/auth`;
     const headers = {
       "Content-Type": "application/json",
       "X-API-KEY": this.#apiKey,
@@ -139,7 +144,7 @@ export class Picket {
     }
 
     const requestBody = { walletAddress, contractAddress, minTokenBalance };
-    const url = `${BASE_API_URL}/ownership`;
+    const url = `${this.baseURL}/ownership`;
     const headers = {
       "Content-Type": "application/json",
       "X-API-KEY": this.#apiKey,
@@ -150,6 +155,8 @@ export class Picket {
       body: JSON.stringify(requestBody),
     };
     const res = await fetch(url, reqOptions);
+    // TODO HANDLE ERROR CODES
+
     return await res.json();
   }
 
@@ -160,7 +167,7 @@ export class Picket {
   async verify(jwt: string): Promise<boolean> {
     if (!jwt) return false;
 
-    const url = `${BASE_API_URL}/verify`;
+    const url = `${this.baseURL}/auth/verify`;
 
     const headers = {
       "Content-Type": "application/json",
@@ -249,6 +256,7 @@ export class Picket {
     };
 
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));
+    this.#authState = authState;
 
     return authState;
   }
@@ -263,23 +271,23 @@ export class Picket {
   }
 
   /**
-   * getUser
-   * getUser information if it exists
+   * getAuthState
+   * get user auth information if it exists
    */
-  async getUser(): Promise<AuthenticatedUser | null> {
+  async getAuthState(): Promise<AuthState | null> {
     // check memory
     // check state
-    if (this.user) return this.user;
+    if (this.#authState) return this.#authState;
 
     const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) return Promise.resolve(null);
 
     // TODO: if JWT is expired deleted it!
 
-    const { user }: AuthState = JSON.parse(stored);
-    this.user = user;
+    const authState: AuthState = JSON.parse(stored);
+    this.#authState = authState;
 
-    return Promise.resolve(user);
+    return Promise.resolve(authState);
   }
 }
 
