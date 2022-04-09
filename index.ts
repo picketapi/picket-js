@@ -42,14 +42,21 @@ export interface AuthState {
   user: AuthenticatedUser;
 }
 
+export interface WalletObject {
+  walletAddress: string;
+  signature: string;
+}
+
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
+const PICKET_WALLET_OBJECT = "picket_wallet_object"
 
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
   #providerOptions;
   #authState?: AuthState;
+  #walletObject?: WalletObject;
 
   constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
     if (!apiKey) {
@@ -259,6 +266,28 @@ export class Picket {
     this.#authState = authState;
 
     return authState;
+  }
+
+  /**
+   * connect
+   * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
+   */
+   async connect(): Promise<WalletObject> {
+    //Initiate signature request
+    const signer = await this.getSigner();
+    // Invokes client side wallet for user to connect wallet
+    const walletAddress = await signer.getAddress();
+    const signature = await this.getSignature();
+
+    const walletObject = {
+      walletAddress,
+      signature
+    };
+
+    window.localStorage.setItem(PICKET_WALLET_OBJECT, JSON.stringify(walletObject));
+    this.#walletObject = walletObject;
+
+    return walletObject;
   }
 
   /**
