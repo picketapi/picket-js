@@ -44,6 +44,15 @@ export interface AuthState {
   user: AuthenticatedUser;
 }
 
+export interface AccessTokenPayload extends AuthenticatedUser {
+  iat: number;
+  ext: number;
+  iss: string;
+  sub: string;
+  aud: string;
+  tid: string;
+}
+
 export interface ConnectResponse {
   walletAddress: string;
   signature: string;
@@ -52,6 +61,7 @@ export interface ConnectResponse {
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 
+// TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
@@ -128,24 +138,31 @@ export class Picket {
    * Validate
    * Validate the given access token and requirements
    */
-  async validate(jwt: string): Promise<boolean> {
-    if (!jwt) return false;
+  async validate(
+    accessToken: string,
+    requirements?: AuthRequirements
+  ): Promise<AccessTokenPayload> {
+    if (!accessToken) {
+      return Promise.reject("access token is empty");
+    }
 
-    const url = `${this.baseURL}/auth/verify`;
-
-    // TODO: Fix to only use one authorization method
-    const headers = {
-      Authorization: `Bearer ${jwt}`,
-      ...this.#defaultHeaders,
-    };
-
+    const url = `${this.baseURL}/auth/validate`;
     const res = await fetch(url, {
-      headers,
+      method: "POST",
+      headers: { ...this.#defaultHeaders },
+      body: JSON.stringify({
+        accessToken,
+        requirements,
+      }),
     });
 
-    const { valid }: { valid: boolean } = await res.json();
+    const data = await res.json();
 
-    return valid;
+    if (res.status !== 200) {
+      return Promise.reject(data.msg);
+    }
+
+    return data as AccessTokenPayload;
   }
 
   // -----------
