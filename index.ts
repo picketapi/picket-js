@@ -1,5 +1,5 @@
 import { ethers, providers } from "ethers";
-import Web3Modal, { IProviderOptions } from "web3modal";
+import Web3Modal from "web3modal";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
@@ -34,6 +34,7 @@ export interface AuthResponse {
 
 export interface AuthenticatedUser {
   walletAddress: string;
+  displayAddress: string;
   // TODO: Add more
 }
 
@@ -42,13 +43,17 @@ export interface AuthState {
   user: AuthenticatedUser;
 }
 
+export interface ConnectResponse {
+  walletAddress: string;
+  signature: string;
+}
+
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
-  #providerOptions;
   #authState?: AuthState;
 
   constructor(apiKey: string) {
@@ -56,7 +61,6 @@ export class Picket {
       throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
-    this.#providerOptions = providerOptions;
   }
 
   #defaultHeaders = () => ({
@@ -76,7 +80,7 @@ export class Picket {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
       method: "POST",
-      headers: this.#defaultHeaders,
+      headers: { ...this.#defaultHeaders },
       body: JSON.stringify({
         walletAddress,
       }),
@@ -112,7 +116,7 @@ export class Picket {
     const url = `${this.baseURL}/auth`;
     const reqOptions = {
       method: "POST",
-      headers: this.#defaultHeaders,
+      headers: { ...this.#defaultHeaders },
       body: JSON.stringify(requestBody),
     };
     const res = await fetch(url, reqOptions);
@@ -120,18 +124,18 @@ export class Picket {
   }
 
   /**
-   * Verify
-   * Function for initiating auth / token gating
+   * Validate
+   * Validate the given access token and requirements
    */
-  async verify(jwt: string): Promise<boolean> {
+  async validate(jwt: string): Promise<boolean> {
     if (!jwt) return false;
 
     const url = `${this.baseURL}/auth/verify`;
 
+    // TODO: Fix to only use one authorization method
     const headers = {
-      "Content-Type": "application/json",
-      "X-API-KEY": this.#apiKey,
       Authorization: `Bearer ${jwt}`,
+      ...this.#defaultHeaders,
     };
 
     const res = await fetch(url, {
@@ -156,7 +160,7 @@ export class Picket {
     // @ts-ignore
     const web3Modal = new Web3Modal.default({
       cacheProvider: true,
-      providerOptions: this.#providerOptions, // required
+      providerOptions: {}, // required
       disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
     });
 
@@ -211,6 +215,7 @@ export class Picket {
       // TODO: Derive user from auth response (or include in auth response)
       user: {
         walletAddress,
+        displayAddress: walletAddress,
       },
     };
 
@@ -218,6 +223,23 @@ export class Picket {
     this.#authState = authState;
 
     return authState;
+  }
+
+  /**
+   * connect
+   * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
+   */
+  async connect(): Promise<ConnectResponse> {
+    //Initiate signature request
+    const signer = await this.getSigner();
+    // Invokes client side wallet for user to connect wallet
+    const walletAddress = await signer.getAddress();
+    const signature = await this.getSignature();
+
+    return {
+      walletAddress,
+      signature,
+    };
   }
 
   /**
