@@ -35,7 +35,8 @@ export interface AuthResponse {
 export interface AuthenticatedUser {
   walletAddress: string;
   displayAddress: string;
-  // TODO: Add more
+  contractAddress?: string;
+  tokenBalance?: string;
 }
 
 export interface AuthState {
