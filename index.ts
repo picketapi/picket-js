@@ -58,36 +58,36 @@ export class Picket {
   #authState?: AuthState;
   #walletObject?: WalletObject;
 
-  constructor(apiKey: string, providerOptions: IProviderOptions = {}) {
+  constructor(apiKey: string) {
     if (!apiKey) {
-      throw new Error("Missing API Key");
+      throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
     this.#providerOptions = providerOptions;
-
-    // TODO: Do API key validation and get the associated wallet address
   }
+
+  #defaultHeaders = () => ({
+    "Content-Type": "application/json",
+    Authorization: `Basic  ${btoa(this.#apiKey)}`,
+  });
 
   // -------------
   // API SDK
   // -------------
 
   /**
-   * getNonce
+   * nonce
    * Function for retrieving nonce for a given user
    */
-  async getNonce(walletAddress: string): Promise<NonceResponse> {
+  async nonce(walletAddress: string): Promise<NonceResponse> {
     const url = `${this.baseURL}/auth/nonce`;
-    const headers = {
-      "Content-Type": "application/json",
-      "X-API-KEY": this.#apiKey,
-    };
     const res = await fetch(url, {
       method: "POST",
-      headers,
+      headers: this.#defaultHeaders,
       body: JSON.stringify({
         walletAddress,
       }),
+      credentials: "include",
     });
     return await res.json();
   }
@@ -117,53 +117,12 @@ export class Picket {
       ? { walletAddress, signature, contractAddress, minTokenBalance }
       : { walletAddress, signature };
     const url = `${this.baseURL}/auth`;
-    const headers = {
-      "Content-Type": "application/json",
-      "X-API-KEY": this.#apiKey,
-    };
     const reqOptions = {
       method: "POST",
-      headers,
+      headers: this.#defaultHeaders,
       body: JSON.stringify(requestBody),
     };
     const res = await fetch(url, reqOptions);
-    return await res.json();
-  }
-
-  /**
-   * Ownership
-   * Function for initiating auth / token gating
-   */
-  async ownership({
-    walletAddress,
-    contractAddress,
-    minTokenBalance,
-  }: OwnershipRequest): Promise<OwnershipResponse> {
-    if (!walletAddress) {
-      throw new Error(
-        "walletAddress parameter is required - see docs for reference."
-      );
-    }
-    if (!contractAddress) {
-      throw new Error(
-        "contractAddress parameter is required - see docs for reference."
-      );
-    }
-
-    const requestBody = { walletAddress, contractAddress, minTokenBalance };
-    const url = `${this.baseURL}/ownership`;
-    const headers = {
-      "Content-Type": "application/json",
-      "X-API-KEY": this.#apiKey,
-    };
-    const reqOptions = {
-      method: "POST",
-      headers,
-      body: JSON.stringify(requestBody),
-    };
-    const res = await fetch(url, reqOptions);
-    // TODO HANDLE ERROR CODES
-
     return await res.json();
   }
 
@@ -225,7 +184,7 @@ export class Picket {
     const walletAddress = await signer.getAddress();
 
     //Get Nonce
-    const { nonce } = await this.getNonce(walletAddress);
+    const { nonce } = await this.nonce(walletAddress);
 
     //Sign the nonce to get signature
     const signature = await signer.signMessage(nonce);
