@@ -252,10 +252,10 @@ export class Picket {
   }
 
   /**
-   * getAuthState
+   * authState
    * get user auth information if it exists
    */
-  async getAuthState(): Promise<AuthState | null> {
+  async authState(): Promise<AuthState | null> {
     // check memory
     // check state
     if (this.#authState) return this.#authState;
@@ -263,9 +263,16 @@ export class Picket {
     const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) return Promise.resolve(null);
 
-    // TODO: if JWT is expired deleted it!
-
     const authState: AuthState = JSON.parse(stored);
+
+    // validate the accessToken on the ad
+    try {
+      await this.validate(authState.accessToken);
+    } catch (err) {
+      console.log("deleting invalid access token:", err);
+      return Promise.resolve(null);
+    }
+
     this.#authState = authState;
 
     return Promise.resolve(authState);
