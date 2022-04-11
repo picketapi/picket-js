@@ -28,15 +28,16 @@ export interface OwnershipResponse {
   allowed: boolean;
 }
 
-export interface AuthResponse {
-  accessToken: string;
-}
-
 export interface AuthenticatedUser {
   walletAddress: string;
   displayAddress: string;
   contractAddress?: string;
   tokenBalance?: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: AuthenticatedUser;
 }
 
 export interface AuthState {
@@ -95,9 +96,15 @@ export class Picket {
       body: JSON.stringify({
         walletAddress,
       }),
-      credentials: "include",
     });
-    return await res.json();
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data.msg);
+    }
+
+    return data as NonceResponse;
   }
 
   /**
@@ -130,8 +137,16 @@ export class Picket {
       headers: { ...this.#defaultHeaders },
       body: JSON.stringify(requestBody),
     };
+
     const res = await fetch(url, reqOptions);
-    return await res.json();
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data.msg);
+    }
+
+    return data as AuthResponse;
   }
 
   /**
@@ -158,7 +173,8 @@ export class Picket {
 
     const data = await res.json();
 
-    if (res.status !== 200) {
+    // reject any error code > 201
+    if (res.status > 201) {
       return Promise.reject(data.msg);
     }
 
@@ -221,7 +237,7 @@ export class Picket {
     const walletAddress = await signer.getAddress();
     const signature = await this.getSignature();
 
-    const { accessToken } = await this.auth({
+    const { accessToken, user } = await this.auth({
       walletAddress,
       signature,
       contractAddress,
@@ -230,11 +246,7 @@ export class Picket {
 
     const authState = {
       accessToken,
-      // TODO: Derive user from auth response (or include in auth response)
-      user: {
-        walletAddress,
-        displayAddress: walletAddress,
-      },
+      user,
     };
 
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));

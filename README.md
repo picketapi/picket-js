@@ -1,4 +1,4 @@
-## **Picket-js ES Module**
+# picket-js
 
 Use picket as an ES module.
 
@@ -6,7 +6,7 @@ Use picket as an ES module.
 ## Installation
 
 ```shell
-npm install @picketapi/picket-js
+npm install "@picketapi/picket-js"
 ```
 
 ## Usage
@@ -14,11 +14,12 @@ npm install @picketapi/picket-js
 ```ts
 Picket()
 ```
-The Picket funcion creates and returns a promise that resolves to a new instance of the Picket class. It takes an API key as a parameter.
 
-```
+The Picket function creates and returns a promise that resolves to a new instance of the Picket class. It takes an API key as a parameter.
+
+```ts
 import Picket from "@picketapi/picket-js"
-const picket = await Picket("pk-1234-2938-18fs-sj87")
+const picket = new Picket("YOUR_PUBLISHABLE_KEY_HERE")
 ```
 
 We’ve placed a random API key in this example. Replace it with your [actual api keys](https://picketapi.com/dashboard).
