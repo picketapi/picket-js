@@ -1,7 +1,7 @@
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
 
-import providerOptions from "./providers";
+import getProviderOptions, { ConnectProviderOptions } from "./providers";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
@@ -198,13 +198,15 @@ export class Picket {
   async getProvider(): Promise<ConnectProvider> {
     // only re-init if needed
     if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
+      const providerOptions = getProviderOptions({});
+
       // Temporary workaround for issues with Web3Modal bundling w/ swc
       // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
       // @ts-ignore
       this.web3Modal = new Web3Modal.default({
         network: "mainnet",
         cacheProvider: true,
-        providerOptions, // required
+        providerOptions,
       });
     }
 
