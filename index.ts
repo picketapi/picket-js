@@ -4,43 +4,50 @@ import Web3Modal from "web3modal";
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
 
+export interface ErrorResponse {
+  code?: string;
+  msg: string;
+}
+
 export interface NonceResponse {
   nonce: string;
 }
 
 export interface AuthRequirements {
   contractAddress?: string;
-  minTokenBalance?: number;
+  minTokenBalance?: number | string;
 }
 
-export interface AuthRequest extends AuthRequirements {
+export interface AuthRequest {
   walletAddress: string;
   signature: string;
-}
-
-export interface OwnershipRequest {
-  walletAddress: string;
-  contractAddress: string;
-  minTokenBalance?: number;
-}
-
-export interface OwnershipResponse {
-  allowed: boolean;
-}
-
-export interface AuthResponse {
-  accessToken: string;
+  requirements?: AuthRequirements;
 }
 
 export interface AuthenticatedUser {
   walletAddress: string;
   displayAddress: string;
-  // TODO: Add more
+  contractAddress?: string;
+  tokenBalance?: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: AuthenticatedUser;
 }
 
 export interface AuthState {
   accessToken: string;
   user: AuthenticatedUser;
+}
+
+export interface AccessTokenPayload extends AuthenticatedUser {
+  iat: number;
+  ext: number;
+  iss: string;
+  sub: string;
+  aud: string;
+  tid: string;
 }
 
 export interface ConnectResponse {
@@ -51,6 +58,7 @@ export interface ConnectResponse {
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 
+// TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
@@ -84,9 +92,15 @@ export class Picket {
       body: JSON.stringify({
         walletAddress,
       }),
-      credentials: "include",
     });
-    return await res.json();
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as NonceResponse;
   }
 
   /**
@@ -96,8 +110,7 @@ export class Picket {
   async auth({
     walletAddress,
     signature,
-    contractAddress,
-    minTokenBalance,
+    requirements,
   }: AuthRequest): Promise<AuthResponse> {
     if (!walletAddress) {
       throw new Error(
@@ -110,41 +123,58 @@ export class Picket {
       );
     }
 
-    const requestBody = Boolean(contractAddress)
-      ? { walletAddress, signature, contractAddress, minTokenBalance }
-      : { walletAddress, signature };
     const url = `${this.baseURL}/auth`;
     const reqOptions = {
       method: "POST",
       headers: { ...this.#defaultHeaders },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        walletAddress,
+        signature,
+        requirements,
+      }),
     };
+
     const res = await fetch(url, reqOptions);
-    return await res.json();
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as AuthResponse;
   }
 
   /**
    * Validate
    * Validate the given access token and requirements
    */
-  async validate(jwt: string): Promise<boolean> {
-    if (!jwt) return false;
+  async validate(
+    accessToken: string,
+    requirements?: AuthRequirements
+  ): Promise<AccessTokenPayload> {
+    if (!accessToken) {
+      return Promise.reject("access token is empty");
+    }
 
-    const url = `${this.baseURL}/auth/verify`;
-
-    // TODO: Fix to only use one authorization method
-    const headers = {
-      Authorization: `Bearer ${jwt}`,
-      ...this.#defaultHeaders,
-    };
-
+    const url = `${this.baseURL}/auth/validate`;
     const res = await fetch(url, {
-      headers,
+      method: "POST",
+      headers: { ...this.#defaultHeaders },
+      body: JSON.stringify({
+        accessToken,
+        requirements,
+      }),
     });
 
-    const { valid }: { valid: boolean } = await res.json();
+    const data = await res.json();
 
-    return valid;
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as AccessTokenPayload;
   }
 
   // -----------
@@ -203,20 +233,18 @@ export class Picket {
     const walletAddress = await signer.getAddress();
     const signature = await this.getSignature();
 
-    const { accessToken } = await this.auth({
+    const { accessToken, user } = await this.auth({
       walletAddress,
       signature,
-      contractAddress,
-      minTokenBalance,
+      requirements: {
+        contractAddress,
+        minTokenBalance,
+      },
     });
 
     const authState = {
       accessToken,
-      // TODO: Derive user from auth response (or include in auth response)
-      user: {
-        walletAddress,
-        displayAddress: walletAddress,
-      },
+      user,
     };
 
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));
@@ -252,10 +280,10 @@ export class Picket {
   }
 
   /**
-   * getAuthState
+   * authState
    * get user auth information if it exists
    */
-  async getAuthState(): Promise<AuthState | null> {
+  async authState(): Promise<AuthState | null> {
     // check memory
     // check state
     if (this.#authState) return this.#authState;
@@ -263,9 +291,16 @@ export class Picket {
     const stored = window.localStorage.getItem(LOCAL_STORAGE_KEY);
     if (!stored) return Promise.resolve(null);
 
-    // TODO: if JWT is expired deleted it!
-
     const authState: AuthState = JSON.parse(stored);
+
+    // validate the accessToken on the ad
+    try {
+      await this.validate(authState.accessToken);
+    } catch (err) {
+      console.log("deleting invalid access token:", err);
+      return Promise.resolve(null);
+    }
+
     this.#authState = authState;
 
     return Promise.resolve(authState);
