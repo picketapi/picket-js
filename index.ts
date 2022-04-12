@@ -18,9 +18,10 @@ export interface AuthRequirements {
   minTokenBalance?: number | string;
 }
 
-export interface AuthRequest extends AuthRequirements {
+export interface AuthRequest {
   walletAddress: string;
   signature: string;
+  requirements?: AuthRequirements;
 }
 
 export interface AuthenticatedUser {
@@ -109,8 +110,7 @@ export class Picket {
   async auth({
     walletAddress,
     signature,
-    contractAddress,
-    minTokenBalance,
+    requirements,
   }: AuthRequest): Promise<AuthResponse> {
     if (!walletAddress) {
       throw new Error(
@@ -123,14 +123,15 @@ export class Picket {
       );
     }
 
-    const requestBody = Boolean(contractAddress)
-      ? { walletAddress, signature, contractAddress, minTokenBalance }
-      : { walletAddress, signature };
     const url = `${this.baseURL}/auth`;
     const reqOptions = {
       method: "POST",
       headers: { ...this.#defaultHeaders },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({
+        walletAddress,
+        signature,
+        requirements,
+      }),
     };
 
     const res = await fetch(url, reqOptions);
@@ -235,8 +236,10 @@ export class Picket {
     const { accessToken, user } = await this.auth({
       walletAddress,
       signature,
-      contractAddress,
-      minTokenBalance,
+      requirements: {
+        contractAddress,
+        minTokenBalance,
+      },
     });
 
     const authState = {
