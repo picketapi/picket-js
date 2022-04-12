@@ -88,7 +88,7 @@ export class Picket {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         walletAddress,
       }),
@@ -126,7 +126,7 @@ export class Picket {
     const url = `${this.baseURL}/auth`;
     const reqOptions = {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         walletAddress,
         signature,
@@ -160,7 +160,7 @@ export class Picket {
     const url = `${this.baseURL}/auth/validate`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         accessToken,
         requirements,
