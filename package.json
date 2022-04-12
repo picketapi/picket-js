@@ -1,12 +1,12 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "npx swc index.ts -d dist && npx tsc",
+    "build": "npx swc src -d dist && npx tsc",
     "build-verify": "npm run build && node dist/index.js",
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,10 +22,14 @@
   },
   "homepage": "https://github.com/picketapi/picket-js#readme",
   "dependencies": {
+    "@coinbase/wallet-sdk": "^3.0.6",
     "@metamask/detect-provider": "^1.2.0",
+    "@walletconnect/web3-provider": "^1.7.7",
+    "eth-provider": "^0.10.0",
     "ethers": "^5.6.0",
     "typescript": "^4.6.2",
-    "web3modal": "^1.9.5"
+    "web3": "^1.7.3",
+    "web3modal": "^1.9.6"
   },
   "devDependencies": {
     "@swc/cli": "^0.1.55",
