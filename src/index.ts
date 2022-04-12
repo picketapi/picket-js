@@ -157,7 +157,7 @@ export class Picket {
     requirements?: AuthRequirements
   ): Promise<AccessTokenPayload> {
     if (!accessToken) {
-      return Promise.reject("access token is empty");
+      return Promise.reject({ msg: "access token is empty" });
     }
 
     const url = `${this.baseURL}/auth/validate`;
@@ -272,6 +272,8 @@ export class Picket {
     // Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
     const signature = await this.getSignature();
+
+    // TODO: Return provider
 
     return {
       walletAddress,
