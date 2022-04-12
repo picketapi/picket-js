@@ -4,28 +4,23 @@ import Web3Modal from "web3modal";
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
 
+export interface ErrorResponse {
+  code?: string;
+  msg: string;
+}
+
 export interface NonceResponse {
   nonce: string;
 }
 
 export interface AuthRequirements {
   contractAddress?: string;
-  minTokenBalance?: number;
+  minTokenBalance?: number | string;
 }
 
 export interface AuthRequest extends AuthRequirements {
   walletAddress: string;
   signature: string;
-}
-
-export interface OwnershipRequest {
-  walletAddress: string;
-  contractAddress: string;
-  minTokenBalance?: number;
-}
-
-export interface OwnershipResponse {
-  allowed: boolean;
 }
 
 export interface AuthenticatedUser {
@@ -101,7 +96,7 @@ export class Picket {
 
     // reject any error code > 201
     if (res.status > 201) {
-      return Promise.reject(data.msg);
+      return Promise.reject(data as ErrorResponse);
     }
 
     return data as NonceResponse;
@@ -143,7 +138,7 @@ export class Picket {
 
     // reject any error code > 201
     if (res.status > 201) {
-      return Promise.reject(data.msg);
+      return Promise.reject(data as ErrorResponse);
     }
 
     return data as AuthResponse;
@@ -175,7 +170,7 @@ export class Picket {
 
     // reject any error code > 201
     if (res.status > 201) {
-      return Promise.reject(data.msg);
+      return Promise.reject(data as ErrorResponse);
     }
 
     return data as AccessTokenPayload;
