@@ -1,6 +1,8 @@
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
 
+import providerOptions from "./providers";
+
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
 
@@ -89,7 +91,7 @@ export class Picket {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         walletAddress,
       }),
@@ -127,7 +129,7 @@ export class Picket {
     const url = `${this.baseURL}/auth`;
     const reqOptions = {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         walletAddress,
         signature,
@@ -161,7 +163,7 @@ export class Picket {
     const url = `${this.baseURL}/auth/validate`;
     const res = await fetch(url, {
       method: "POST",
-      headers: { ...this.#defaultHeaders },
+      headers: this.#defaultHeaders(),
       body: JSON.stringify({
         accessToken,
         requirements,
@@ -193,10 +195,9 @@ export class Picket {
       // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
       // @ts-ignore
       this.web3Modal = new Web3Modal.default({
-        network: "mainnet", // optional
+        network: "mainnet",
         cacheProvider: true,
-        providerOptions: {}, // required
-        disableInjectedProvider: true, // optional. For MetaMask / Brave / Opera.
+        providerOptions, // required
       });
     }
 
