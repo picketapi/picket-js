@@ -52,9 +52,16 @@ export interface AccessTokenPayload extends AuthenticatedUser {
   tid: string;
 }
 
+// support any for non-ethers libraries
+type ConnectProvider =
+  | providers.ExternalProvider
+  | providers.JsonRpcFetchFunc
+  | any;
+
 export interface ConnectResponse {
   walletAddress: string;
   signature: string;
+  provider: ConnectProvider;
 }
 
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
@@ -188,9 +195,7 @@ export class Picket {
    * getProvider
    * connect to wallet provider
    */
-  async getProvider(): Promise<
-    providers.ExternalProvider | providers.JsonRpcFetchFunc
-  > {
+  async getProvider(): Promise<ConnectProvider> {
     // only re-init if needed
     if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
       // Temporary workaround for issues with Web3Modal bundling w/ swc
@@ -214,20 +219,8 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    // only re-init if needed
-    if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
-      // Temporary workaround for issues with Web3Modal bundling w/ swc
-      // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
-      // @ts-ignore
-      this.web3Modal = new Web3Modal.default({
-        network: "mainnet",
-        cacheProvider: true,
-        providerOptions, // required
-      });
-    }
-
     // @ts-ignore this is initialized above, but ts doesn't recognize
-    const provider = await this.web3Modal.connect();
+    const provider = await this.getProvider();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
@@ -291,17 +284,20 @@ export class Picket {
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
   async connect(): Promise<ConnectResponse> {
-    //Initiate signature request
-    const signer = await this.getSigner();
-    // Invokes client side wallet for user to connect wallet
-    const walletAddress = await signer.getAddress();
-    const signature = await this.getSignature();
+    // connect to user's wallet provider
+    const provider = await this.getProvider();
 
-    // TODO: Return provider
+    const wallet = new ethers.providers.Web3Provider(provider);
+    const signer = wallet.getSigner();
+    const walletAddress = await signer.getAddress();
+
+    // Initiate signature request
+    const signature = await this.getSignature();
 
     return {
       walletAddress,
       signature,
+      provider,
     };
   }
 
