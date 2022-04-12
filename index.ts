@@ -61,6 +61,7 @@ const LOCAL_STORAGE_KEY = "_picketauth";
 // TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
+  web3Modal?: Web3Modal;
   #apiKey;
   #authState?: AuthState;
 
@@ -186,15 +187,22 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    // Temporary workaround for issues with Web3Modal bundling w/ swc
-    // @ts-ignore
-    const web3Modal = new Web3Modal.default({
-      cacheProvider: true,
-      providerOptions: {}, // required
-      disableInjectedProvider: false, // optional. For MetaMask / Brave / Opera.
-    });
+    // only re-init if needed
+    if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
+      // Temporary workaround for issues with Web3Modal bundling w/ swc
+      // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
+      // @ts-ignore
+      this.web3Modal = new Web3Modal.default({
+        network: "mainnet", // optional
+        cacheProvider: true,
+        providerOptions: {}, // required
+        disableInjectedProvider: true, // optional. For MetaMask / Brave / Opera.
+      });
+    }
 
-    const provider = await web3Modal.connect();
+    // @ts-ignore this is initialized above, but ts doesn't recognize
+    const provider = await this.web3Modal.connect();
+
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
@@ -276,6 +284,9 @@ export class Picket {
    */
   async logout(): Promise<void> {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+    if (this.web3Modal) {
+      this.web3Modal.clearCachedProvider();
+    }
     return Promise.resolve();
   }
 
