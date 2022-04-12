@@ -185,6 +185,31 @@ export class Picket {
   // -----------
 
   /**
+   * getProvider
+   * connect to wallet provider
+   */
+  async getProvider(): Promise<
+    providers.ExternalProvider | providers.JsonRpcFetchFunc
+  > {
+    // only re-init if needed
+    if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
+      // Temporary workaround for issues with Web3Modal bundling w/ swc
+      // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
+      // @ts-ignore
+      this.web3Modal = new Web3Modal.default({
+        network: "mainnet",
+        cacheProvider: true,
+        providerOptions, // required
+      });
+    }
+
+    // @ts-ignore this is initialized above, but ts doesn't recognize
+    const provider = await this.web3Modal.connect();
+
+    return provider;
+  }
+
+  /**
    * getSigner
    * Method to handle client side logic for fetching wallet/signer
    */
@@ -203,7 +228,6 @@ export class Picket {
 
     // @ts-ignore this is initialized above, but ts doesn't recognize
     const provider = await this.web3Modal.connect();
-
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
