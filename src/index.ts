@@ -64,6 +64,10 @@ export interface ConnectResponse {
   provider: ConnectProvider;
 }
 
+export interface PicketOptions {
+  connectProviderOptions?: ConnectProviderOptions;
+}
+
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 
@@ -71,14 +75,20 @@ const LOCAL_STORAGE_KEY = "_picketauth";
 export class Picket {
   baseURL = BASE_API_URL;
   web3Modal?: Web3Modal;
+  #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
 
-  constructor(apiKey: string) {
+  constructor(
+    apiKey: string,
+    { connectProviderOptions = {} }: PicketOptions = {}
+  ) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
+
+    this.#connectProviderOptions = connectProviderOptions;
   }
 
   #defaultHeaders = () => ({
@@ -198,7 +208,7 @@ export class Picket {
   async getProvider(): Promise<ConnectProvider> {
     // only re-init if needed
     if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
-      const providerOptions = getProviderOptions({});
+      const providerOptions = getProviderOptions(this.#connectProviderOptions);
 
       // Temporary workaround for issues with Web3Modal bundling w/ swc
       // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
