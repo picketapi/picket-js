@@ -43,10 +43,8 @@ export const getProviderOptions = ({
       package: CoinbaseWalletSDK,
       options: {
         appName: "Picket API",
-        infuraId,
-        rpc,
-        chainId: 1,
-        darkMode: false,
+        // provide infuraId OR rpc
+        ...(infuraId ? { infuraId } : { rpc }),
       },
     },
     frame: {
