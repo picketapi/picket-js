@@ -1,7 +1,7 @@
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
 
-import providerOptions from "./providers";
+import getProviderOptions, { ConnectProviderOptions } from "./providers";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
@@ -52,9 +52,20 @@ export interface AccessTokenPayload extends AuthenticatedUser {
   tid: string;
 }
 
+// support any for non-ethers libraries
+type ConnectProvider =
+  | providers.ExternalProvider
+  | providers.JsonRpcFetchFunc
+  | any;
+
 export interface ConnectResponse {
   walletAddress: string;
   signature: string;
+  provider: ConnectProvider;
+}
+
+export interface PicketOptions {
+  connectProviderOptions?: ConnectProviderOptions;
 }
 
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
@@ -64,14 +75,20 @@ const LOCAL_STORAGE_KEY = "_picketauth";
 export class Picket {
   baseURL = BASE_API_URL;
   web3Modal?: Web3Modal;
+  #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
 
-  constructor(apiKey: string) {
+  constructor(
+    apiKey: string,
+    { connectProviderOptions = {} }: PicketOptions = {}
+  ) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
+
+    this.#connectProviderOptions = connectProviderOptions;
   }
 
   #defaultHeaders = () => ({
@@ -185,25 +202,36 @@ export class Picket {
   // -----------
 
   /**
-   * getSigner
-   * Method to handle client side logic for fetching wallet/signer
+   * getProvider
+   * connect to wallet provider
    */
-  async getSigner(): Promise<providers.JsonRpcSigner> {
+  async getProvider(): Promise<ConnectProvider> {
     // only re-init if needed
     if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
+      const providerOptions = getProviderOptions(this.#connectProviderOptions);
+
       // Temporary workaround for issues with Web3Modal bundling w/ swc
       // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
       // @ts-ignore
       this.web3Modal = new Web3Modal.default({
         network: "mainnet",
         cacheProvider: true,
-        providerOptions, // required
+        providerOptions,
       });
     }
 
     // @ts-ignore this is initialized above, but ts doesn't recognize
     const provider = await this.web3Modal.connect();
 
+    return provider;
+  }
+
+  /**
+   * getSigner
+   * Method to handle client side logic for fetching wallet/signer
+   */
+  async getSigner(): Promise<providers.JsonRpcSigner> {
+    const provider = await this.getProvider();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
 
@@ -267,17 +295,20 @@ export class Picket {
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
   async connect(): Promise<ConnectResponse> {
-    //Initiate signature request
-    const signer = await this.getSigner();
-    // Invokes client side wallet for user to connect wallet
-    const walletAddress = await signer.getAddress();
-    const signature = await this.getSignature();
+    // connect to user's wallet provider
+    const provider = await this.getProvider();
 
-    // TODO: Return provider
+    const wallet = new ethers.providers.Web3Provider(provider);
+    const signer = wallet.getSigner();
+    const walletAddress = await signer.getAddress();
+
+    // Initiate signature request
+    const signature = await this.getSignature();
 
     return {
       walletAddress,
       signature,
+      provider,
     };
   }
 
