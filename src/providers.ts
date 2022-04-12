@@ -12,7 +12,7 @@ export interface ConnectProviderOptions {
   behavior?: ProviderOptionsBehavior;
 }
 
-const getProviderOptions = ({
+export const getProviderOptions = ({
   infuraId,
   rpc = ETH_MAINNET_RPC_URL,
   providerOptions,
@@ -51,5 +51,3 @@ const getProviderOptions = ({
   // behavior === "merge"
   return { ...defaultOptions, providerOptions };
 };
-
-export default getProviderOptions;
