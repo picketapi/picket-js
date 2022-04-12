@@ -2,6 +2,10 @@ import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
 
 // BEGIN: provider.ts
+import WalletConnectProvider from "@walletconnect/web3-provider";
+import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
+// @ts-ignore no types exist
+import ethProvider from "eth-provider";
 
 import { IProviderOptions } from "web3modal";
 
@@ -27,7 +31,7 @@ export const getProviderOptions = ({
 
   const defaultOptions = {
     walletconnect: {
-      package: () => import("@walletconnect/web3-provider"),
+      package: WalletConnectProvider,
       options: {
         infuraId,
         rpc: {
@@ -36,7 +40,7 @@ export const getProviderOptions = ({
       },
     },
     coinbasewallet: {
-      package: () => import("@coinbase/wallet-sdk"),
+      package: CoinbaseWalletSDK,
       options: {
         appName: "Picket API",
         infuraId,
@@ -47,7 +51,7 @@ export const getProviderOptions = ({
     },
     frame: {
       // @ts-ignore no types exist
-      package: () => import("eth-provider"),
+      package: ethProvider,
     },
   };
 
