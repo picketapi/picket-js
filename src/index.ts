@@ -231,7 +231,6 @@ export class Picket {
    * Method to handle client side logic for fetching wallet/signer
    */
   async getSigner(): Promise<providers.JsonRpcSigner> {
-    // @ts-ignore this is initialized above, but ts doesn't recognize
     const provider = await this.getProvider();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
