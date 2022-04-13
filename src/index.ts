@@ -124,7 +124,7 @@ export interface PicketOptions {
 }
 
 export const API_VERSION = "v1";
-const BASE_API_URL = `https://www.picketapi.com/api/${API_VERSION}`;
+const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
