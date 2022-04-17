@@ -17,6 +17,7 @@ import {
 
 export interface PicketOptions {
   connectProviderOptions?: ConnectProviderOptions;
+  baseURL?: string;
 }
 
 export const API_VERSION = "v1";
@@ -35,7 +36,7 @@ export class Picket {
 
   constructor(
     apiKey: string,
-    { connectProviderOptions = {} }: PicketOptions = {}
+    { connectProviderOptions = {}, baseURL = BASE_API_URL }: PicketOptions = {}
   ) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
@@ -43,6 +44,7 @@ export class Picket {
     this.#apiKey = apiKey;
 
     this.#connectProviderOptions = connectProviderOptions;
+    this.baseURL = baseURL;
   }
 
   #defaultHeaders = () => ({
