@@ -1,13 +1,14 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.js",
+  "source": "src/index.ts",
+  "module": "dist/module.js",
   "types": "dist/index.d.ts",
-  "type": "module",
+  "context": "browser",
   "scripts": {
-    "build": "npx swc src -d dist && npx tsc",
-    "build-verify": "npm run build && node dist/index.js",
+    "build": "npx parcel build",
     "prepare": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -30,8 +31,12 @@
     "web3modal": "^1.9.6"
   },
   "devDependencies": {
-    "@swc/cli": "^0.1.55",
-    "@swc/core": "^1.2.154"
+    "@parcel/packager-ts": "^2.4.1",
+    "@parcel/transformer-typescript-types": "^2.4.1",
+    "eslint": "8.10.0",
+    "eslint-config-next": "12.1.0",
+    "parcel": "^2.4.1",
+    "prettier": "^2.5.1"
   },
   "keywords": [
     "web3",
