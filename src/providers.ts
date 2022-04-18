@@ -22,9 +22,7 @@ export const getProviderOptions = ({
   rpc = ETH_MAINNET_RPC_URL,
   providerOptions,
   behavior = "merge",
-}: ConnectProviderOptions) => {
-  if (behavior === "override") return providerOptions;
-
+}: ConnectProviderOptions): IProviderOptions => {
   const defaultOptions = {
     walletconnect: {
       package: WalletConnectProvider,
@@ -48,9 +46,11 @@ export const getProviderOptions = ({
       package: ethProvider,
     },
   };
-
   if (!providerOptions) return defaultOptions;
 
+  // only override if there are options
+  if (behavior === "override") return providerOptions;
+
   // behavior === "merge"
-  return { ...defaultOptions, providerOptions };
+  return { ...defaultOptions, ...providerOptions };
 };

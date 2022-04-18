@@ -169,7 +169,7 @@ export class Picket {
       // Temporary workaround for issues with Web3Modal bundling w/ swc
       // Solution: https://github.com/Web3Modal/web3modal#using-in-vanilla-javascript
       // @ts-ignore
-      this.web3Modal = new Web3Modal.default({
+      this.web3Modal = new Web3Modal({
         network: "mainnet",
         cacheProvider: true,
         providerOptions,
