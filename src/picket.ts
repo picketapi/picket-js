@@ -251,6 +251,10 @@ export class Picket {
     return authState;
   }
 
+  /**
+   * getAuthorizationURL
+   * getAuthorizationURL returns the authorization URL for the PKCE authorization parameters.
+   */
   getAuthorizationURL({
     walletAddress,
     signature,
@@ -278,8 +282,8 @@ export class Picket {
   }
 
   /**
-   * login
-   * Login with your wallet, and optionally, specify login requirements
+   * loginWithRedirect
+   * loginWithRedirect starts the OAuth2.0 PKCE flow
    */
   async loginWithRedirect(
     {
@@ -322,6 +326,10 @@ export class Picket {
     window.location.assign(authorizationURL);
   }
 
+  /**
+   * oauth2AuthorizationCodeToken
+   * oauth2AuthorizationCodeToken implements the final step of the OAuth2.0 PKCE flow and exchanges an authorization code for an access token.
+   */
   async oauth2AuthorizationCodeToken({
     code,
     codeVerifier,
@@ -352,9 +360,11 @@ export class Picket {
 
     return data as AuthState;
   }
+
   /**
-   * login
-   * Login with your wallet, and optionally, specify login requirements
+   * handleLoginRedirect
+   * handleLoginRedirect fetches an access token after a successful authorization redirect.
+   * If there are no authorization code query parameters or there are error query parameters, it will raise an error.
    */
   async handleLoginRedirect(
     url: string = window.location.href
