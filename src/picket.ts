@@ -1,18 +1,22 @@
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
+import pkceChallenge from "pkce-challenge";
 
 import { getProviderOptions, ConnectProviderOptions } from "./providers";
-
+import { randomString } from "./crypto";
 import {
   ErrorResponse,
   NonceResponse,
   AuthRequirements,
+  LoginRequest,
   AuthRequest,
   AuthResponse,
   AuthState,
   AccessTokenPayload,
   ConnectProvider,
   ConnectResponse,
+  AuthorizationURLRequest,
+  LoginCallbackResponse,
 } from "./types";
 
 export interface PicketOptions {
@@ -25,6 +29,9 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
+const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
+
+const randomState = () => btoa(randomString());
 
 // TODO: Delete AuthState on 401
 export class Picket {
@@ -220,7 +227,7 @@ export class Picket {
     contractAddress,
     minTokenBalance,
   }: AuthRequirements = {}): Promise<AuthState> {
-    //Initiate signature request
+    // Initiate signature request
     const signer = await this.getSigner();
     // Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
@@ -244,6 +251,173 @@ export class Picket {
     this.#authState = authState;
 
     return authState;
+  }
+
+  getAuthorizationURL({
+    walletAddress,
+    signature,
+    contractAddress,
+    minTokenBalance,
+    redirectURI,
+    codeChallenge,
+    state,
+  }: AuthorizationURLRequest): string {
+    const url = new URL(`${this.baseURL}/api/v1/oauth2/authorize`);
+    url.searchParams.set("client_id", this.#apiKey);
+    url.searchParams.set("walletAddress", walletAddress);
+    url.searchParams.set("signature", signature);
+    url.searchParams.set("redirect_uri", redirectURI);
+    url.searchParams.set("code_challenge", codeChallenge);
+    url.searchParams.set("state", state);
+
+    if (contractAddress) {
+      url.searchParams.set("contractAddress", contractAddress);
+    }
+    if (minTokenBalance) {
+      url.searchParams.set("minTokenBalance", String(minTokenBalance));
+    }
+    return url.toString();
+  }
+
+  /**
+   * login
+   * Login with your wallet, and optionally, specify login requirements
+   */
+  async loginWithRedirect(
+    {
+      contractAddress,
+      minTokenBalance,
+      redirectURI = window.location.href,
+      state = randomState(),
+    }: LoginRequest = {
+      redirectURI: window.location.href,
+      state: randomState(),
+    }
+  ): Promise<void> {
+    // 1. Connect to local provider and get signature
+    const { walletAddress, signature } = await this.connect();
+
+    // 2. generate PKCE and store!
+    const { code_challenge, code_verifier } = pkceChallenge();
+    window.localStorage.setItem(
+      PKCE_STORAGE_KEY,
+      JSON.stringify({
+        code_verifier,
+        state,
+        redirectURI,
+      })
+    );
+
+    // 3. get authorization URL
+    const authorizationURL = this.getAuthorizationURL({
+      walletAddress,
+      signature,
+      contractAddress,
+      minTokenBalance,
+      redirectURI,
+      state,
+      codeChallenge: code_challenge,
+    });
+    // 4. redirect user
+    window.location.assign(authorizationURL);
+  }
+
+  async oauth2AuthorizationCodeToken({
+    code,
+    codeVerifier,
+    redirectURI,
+  }: {
+    code: string;
+    codeVerifier: string;
+    redirectURI: string;
+  }): Promise<AuthState> {
+    // get the token!
+    const res = await fetch(`/api/v1/oauth2/token`, {
+      method: "POST",
+      headers: this.#defaultHeaders(),
+      body: JSON.stringify({
+        grant_type: "authorization_code",
+        code_verifier: codeVerifier,
+        code,
+        redirect_uri: redirectURI,
+      }),
+    });
+
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as AuthState;
+  }
+  /**
+   * login
+   * Login with your wallet, and optionally, specify login requirements
+   */
+  async handleLoginRedirectCallback(
+    url: string = window.location.href
+  ): Promise<LoginCallbackResponse> {
+    const queryStringFragments = url.split("?").slice(1);
+
+    if (queryStringFragments.length === 0) {
+      throw new Error("there are no query params available for parsing.");
+    }
+    let queryString = queryStringFragments.join("");
+    if (queryString.indexOf("#") > -1) {
+      queryString = queryString.substr(0, queryString.indexOf("#"));
+    }
+
+    const queryParams = queryString.split("&");
+    const parsedQuery: Record<string, any> = {};
+
+    queryParams.forEach((qp) => {
+      const [key, val] = qp.split("=");
+      parsedQuery[key] = decodeURIComponent(val);
+    });
+
+    const { code, state, error, error_description } = parsedQuery;
+
+    if (error) {
+      // OAuth 2.0 specifies at least error must be defined
+      throw new Error(error_description || error);
+    }
+
+    if (!code) {
+      throw new Error("no authorization code in query");
+    }
+
+    const transaction = window.localStorage.getItem(PKCE_STORAGE_KEY);
+
+    if (!transaction) {
+      throw new Error("invalid state. missing pkce transaction data.");
+    }
+
+    const {
+      code_verifier,
+      state: storedState,
+      redirectURI,
+    } = JSON.parse(transaction);
+    if (!code_verifier) {
+      throw new Error(
+        "invalid state. code_verifier is missing in pkce transaction data"
+      );
+    }
+
+    if (storedState !== state) {
+      throw new Error(
+        "invalid state. stored state doesn't match query parameter state "
+      );
+    }
+
+    const auth = await this.oauth2AuthorizationCodeToken({
+      code,
+      codeVerifier: code_verifier,
+      redirectURI,
+    });
+
+    return { ...auth, state } as LoginCallbackResponse;
   }
 
   /**

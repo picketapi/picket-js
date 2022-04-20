@@ -14,6 +14,19 @@ export interface AuthRequirements {
   minTokenBalance?: number | string;
 }
 
+export interface LoginRequest extends AuthRequirements {
+  redirectURI?: string;
+  state?: string;
+}
+
+export interface AuthorizationURLRequest extends AuthRequirements {
+  redirectURI: string;
+  state: string;
+  codeChallenge: string;
+  walletAddress: string;
+  signature: string;
+}
+
 export interface AuthRequest {
   walletAddress: string;
   signature: string;
@@ -56,4 +69,8 @@ export interface ConnectResponse {
   walletAddress: string;
   signature: string;
   provider: ConnectProvider;
+}
+
+export interface LoginCallbackResponse extends AuthState {
+  state: string;
 }
