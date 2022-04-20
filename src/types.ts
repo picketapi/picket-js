@@ -14,11 +14,6 @@ export interface AuthRequirements {
   minTokenBalance?: number | string;
 }
 
-export interface LoginRequest extends AuthRequirements {
-  redirectURI?: string;
-  state?: string;
-}
-
 export interface AuthorizationURLRequest extends AuthRequirements {
   redirectURI: string;
   state: string;
@@ -50,6 +45,10 @@ export interface AuthState {
   user: AuthenticatedUser;
 }
 
+export interface AppState extends Record<string, any> {
+  returnTo?: string;
+}
+
 export interface AccessTokenPayload extends AuthenticatedUser {
   iat: number;
   ext: number;
@@ -71,6 +70,11 @@ export interface ConnectResponse {
   provider: ConnectProvider;
 }
 
+export interface LoginRequest extends AuthRequirements {
+  redirectURI?: string;
+  appState?: AppState;
+}
+
 export interface LoginCallbackResponse extends AuthState {
-  state: string;
+  appState: AppState;
 }

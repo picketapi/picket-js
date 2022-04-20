@@ -3,7 +3,7 @@ import Web3Modal from "web3modal";
 import pkceChallenge from "pkce-challenge";
 
 import { getProviderOptions, ConnectProviderOptions } from "./providers";
-import { randomString } from "./crypto";
+import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import {
   ErrorResponse,
   NonceResponse,
@@ -30,8 +30,6 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
 const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
-
-const randomState = () => btoa(randomString());
 
 // TODO: Delete AuthState on 401
 export class Picket {
@@ -262,7 +260,7 @@ export class Picket {
     codeChallenge,
     state,
   }: AuthorizationURLRequest): string {
-    const url = new URL(`${this.baseURL}/api/v1/oauth2/authorize`);
+    const url = new URL(`${this.baseURL}/oauth2/authorize`);
     url.searchParams.set("client_id", this.#apiKey);
     url.searchParams.set("walletAddress", walletAddress);
     url.searchParams.set("signature", signature);
@@ -288,14 +286,15 @@ export class Picket {
       contractAddress,
       minTokenBalance,
       redirectURI = window.location.href,
-      state = randomState(),
+      appState = {},
     }: LoginRequest = {
       redirectURI: window.location.href,
-      state: randomState(),
+      appState: {},
     }
   ): Promise<void> {
     // 1. Connect to local provider and get signature
     const { walletAddress, signature } = await this.connect();
+    const state = randomState();
 
     // 2. generate PKCE and store!
     const { code_challenge, code_verifier } = pkceChallenge();
@@ -304,6 +303,7 @@ export class Picket {
       JSON.stringify({
         code_verifier,
         state,
+        appState,
         redirectURI,
       })
     );
@@ -332,7 +332,7 @@ export class Picket {
     redirectURI: string;
   }): Promise<AuthState> {
     // get the token!
-    const res = await fetch(`/api/v1/oauth2/token`, {
+    const res = await fetch(`${this.baseURL}/oauth2/token`, {
       method: "POST",
       headers: this.#defaultHeaders(),
       body: JSON.stringify({
@@ -356,28 +356,11 @@ export class Picket {
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async handleLoginRedirectCallback(
+  async handleLoginRedirect(
     url: string = window.location.href
   ): Promise<LoginCallbackResponse> {
-    const queryStringFragments = url.split("?").slice(1);
-
-    if (queryStringFragments.length === 0) {
-      throw new Error("there are no query params available for parsing.");
-    }
-    let queryString = queryStringFragments.join("");
-    if (queryString.indexOf("#") > -1) {
-      queryString = queryString.substr(0, queryString.indexOf("#"));
-    }
-
-    const queryParams = queryString.split("&");
-    const parsedQuery: Record<string, any> = {};
-
-    queryParams.forEach((qp) => {
-      const [key, val] = qp.split("=");
-      parsedQuery[key] = decodeURIComponent(val);
-    });
-
-    const { code, state, error, error_description } = parsedQuery;
+    const { code, state, error, error_description } =
+      parseAuthorizationCodeParams(url);
 
     if (error) {
       // OAuth 2.0 specifies at least error must be defined
@@ -398,6 +381,7 @@ export class Picket {
       code_verifier,
       state: storedState,
       redirectURI,
+      appState,
     } = JSON.parse(transaction);
     if (!code_verifier) {
       throw new Error(
@@ -417,7 +401,7 @@ export class Picket {
       redirectURI,
     });
 
-    return { ...auth, state } as LoginCallbackResponse;
+    return { ...auth, appState } as LoginCallbackResponse;
   }
 
   /**
