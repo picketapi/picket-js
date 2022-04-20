@@ -1,18 +1,22 @@
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
+import pkceChallenge from "pkce-challenge";
 
 import { getProviderOptions, ConnectProviderOptions } from "./providers";
-
+import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import {
   ErrorResponse,
   NonceResponse,
   AuthRequirements,
+  LoginRequest,
   AuthRequest,
   AuthResponse,
   AuthState,
   AccessTokenPayload,
   ConnectProvider,
   ConnectResponse,
+  AuthorizationURLRequest,
+  LoginCallbackResponse,
 } from "./types";
 
 export interface PicketOptions {
@@ -25,6 +29,7 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
 // Consider migrating to cookies https://github.com/auth0/auth0.js/pull/817
 const LOCAL_STORAGE_KEY = "_picketauth";
+const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 
 // TODO: Delete AuthState on 401
 export class Picket {
@@ -220,7 +225,7 @@ export class Picket {
     contractAddress,
     minTokenBalance,
   }: AuthRequirements = {}): Promise<AuthState> {
-    //Initiate signature request
+    // Initiate signature request
     const signer = await this.getSigner();
     // Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
@@ -244,6 +249,176 @@ export class Picket {
     this.#authState = authState;
 
     return authState;
+  }
+
+  /**
+   * getAuthorizationURL
+   * getAuthorizationURL returns the authorization URL for the PKCE authorization parameters.
+   */
+  getAuthorizationURL({
+    walletAddress,
+    signature,
+    contractAddress,
+    minTokenBalance,
+    redirectURI,
+    codeChallenge,
+    state,
+  }: AuthorizationURLRequest): string {
+    const url = new URL(`${this.baseURL}/oauth2/authorize`);
+    url.searchParams.set("client_id", this.#apiKey);
+    url.searchParams.set("walletAddress", walletAddress);
+    url.searchParams.set("signature", signature);
+    url.searchParams.set("redirect_uri", redirectURI);
+    url.searchParams.set("code_challenge", codeChallenge);
+    url.searchParams.set("state", state);
+
+    if (contractAddress) {
+      url.searchParams.set("contractAddress", contractAddress);
+    }
+    if (minTokenBalance) {
+      url.searchParams.set("minTokenBalance", String(minTokenBalance));
+    }
+    return url.toString();
+  }
+
+  /**
+   * loginWithRedirect
+   * loginWithRedirect starts the OAuth2.0 PKCE flow
+   */
+  async loginWithRedirect(
+    {
+      contractAddress,
+      minTokenBalance,
+      redirectURI = window.location.href,
+      appState = {},
+    }: LoginRequest = {
+      redirectURI: window.location.href,
+      appState: {},
+    }
+  ): Promise<void> {
+    // 1. Connect to local provider and get signature
+    const { walletAddress, signature } = await this.connect();
+    const state = randomState();
+
+    // 2. generate PKCE and store!
+    const { code_challenge, code_verifier } = pkceChallenge();
+    window.localStorage.setItem(
+      PKCE_STORAGE_KEY,
+      JSON.stringify({
+        code_verifier,
+        state,
+        appState,
+        redirectURI,
+      })
+    );
+
+    // 3. get authorization URL
+    const authorizationURL = this.getAuthorizationURL({
+      walletAddress,
+      signature,
+      contractAddress,
+      minTokenBalance,
+      redirectURI,
+      state,
+      codeChallenge: code_challenge,
+    });
+    // 4. redirect user
+    window.location.assign(authorizationURL);
+  }
+
+  /**
+   * oauth2AuthorizationCodeToken
+   * oauth2AuthorizationCodeToken implements the final step of the OAuth2.0 PKCE flow and exchanges an authorization code for an access token.
+   */
+  async oauth2AuthorizationCodeToken({
+    code,
+    codeVerifier,
+    redirectURI,
+  }: {
+    code: string;
+    codeVerifier: string;
+    redirectURI: string;
+  }): Promise<AuthState> {
+    // get the token!
+    const res = await fetch(`${this.baseURL}/oauth2/token`, {
+      method: "POST",
+      headers: this.#defaultHeaders(),
+      body: JSON.stringify({
+        grant_type: "authorization_code",
+        code_verifier: codeVerifier,
+        code,
+        redirect_uri: redirectURI,
+      }),
+    });
+
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    // save it locally!
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    this.#authState = data;
+
+    return data as AuthState;
+  }
+
+  /**
+   * handleLoginRedirect
+   * handleLoginRedirect fetches an access token after a successful authorization redirect.
+   * If there are no authorization code query parameters or there are error query parameters, it will raise an error.
+   */
+  async handleLoginRedirect(
+    url: string = window.location.href
+  ): Promise<LoginCallbackResponse> {
+    const { code, state, error, error_description } =
+      parseAuthorizationCodeParams(url);
+
+    if (error) {
+      // OAuth 2.0 specifies at least error must be defined
+      throw new Error(error_description || error);
+    }
+
+    if (!code) {
+      throw new Error("no authorization code in query");
+    }
+
+    const transaction = window.localStorage.getItem(PKCE_STORAGE_KEY);
+
+    if (!transaction) {
+      throw new Error("invalid state. missing pkce transaction data.");
+    }
+
+    const {
+      code_verifier,
+      state: storedState,
+      redirectURI,
+      appState,
+    } = JSON.parse(transaction);
+    if (!code_verifier) {
+      throw new Error(
+        "invalid state. code_verifier is missing in pkce transaction data"
+      );
+    }
+
+    if (storedState !== state) {
+      throw new Error(
+        "invalid state. stored state doesn't match query parameter state "
+      );
+    }
+
+    const auth = await this.oauth2AuthorizationCodeToken({
+      code,
+      codeVerifier: code_verifier,
+      redirectURI,
+    });
+
+    // clear PKCE transaction from storage
+    window.localStorage.removeItem(PKCE_STORAGE_KEY);
+
+    return { ...auth, appState } as LoginCallbackResponse;
   }
 
   /**
