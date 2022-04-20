@@ -415,6 +415,9 @@ export class Picket {
       redirectURI,
     });
 
+    // clear PKCE transaction from storage
+    window.localStorage.removeItem(PKCE_STORAGE_KEY);
+
     return { ...auth, appState } as LoginCallbackResponse;
   }
 
