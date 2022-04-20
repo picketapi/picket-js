@@ -1,4 +1,7 @@
+import { randomString } from "./crypto";
 import { AppState } from "./types";
+
+export const randomState = () => btoa(randomString());
 
 // hasAuthorizationCodeParams returns true if the url contains OAuth 2.0 authorization code parameters
 export const hasAuthorizationCodeParams = (url: string): boolean => {
