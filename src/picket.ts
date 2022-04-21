@@ -9,8 +9,6 @@ import {
   NonceResponse,
   AuthRequirements,
   LoginRequest,
-  AuthRequest,
-  AuthResponse,
   AuthState,
   AccessTokenPayload,
   ConnectProvider,
