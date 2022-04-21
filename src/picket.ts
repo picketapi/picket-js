@@ -174,7 +174,6 @@ export class Picket {
     return signature;
   }
 
-  // login({ AuthRequirements }, { redirectURI });
   /**
    * login
    * Login with your wallet, and optionally, specify login requirements
