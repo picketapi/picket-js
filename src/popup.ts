@@ -10,7 +10,6 @@ export const open = (url: string): Window | null => {
   const left = window.screenX + (window.innerWidth - POPUP_WIDTH) / 2;
   const top = window.screenY + (window.innerHeight - POPUP_HEIGHT) / 2;
 
-  // Need to add some content...
   return window.open(
     url,
     "picket:authorize:popup",
@@ -18,6 +17,7 @@ export const open = (url: string): Window | null => {
   );
 };
 
+const ONE_SECOND_IN_MILLISECONDS = 1000;
 const TIMEOUT_IN_SECONDS = 60 * 2;
 
 export const run = (popup: Window) => {
@@ -62,13 +62,13 @@ export const run = (popup: Window) => {
         window.removeEventListener("message", popupEventListener, false);
         reject(new Error("popup closed"));
       }
-    }, 1000);
+    }, ONE_SECOND_IN_MILLISECONDS);
 
     const timeoutId = setTimeout(() => {
       clearInterval(popupTimer);
       reject(new Error("popup timed out"));
       window.removeEventListener("message", popupEventListener, false);
-    }, TIMEOUT_IN_SECONDS * 1000);
+    }, TIMEOUT_IN_SECONDS * ONE_SECOND_IN_MILLISECONDS);
 
     window.addEventListener("message", popupEventListener);
   });
