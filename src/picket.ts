@@ -4,6 +4,7 @@ import pkceChallenge from "pkce-challenge";
 
 import { getProviderOptions, ConnectProviderOptions } from "./providers";
 import { randomState, parseAuthorizationCodeParams } from "./pkce";
+import * as popup from "./popup";
 import {
   ErrorResponse,
   NonceResponse,
@@ -194,24 +195,23 @@ export class Picket {
     redirectURI,
     codeChallenge,
     state,
+    responseMode,
   }: AuthorizationURLRequest): string {
     const url = new URL(`${this.baseURL}/oauth2/authorize`);
     url.searchParams.set("client_id", this.#apiKey);
-    url.searchParams.set("walletAddress", walletAddress);
-    url.searchParams.set("signature", signature);
     url.searchParams.set("redirect_uri", redirectURI);
     url.searchParams.set("code_challenge", codeChallenge);
     url.searchParams.set("state", state);
 
     url.searchParams.set("code_challenge_method", "S256");
-    url.searchParams.set("response_type", "code");
+    url.searchParams.set("response_mode", responseMode);
 
-    if (contractAddress) {
-      url.searchParams.set("contractAddress", contractAddress);
-    }
-    if (minTokenBalance) {
+    walletAddress && url.searchParams.set("walletAddress", walletAddress);
+    signature && url.searchParams.set("signature", signature);
+    contractAddress && url.searchParams.set("contractAddress", contractAddress);
+    minTokenBalance &&
       url.searchParams.set("minTokenBalance", String(minTokenBalance));
-    }
+
     return url.toString();
   }
 
@@ -261,7 +261,9 @@ export class Picket {
       redirectURI,
       state,
       codeChallenge: code_challenge,
+      responseMode: "code",
     });
+
     // 4. redirect user
     window.location.assign(authorizationURL);
   }
@@ -362,13 +364,91 @@ export class Picket {
   }
 
   /**
+   * loginWithPopup
+   * loginWithPopup starts the OAuth2.0 PKCE flow
+   *
+   * Implements https://datatracker.ietf.org/doc/html/draft-sakimura-oauth-wmrm-00#section-2.3
+   */
+  async loginWithPopup(
+    {
+      walletAddress,
+      signature,
+      contractAddress,
+      minTokenBalance,
+    }: LoginRequest = {},
+    { redirectURI = window.location.href }: LoginOptions = {
+      redirectURI: window.location.href,
+    }
+  ): Promise<AuthState> {
+    // 1. If no signature provided, connect to local provider and get signature
+    if (!(walletAddress && signature)) {
+      const info = await this.connect();
+      walletAddress = info.walletAddress;
+      signature = info.signature;
+    }
+
+    const state = randomState();
+
+    // 2. generate PKCE and store!
+    const { code_challenge, code_verifier } = pkceChallenge();
+
+    // 3. get authorization URL
+    const authorizationURL = this.getAuthorizationURL({
+      walletAddress,
+      signature,
+      contractAddress,
+      minTokenBalance,
+      state,
+      codeChallenge: code_challenge,
+      redirectURI,
+      responseMode: "web_message",
+    });
+
+    // 4. Open popup
+    let authorizationPopup = popup.open(authorizationURL);
+
+    // try see if the popup has been blocked
+    if (
+      !authorizationPopup ||
+      authorizationPopup.closed ||
+      typeof authorizationPopup.closed === "undefined"
+    ) {
+      throw new Error("failed to open popup");
+    }
+
+    const res = await popup.run(authorizationPopup);
+
+    if (res.error) {
+      // OAuth 2.0 specifies at least error must be defined
+      throw new Error(res.error_description || res.error);
+    }
+
+    if (!res.code) {
+      throw new Error("no authorization code returned from popup");
+    }
+
+    if (res.state !== state) {
+      throw new Error(
+        "invalid state. stored state doesn't match query parameter state "
+      );
+    }
+
+    const auth = await this.oauth2AuthorizationCodeToken({
+      code: res.code,
+      codeVerifier: code_verifier,
+      redirectURI,
+    });
+
+    return auth;
+  }
+
+  /**
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
   async connect(): Promise<ConnectResponse> {
     // connect to user's wallet provider
     const provider = await this.getProvider();
-
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
     const walletAddress = await signer.getAddress();
