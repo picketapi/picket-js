@@ -272,6 +272,9 @@ export class Picket {
     url.searchParams.set("code_challenge", codeChallenge);
     url.searchParams.set("state", state);
 
+    url.searchParams.set("code_challenge_method", "S256");
+    url.searchParams.set("response_type", "code");
+
     if (contractAddress) {
       url.searchParams.set("contractAddress", contractAddress);
     }
