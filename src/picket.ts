@@ -178,7 +178,7 @@ export class Picket {
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async login(req: LoginRequest, opts: LoginOptions): Promise<void> {
+  async login(req?: LoginRequest, opts?: LoginOptions): Promise<void> {
     return await this.loginWithRedirect(req, opts);
   }
 
@@ -225,7 +225,7 @@ export class Picket {
       signature,
       contractAddress,
       minTokenBalance,
-    }: LoginRequest,
+    }: LoginRequest = {},
     { redirectURI = window.location.href, appState = {} }: LoginOptions = {
       redirectURI: window.location.href,
       appState: {},
