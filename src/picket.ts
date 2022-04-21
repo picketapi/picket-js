@@ -9,8 +9,7 @@ import {
   NonceResponse,
   AuthRequirements,
   LoginRequest,
-  AuthRequest,
-  AuthResponse,
+  LoginOptions,
   AuthState,
   AccessTokenPayload,
   ConnectProvider,
@@ -82,48 +81,6 @@ export class Picket {
     }
 
     return data as NonceResponse;
-  }
-
-  /**
-   * Auth
-   * Function for initiating auth / token gating
-   */
-  async auth({
-    walletAddress,
-    signature,
-    requirements,
-  }: AuthRequest): Promise<AuthResponse> {
-    if (!walletAddress) {
-      throw new Error(
-        "walletAddress parameter is required - see docs for reference."
-      );
-    }
-    if (!signature) {
-      throw new Error(
-        "signature parameter is required - see docs for reference."
-      );
-    }
-
-    const url = `${this.baseURL}/auth`;
-    const reqOptions = {
-      method: "POST",
-      headers: this.#defaultHeaders(),
-      body: JSON.stringify({
-        walletAddress,
-        signature,
-        requirements,
-      }),
-    };
-
-    const res = await fetch(url, reqOptions);
-    const data = await res.json();
-
-    // reject any error code > 201
-    if (res.status > 201) {
-      return Promise.reject(data as ErrorResponse);
-    }
-
-    return data as AuthResponse;
   }
 
   /**
@@ -221,34 +178,8 @@ export class Picket {
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async login({
-    contractAddress,
-    minTokenBalance,
-  }: AuthRequirements = {}): Promise<AuthState> {
-    // Initiate signature request
-    const signer = await this.getSigner();
-    // Invokes client side wallet for user to connect wallet
-    const walletAddress = await signer.getAddress();
-    const signature = await this.getSignature();
-
-    const { accessToken, user } = await this.auth({
-      walletAddress,
-      signature,
-      requirements: {
-        contractAddress,
-        minTokenBalance,
-      },
-    });
-
-    const authState = {
-      accessToken,
-      user,
-    };
-
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));
-    this.#authState = authState;
-
-    return authState;
+  async login(req: LoginRequest, opts: LoginOptions): Promise<void> {
+    return await this.loginWithRedirect(req, opts);
   }
 
   /**
@@ -272,6 +203,9 @@ export class Picket {
     url.searchParams.set("code_challenge", codeChallenge);
     url.searchParams.set("state", state);
 
+    url.searchParams.set("code_challenge_method", "S256");
+    url.searchParams.set("response_type", "code");
+
     if (contractAddress) {
       url.searchParams.set("contractAddress", contractAddress);
     }
@@ -287,17 +221,23 @@ export class Picket {
    */
   async loginWithRedirect(
     {
+      walletAddress,
+      signature,
       contractAddress,
       minTokenBalance,
-      redirectURI = window.location.href,
-      appState = {},
-    }: LoginRequest = {
+    }: LoginRequest,
+    { redirectURI = window.location.href, appState = {} }: LoginOptions = {
       redirectURI: window.location.href,
       appState: {},
     }
   ): Promise<void> {
-    // 1. Connect to local provider and get signature
-    const { walletAddress, signature } = await this.connect();
+    // 1. If no signature provided, connect to local provider and get signature
+    if (!(walletAddress && signature)) {
+      const info = await this.connect();
+      walletAddress = info.walletAddress;
+      signature = info.signature;
+    }
+
     const state = randomState();
 
     // 2. generate PKCE and store!
