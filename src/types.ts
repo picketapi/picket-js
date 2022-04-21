@@ -14,20 +14,6 @@ export interface AuthRequirements {
   minTokenBalance?: number | string;
 }
 
-export interface AuthorizationURLRequest extends AuthRequirements {
-  redirectURI: string;
-  state: string;
-  codeChallenge: string;
-  walletAddress: string;
-  signature: string;
-}
-
-export interface AuthRequest {
-  walletAddress: string;
-  signature: string;
-  requirements?: AuthRequirements;
-}
-
 export interface AuthenticatedUser {
   walletAddress: string;
   displayAddress: string;
@@ -35,18 +21,9 @@ export interface AuthenticatedUser {
   tokenBalance?: string;
 }
 
-export interface AuthResponse {
-  accessToken: string;
-  user: AuthenticatedUser;
-}
-
 export interface AuthState {
   accessToken: string;
   user: AuthenticatedUser;
-}
-
-export interface AppState extends Record<string, any> {
-  returnTo?: string;
 }
 
 export interface AccessTokenPayload extends AuthenticatedUser {
@@ -70,11 +47,28 @@ export interface ConnectResponse {
   provider: ConnectProvider;
 }
 
+export interface AppState extends Record<string, any> {
+  returnTo?: string;
+}
+
 export interface LoginRequest extends AuthRequirements {
+  walletAddress?: string;
+  signature?: string;
+}
+
+export interface LoginOptions {
   redirectURI?: string;
   appState?: AppState;
 }
 
 export interface LoginCallbackResponse extends AuthState {
   appState: AppState;
+}
+
+export interface AuthorizationURLRequest extends AuthRequirements {
+  redirectURI: string;
+  state: string;
+  codeChallenge: string;
+  walletAddress: string;
+  signature: string;
 }

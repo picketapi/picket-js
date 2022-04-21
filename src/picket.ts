@@ -9,6 +9,7 @@ import {
   NonceResponse,
   AuthRequirements,
   LoginRequest,
+  LoginOptions,
   AuthState,
   AccessTokenPayload,
   ConnectProvider,
@@ -173,12 +174,13 @@ export class Picket {
     return signature;
   }
 
+  // login({ AuthRequirements }, { redirectURI });
   /**
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async login(opts: LoginRequest): Promise<void> {
-    return await this.loginWithRedirect(opts);
+  async login(req: LoginRequest, opts: LoginOptions): Promise<void> {
+    return await this.loginWithRedirect(req, opts);
   }
 
   /**
@@ -220,17 +222,23 @@ export class Picket {
    */
   async loginWithRedirect(
     {
+      walletAddress,
+      signature,
       contractAddress,
       minTokenBalance,
-      redirectURI = window.location.href,
-      appState = {},
-    }: LoginRequest = {
+    }: LoginRequest,
+    { redirectURI = window.location.href, appState = {} }: LoginOptions = {
       redirectURI: window.location.href,
       appState: {},
     }
   ): Promise<void> {
-    // 1. Connect to local provider and get signature
-    const { walletAddress, signature } = await this.connect();
+    // 1. If no signature provided, connect to local provider and get signature
+    if (!(walletAddress && signature)) {
+      const info = await this.connect();
+      walletAddress = info.walletAddress;
+      signature = info.signature;
+    }
+
     const state = randomState();
 
     // 2. generate PKCE and store!
