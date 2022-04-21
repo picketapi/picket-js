@@ -261,7 +261,7 @@ export class Picket {
       redirectURI,
       state,
       codeChallenge: code_challenge,
-      responseType: "code",
+      responseMode: "code",
     });
 
     // 4. redirect user
