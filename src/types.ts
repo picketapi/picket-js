@@ -69,6 +69,14 @@ export interface AuthorizationURLRequest extends AuthRequirements {
   redirectURI: string;
   state: string;
   codeChallenge: string;
-  walletAddress: string;
-  signature: string;
+  walletAddress?: string;
+  signature?: string;
+  responseMode: "code" | "web_message";
+}
+
+export interface AuthorizationServerWebResponse {
+  state: string;
+  code?: string;
+  error?: string;
+  error_description?: string;
 }
