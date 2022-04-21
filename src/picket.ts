@@ -85,48 +85,6 @@ export class Picket {
   }
 
   /**
-   * Auth
-   * Function for initiating auth / token gating
-   */
-  async auth({
-    walletAddress,
-    signature,
-    requirements,
-  }: AuthRequest): Promise<AuthResponse> {
-    if (!walletAddress) {
-      throw new Error(
-        "walletAddress parameter is required - see docs for reference."
-      );
-    }
-    if (!signature) {
-      throw new Error(
-        "signature parameter is required - see docs for reference."
-      );
-    }
-
-    const url = `${this.baseURL}/auth`;
-    const reqOptions = {
-      method: "POST",
-      headers: this.#defaultHeaders(),
-      body: JSON.stringify({
-        walletAddress,
-        signature,
-        requirements,
-      }),
-    };
-
-    const res = await fetch(url, reqOptions);
-    const data = await res.json();
-
-    // reject any error code > 201
-    if (res.status > 201) {
-      return Promise.reject(data as ErrorResponse);
-    }
-
-    return data as AuthResponse;
-  }
-
-  /**
    * Validate
    * Validate the given access token and requirements
    */
@@ -221,34 +179,8 @@ export class Picket {
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async login({
-    contractAddress,
-    minTokenBalance,
-  }: AuthRequirements = {}): Promise<AuthState> {
-    // Initiate signature request
-    const signer = await this.getSigner();
-    // Invokes client side wallet for user to connect wallet
-    const walletAddress = await signer.getAddress();
-    const signature = await this.getSignature();
-
-    const { accessToken, user } = await this.auth({
-      walletAddress,
-      signature,
-      requirements: {
-        contractAddress,
-        minTokenBalance,
-      },
-    });
-
-    const authState = {
-      accessToken,
-      user,
-    };
-
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(authState));
-    this.#authState = authState;
-
-    return authState;
+  async login(opts: LoginRequest): Promise<void> {
+    return await this.loginWithRedirect(opts);
   }
 
   /**
