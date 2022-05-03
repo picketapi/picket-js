@@ -34,7 +34,7 @@ const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 // TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
-  web3Modal?: Web3Modal;
+  #provider?: ConnectProvider;
   #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
@@ -125,15 +125,22 @@ export class Picket {
    * connect to wallet provider
    */
   async getProvider(): Promise<ConnectProvider> {
+    // return selected provider if it exists
+    if (this.#provider) {
+      return this.#provider;
+    }
+
     const providerOptions = getProviderOptions(this.#connectProviderOptions);
 
-    this.web3Modal = new Web3Modal({
+    const web3Modal = new Web3Modal({
       network: "mainnet",
+      // for now, disable caching
       cacheProvider: false,
       providerOptions,
     });
 
-    const provider = await this.web3Modal.connect();
+    const provider = await web3Modal.connect();
+    this.#provider = provider;
 
     return provider;
   }
@@ -155,14 +162,14 @@ export class Picket {
    * Initiates signature request
    */
   async getSignature(): Promise<string> {
-    //Initiate signature request
+    // Initiate signature request
     const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
     const walletAddress = await signer.getAddress();
 
-    //Get Nonce
+    // Get Nonce
     const { nonce } = await this.nonce(walletAddress);
 
-    //Sign the nonce to get signature
+    // Sign the nonce to get signature
     const signature = await signer.signMessage(nonce);
 
     return signature;
@@ -462,9 +469,7 @@ export class Picket {
    */
   async logout(): Promise<void> {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
-    if (this.web3Modal) {
-      this.web3Modal.clearCachedProvider();
-    }
+    this.#provider = undefined;
     return Promise.resolve();
   }
 
