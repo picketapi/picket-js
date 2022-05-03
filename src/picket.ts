@@ -125,19 +125,14 @@ export class Picket {
    * connect to wallet provider
    */
   async getProvider(): Promise<ConnectProvider> {
-    // only re-init if needed
-    if (!(this.web3Modal && this.web3Modal.cachedProvider)) {
-      const providerOptions = getProviderOptions(this.#connectProviderOptions);
+    const providerOptions = getProviderOptions(this.#connectProviderOptions);
 
-      // Temporary workaround for issues with Web3Modal bundling w/ swc
-      this.web3Modal = new Web3Modal({
-        network: "mainnet",
-        cacheProvider: false,
-        providerOptions,
-      });
-    }
+    this.web3Modal = new Web3Modal({
+      network: "mainnet",
+      cacheProvider: false,
+      providerOptions,
+    });
 
-    // @ts-ignore this is initialized above, but ts doesn't recognize
     const provider = await this.web3Modal.connect();
 
     return provider;
