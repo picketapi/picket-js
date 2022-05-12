@@ -25,6 +25,7 @@ export interface AuthRequirements {
 }
 
 export interface AuthenticatedUser {
+  chain: Chain;
   walletAddress: string;
   displayAddress: string;
   contractAddress?: string;
