@@ -1,8 +1,18 @@
 import { providers } from "ethers";
 
+export enum Chain {
+  ETH = "ethereum",
+  SOL = "solana",
+}
+
 export interface ErrorResponse {
   code?: string;
   msg: string;
+}
+
+export interface NonceRequest {
+  chain: Chain;
+  walletAddress: string;
 }
 
 export interface NonceResponse {
@@ -52,6 +62,7 @@ export interface AppState extends Record<string, any> {
 }
 
 export interface LoginRequest extends AuthRequirements {
+  chain?: Chain;
   walletAddress?: string;
   signature?: string;
 }
@@ -69,6 +80,7 @@ export interface AuthorizationURLRequest extends AuthRequirements {
   redirectURI: string;
   state: string;
   codeChallenge: string;
+  chain?: Chain;
   walletAddress?: string;
   signature?: string;
   responseMode: "code" | "web_message";
