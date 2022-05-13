@@ -1,12 +1,19 @@
+import pkceChallenge from "pkce-challenge";
+
+// Ethereum imports
 import { ethers, providers } from "ethers";
 import Web3Modal from "web3modal";
-import pkceChallenge from "pkce-challenge";
+
+// Solana imports
+import bs58 from "bs58";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 
 import { getProviderOptions, ConnectProviderOptions } from "./providers";
 import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import * as popup from "./popup";
 import {
   ErrorResponse,
+  NonceRequest,
   NonceResponse,
   AuthRequirements,
   LoginRequest,
@@ -17,6 +24,7 @@ import {
   ConnectResponse,
   AuthorizationURLRequest,
   LoginCallbackResponse,
+  Chain,
 } from "./types";
 
 export interface PicketOptions {
@@ -65,12 +73,16 @@ export class Picket {
    * nonce
    * Function for retrieving nonce for a given user
    */
-  async nonce(walletAddress: string): Promise<NonceResponse> {
+  async nonce({
+    walletAddress,
+    chain = Chain.ETH,
+  }: NonceRequest): Promise<NonceResponse> {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
       method: "POST",
       headers: this.#defaultHeaders(),
       body: JSON.stringify({
+        chain,
         walletAddress,
       }),
     });
@@ -146,36 +158,6 @@ export class Picket {
   }
 
   /**
-   * getSigner
-   * Method to handle client side logic for fetching wallet/signer
-   */
-  async getSigner(): Promise<providers.JsonRpcSigner> {
-    const provider = await this.getProvider();
-    const wallet = new ethers.providers.Web3Provider(provider);
-    const signer = wallet.getSigner();
-
-    return signer;
-  }
-
-  /**
-   * getSignature
-   * Initiates signature request
-   */
-  async getSignature(): Promise<string> {
-    // Initiate signature request
-    const signer = await this.getSigner(); //Invokes client side wallet for user to connect wallet
-    const walletAddress = await signer.getAddress();
-
-    // Get Nonce
-    const { nonce } = await this.nonce(walletAddress);
-
-    // Sign the nonce to get signature
-    const signature = await signer.signMessage(nonce);
-
-    return signature;
-  }
-
-  /**
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
@@ -188,6 +170,7 @@ export class Picket {
    * getAuthorizationURL returns the authorization URL for the PKCE authorization parameters.
    */
   getAuthorizationURL({
+    chain,
     walletAddress,
     signature,
     contractAddress,
@@ -206,6 +189,7 @@ export class Picket {
     url.searchParams.set("code_challenge_method", "S256");
     url.searchParams.set("response_mode", responseMode);
 
+    chain && url.searchParams.set("chain", chain);
     walletAddress && url.searchParams.set("walletAddress", walletAddress);
     signature && url.searchParams.set("signature", signature);
     contractAddress && url.searchParams.set("contractAddress", contractAddress);
@@ -221,6 +205,7 @@ export class Picket {
    */
   async loginWithRedirect(
     {
+      chain = Chain.ETH,
       walletAddress,
       signature,
       contractAddress,
@@ -233,7 +218,7 @@ export class Picket {
   ): Promise<void> {
     // 1. If no signature provided, connect to local provider and get signature
     if (!(walletAddress && signature)) {
-      const info = await this.connect();
+      const info = await this.connect(chain);
       walletAddress = info.walletAddress;
       signature = info.signature;
     }
@@ -254,6 +239,7 @@ export class Picket {
 
     // 3. get authorization URL
     const authorizationURL = this.getAuthorizationURL({
+      chain,
       walletAddress,
       signature,
       contractAddress,
@@ -371,6 +357,7 @@ export class Picket {
    */
   async loginWithPopup(
     {
+      chain = Chain.ETH,
       walletAddress,
       signature,
       contractAddress,
@@ -382,7 +369,7 @@ export class Picket {
   ): Promise<AuthState> {
     // 1. If no signature provided, connect to local provider and get signature
     if (!(walletAddress && signature)) {
-      const info = await this.connect();
+      const info = await this.connect(chain);
       walletAddress = info.walletAddress;
       signature = info.signature;
     }
@@ -394,6 +381,7 @@ export class Picket {
 
     // 3. get authorization URL
     const authorizationURL = this.getAuthorizationURL({
+      chain,
       walletAddress,
       signature,
       contractAddress,
@@ -446,15 +434,48 @@ export class Picket {
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
-  async connect(): Promise<ConnectResponse> {
+  async connect(chain: Chain = Chain.ETH): Promise<ConnectResponse> {
+    // TODO: Support Multiple Solana Wallets
+    // Connect to Solana Wallet
+    if (chain === Chain.SOL) {
+      const wallet = new PhantomWalletAdapter();
+      await wallet.connect();
+
+      const { connected, publicKey } = wallet;
+
+      if (!connected || !publicKey) {
+        throw new Error("failed to connect to Phantom wallet");
+      }
+
+      const walletAddress = publicKey.toString();
+
+      // Get Nonce
+      const { nonce } = await this.nonce({ walletAddress, chain });
+      const message = new TextEncoder().encode(nonce);
+
+      const signatureBytes = await wallet.signMessage(message);
+      const signature = bs58.encode(signatureBytes);
+
+      return {
+        walletAddress,
+        signature,
+        provider: wallet,
+      };
+    }
+
+    // Connect to Ethereum Wallet
+
     // connect to user's wallet provider
     const provider = await this.getProvider();
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
     const walletAddress = await signer.getAddress();
 
-    // Initiate signature request
-    const signature = await this.getSignature();
+    // Get Nonce
+    const { nonce } = await this.nonce({ chain, walletAddress });
+
+    // Sign the nonce to get signature
+    const signature = await signer.signMessage(nonce);
 
     return {
       walletAddress,
