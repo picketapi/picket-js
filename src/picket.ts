@@ -24,6 +24,7 @@ import {
   ConnectResponse,
   AuthorizationURLRequest,
   LoginCallbackResponse,
+  Chains,
   Chain,
 } from "./types";
 
@@ -75,7 +76,7 @@ export class Picket {
    */
   async nonce({
     walletAddress,
-    chain = Chain.ETH,
+    chain = Chains.ETH,
   }: NonceRequest): Promise<NonceResponse> {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
@@ -205,7 +206,7 @@ export class Picket {
    */
   async loginWithRedirect(
     {
-      chain = Chain.ETH,
+      chain = Chains.ETH,
       walletAddress,
       signature,
       contractAddress,
@@ -350,14 +351,14 @@ export class Picket {
   }
 
   /**
-   * loginWithPopup
+   *ggloginWithPopup
    * loginWithPopup starts the OAuth2.0 PKCE flow
    *
    * Implements https://datatracker.ietf.org/doc/html/draft-sakimura-oauth-wmrm-00#section-2.3
    */
   async loginWithPopup(
     {
-      chain = Chain.ETH,
+      chain = Chains.ETH,
       walletAddress,
       signature,
       contractAddress,
@@ -434,10 +435,10 @@ export class Picket {
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
-  async connect(chain: Chain = Chain.ETH): Promise<ConnectResponse> {
+  async connect(chain: Chain = Chains.ETH): Promise<ConnectResponse> {
     // TODO: Support Multiple Solana Wallets
     // Connect to Solana Wallet
-    if (chain === Chain.SOL) {
+    if (chain === Chains.SOL) {
       const wallet = new PhantomWalletAdapter();
       await wallet.connect();
 

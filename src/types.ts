@@ -1,9 +1,11 @@
 import { providers } from "ethers";
 
-export enum Chain {
+export enum Chains {
   ETH = "ethereum",
   SOL = "solana",
 }
+
+export type Chain = `${Chains}`;
 
 export interface ErrorResponse {
   code?: string;
