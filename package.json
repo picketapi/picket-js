@@ -1,12 +1,18 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.32",
+  "version": "0.0.33",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.js",
   "source": "src/index.ts",
   "module": "dist/module.js",
-  "types": "dist/index.d.ts",
-  "context": "browser",
+  "browser": "dist/browser.js",
+  "targets": {
+    "browser": {
+      "context": "browser",
+      "outputFormat": "esmodule",
+      "includeNodeModules": true
+    }
+  },
   "scripts": {
     "build": "npx parcel build",
     "prepare": "npm run build",
