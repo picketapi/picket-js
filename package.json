@@ -1,15 +1,22 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.33",
+  "version": "0.0.34",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.js",
   "source": "src/index.ts",
   "module": "dist/module.js",
-  "browser": "dist/browser.js",
+  "global": "dist/global.js",
   "targets": {
-    "browser": {
+    "main": {
+      "context": "browser"
+    },
+    "module": {
+      "context": "browser"
+    },
+    "global": {
       "context": "browser",
-      "outputFormat": "esmodule",
+      "isLibrary": false,
+      "outputFormat": "global",
       "includeNodeModules": true
     }
   },
@@ -44,10 +51,16 @@
   "devDependencies": {
     "@parcel/packager-ts": "^2.4.1",
     "@parcel/transformer-typescript-types": "^2.4.1",
+    "crypto-browserify": "^3.12.0",
     "eslint": "8.10.0",
     "eslint-config-next": "12.1.0",
+    "https-browserify": "^1.0.0",
+    "os-browserify": "^0.3.0",
     "parcel": "^2.4.1",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "querystring-es3": "^0.2.1",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.0"
   },
   "keywords": [
     "web3",
