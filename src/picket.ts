@@ -174,6 +174,7 @@ export class Picket {
     chain,
     walletAddress,
     signature,
+    tokenIds,
     contractAddress,
     minTokenBalance,
     redirectURI,
@@ -197,6 +198,12 @@ export class Picket {
     minTokenBalance &&
       url.searchParams.set("minTokenBalance", String(minTokenBalance));
 
+    if (tokenIds) {
+      for (let id of tokenIds) {
+        url.searchParams.append("tokenIds", id);
+      }
+    }
+
     return url.toString();
   }
 
@@ -209,6 +216,7 @@ export class Picket {
       chain = Chains.ETH,
       walletAddress,
       signature,
+      tokenIds,
       contractAddress,
       minTokenBalance,
     }: LoginRequest = {},
@@ -244,6 +252,7 @@ export class Picket {
       walletAddress,
       signature,
       contractAddress,
+      tokenIds,
       minTokenBalance,
       redirectURI,
       state,
@@ -362,6 +371,7 @@ export class Picket {
       walletAddress,
       signature,
       contractAddress,
+      tokenIds,
       minTokenBalance,
     }: LoginRequest = {},
     { redirectURI = window.location.href }: LoginOptions = {
@@ -386,6 +396,7 @@ export class Picket {
       walletAddress,
       signature,
       contractAddress,
+      tokenIds,
       minTokenBalance,
       state,
       codeChallenge: code_challenge,
