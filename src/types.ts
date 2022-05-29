@@ -23,6 +23,7 @@ export interface NonceResponse {
 
 export interface AuthRequirements {
   contractAddress?: string;
+  tokenIds?: string[];
   minTokenBalance?: number | string;
 }
 
