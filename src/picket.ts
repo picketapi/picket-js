@@ -525,6 +525,7 @@ export class Picket {
       await this.validate(authState.accessToken);
     } catch (err) {
       console.log("deleting invalid access token:", err);
+      await this.logout();
       return Promise.resolve(null);
     }
 
