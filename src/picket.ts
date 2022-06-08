@@ -166,7 +166,7 @@ export class Picket {
       return Promise.reject(data as ErrorResponse);
     }
 
-    return data as ChainInfo[];
+    return data.data as ChainInfo[];
   }
 
   // -----------
