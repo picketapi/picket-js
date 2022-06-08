@@ -1,8 +1,5 @@
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
-// @ts-ignore no types exist
-import ethProvider from "eth-provider";
-
 import { IProviderOptions } from "web3modal";
 
 // For now, default to flashbots node
@@ -13,6 +10,7 @@ export type ProviderOptionsBehavior = "merge" | "override";
 export interface ConnectProviderOptions {
   infuraId?: string;
   rpc?: string;
+  chain: string;
   providerOptions?: IProviderOptions;
   behavior?: ProviderOptionsBehavior;
 }
@@ -40,10 +38,6 @@ export const getProviderOptions = ({
         // provide infuraId OR rpc
         ...(infuraId ? { infuraId } : { rpc }),
       },
-    },
-    frame: {
-      // @ts-ignore no types exist
-      package: ethProvider,
     },
   };
   if (!providerOptions) return defaultOptions;
