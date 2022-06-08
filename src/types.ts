@@ -1,19 +1,28 @@
 import { providers } from "ethers";
 
-export enum Chains {
-  ETH = "ethereum",
-  SOL = "solana",
-}
-
-export type Chain = `${Chains}`;
-
 export interface ErrorResponse {
   code?: string;
   msg: string;
 }
 
+export enum ChainTypes {
+  ETH = "ethereum",
+  SOL = "solana",
+}
+
+export type ChainType = `${ChainTypes}`;
+
+export type ChainInfo = {
+  chainSlug: string;
+  chainID: number;
+  chainType: ChainTypes;
+  chainName: string;
+  publicRPC: string;
+  authorizationSupported: boolean;
+};
+
 export interface NonceRequest {
-  chain: Chain;
+  chain: string;
   walletAddress: string;
 }
 
@@ -28,7 +37,7 @@ export interface AuthRequirements {
 }
 
 export interface AuthenticatedUser {
-  chain: Chain;
+  chain: string;
   walletAddress: string;
   displayAddress: string;
   contractAddress?: string;
@@ -66,7 +75,7 @@ export interface AppState extends Record<string, any> {
 }
 
 export interface LoginRequest extends AuthRequirements {
-  chain?: Chain;
+  chain?: string;
   walletAddress?: string;
   signature?: string;
 }
@@ -80,14 +89,16 @@ export interface LoginCallbackResponse extends AuthState {
   appState: AppState;
 }
 
+export type AuthorizationResponseMode = "code" | "web_message";
+
 export interface AuthorizationURLRequest extends AuthRequirements {
   redirectURI: string;
   state: string;
   codeChallenge: string;
-  chain?: Chain;
+  chain?: string;
   walletAddress?: string;
   signature?: string;
-  responseMode: "code" | "web_message";
+  responseMode: AuthorizationResponseMode;
 }
 
 export interface AuthorizationServerWebResponse {
