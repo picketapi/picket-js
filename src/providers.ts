@@ -2,7 +2,9 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import CoinbaseWalletSDK from "@coinbase/wallet-sdk";
 import { IProviderOptions } from "web3modal";
 
-// For now, default to flashbots node
+// defaults if none are provided
+// this should be needed
+const ETH_MAINNET_CHAIN_ID = 1;
 const ETH_MAINNET_RPC_URL = "https://rpc.flashbots.net";
 
 export type ProviderOptionsBehavior = "merge" | "override";
@@ -10,7 +12,7 @@ export type ProviderOptionsBehavior = "merge" | "override";
 export interface ConnectProviderOptions {
   infuraId?: string;
   rpc?: string;
-  chain: string;
+  chainID?: number;
   providerOptions?: IProviderOptions;
   behavior?: ProviderOptionsBehavior;
 }
@@ -18,6 +20,7 @@ export interface ConnectProviderOptions {
 export const getProviderOptions = ({
   infuraId,
   rpc = ETH_MAINNET_RPC_URL,
+  chainID = ETH_MAINNET_CHAIN_ID,
   providerOptions,
   behavior = "merge",
 }: ConnectProviderOptions): IProviderOptions => {
@@ -27,7 +30,7 @@ export const getProviderOptions = ({
       options: {
         infuraId,
         rpc: {
-          1: rpc,
+          [chainID]: rpc,
         },
       },
     },

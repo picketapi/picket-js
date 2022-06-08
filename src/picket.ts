@@ -1,7 +1,7 @@
 import pkceChallenge from "pkce-challenge";
 
 // Ethereum imports
-import { ethers, providers } from "ethers";
+import { ethers } from "ethers";
 import Web3Modal from "web3modal";
 
 // Solana imports
@@ -24,8 +24,8 @@ import {
   ConnectResponse,
   AuthorizationURLRequest,
   LoginCallbackResponse,
-  Chains,
-  Chain,
+  ChainTypes,
+  ChainInfo,
 } from "./types";
 
 export interface PicketOptions {
@@ -76,7 +76,7 @@ export class Picket {
    */
   async nonce({
     walletAddress,
-    chain = Chains.ETH,
+    chain = ChainTypes.ETH,
   }: NonceRequest): Promise<NonceResponse> {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
@@ -129,24 +129,70 @@ export class Picket {
     return data as AccessTokenPayload;
   }
 
+  /**
+   * chainInfo
+   * Function for retrieving chain information
+   */
+  async chainInfo(chain: string): Promise<ChainInfo> {
+    const url = `${this.baseURL}/chains/${chain}`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: this.#defaultHeaders(),
+    });
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as ChainInfo;
+  }
+
+  /**
+   * chains
+   * Function for retrieving information on supported chains
+   */
+  async chains(): Promise<ChainInfo[]> {
+    const url = `${this.baseURL}/chains`;
+    const res = await fetch(url, {
+      method: "GET",
+      headers: this.#defaultHeaders(),
+    });
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as ChainInfo[];
+  }
+
   // -----------
   // Client-side SDK Utilities
   // -----------
 
   /**
-   * getProvider
-   * connect to wallet provider
+   * getEVMProvider
+   * connect to ethereum wallet provider
    */
-  async getProvider(): Promise<ConnectProvider> {
+  async getEVMProvider(chain: string): Promise<ConnectProvider> {
     // return selected provider if it exists
     if (this.#provider) {
       return this.#provider;
     }
 
-    const providerOptions = getProviderOptions(this.#connectProviderOptions);
+    // get chain information
+    const { chainID, publicRPC } = await this.chainInfo(chain);
+
+    const providerOptions = getProviderOptions({
+      chainID,
+      rpc: publicRPC,
+      ...this.#connectProviderOptions,
+    });
 
     const web3Modal = new Web3Modal({
-      network: "mainnet",
       // for now, disable caching
       cacheProvider: false,
       providerOptions,
@@ -213,7 +259,7 @@ export class Picket {
    */
   async loginWithRedirect(
     {
-      chain = Chains.ETH,
+      chain = ChainTypes.ETH,
       walletAddress,
       signature,
       tokenIds,
@@ -367,7 +413,7 @@ export class Picket {
    */
   async loginWithPopup(
     {
-      chain = Chains.ETH,
+      chain = ChainTypes.ETH,
       walletAddress,
       signature,
       contractAddress,
@@ -446,10 +492,10 @@ export class Picket {
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
-  async connect(chain: Chain = Chains.ETH): Promise<ConnectResponse> {
+  async connect(chain: string = ChainTypes.ETH): Promise<ConnectResponse> {
     // TODO: Support Multiple Solana Wallets
     // Connect to Solana Wallet
-    if (chain === Chains.SOL) {
+    if (chain.toLowerCase().includes(ChainTypes.SOL)) {
       const wallet = new PhantomWalletAdapter();
       await wallet.connect();
 
@@ -478,7 +524,7 @@ export class Picket {
     // Connect to Ethereum Wallet
 
     // connect to user's wallet provider
-    const provider = await this.getProvider();
+    const provider = await this.getEVMProvider(chain);
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
     const walletAddress = await signer.getAddress();

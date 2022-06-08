@@ -14,7 +14,7 @@ export type ChainType = `${ChainTypes}`;
 
 export type ChainInfo = {
   chainSlug: string;
-  chainID: string;
+  chainID: number;
   chainType: ChainTypes;
   chainName: string;
   publicRPC: string;
