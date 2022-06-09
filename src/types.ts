@@ -28,6 +28,7 @@ export interface NonceRequest {
 
 export interface NonceResponse {
   nonce: string;
+  statement: string;
 }
 
 export interface AuthRequirements {

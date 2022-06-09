@@ -488,6 +488,16 @@ export class Picket {
     return auth;
   }
 
+  static createSigningMessage({
+    nonce,
+    statement,
+  }: {
+    nonce: string;
+    statement: string;
+  }) {
+    return `${statement}\n\nNonce: ${nonce}`;
+  }
+
   /**
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
@@ -508,8 +518,9 @@ export class Picket {
       const walletAddress = publicKey.toString();
 
       // Get Nonce
-      const { nonce } = await this.nonce({ walletAddress, chain });
-      const message = new TextEncoder().encode(nonce);
+      const { nonce, statement } = await this.nonce({ walletAddress, chain });
+      const signingMessage = Picket.createSigningMessage({ nonce, statement });
+      const message = new TextEncoder().encode(signingMessage);
 
       const signatureBytes = await wallet.signMessage(message);
       const signature = bs58.encode(signatureBytes);
@@ -530,10 +541,11 @@ export class Picket {
     const walletAddress = await signer.getAddress();
 
     // Get Nonce
-    const { nonce } = await this.nonce({ chain, walletAddress });
+    const { nonce, statement } = await this.nonce({ walletAddress, chain });
+    const signingMessage = Picket.createSigningMessage({ nonce, statement });
 
     // Sign the nonce to get signature
-    const signature = await signer.signMessage(nonce);
+    const signature = await signer.signMessage(signingMessage);
 
     return {
       walletAddress,
