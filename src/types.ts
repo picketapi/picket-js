@@ -87,7 +87,6 @@ export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
   issuedAt: string;
 }
 
-// TODO: Better typing!
 export type SigningMessageRequest =
   | SigningMessageRequestSimple
   | SigningMessageRequestSIWE;
