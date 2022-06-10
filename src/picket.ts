@@ -3,6 +3,7 @@ import pkceChallenge from "pkce-challenge";
 // Ethereum imports
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
+import { SiweMessage } from "siwe";
 
 // Solana imports
 import bs58 from "bs58";
@@ -30,6 +31,8 @@ import {
   SigningMessageFormat,
   AuthRequest,
   SigningMessageRequest,
+  SigningMessageRequestSIWE,
+  SigningMessageRequestSimple,
 } from "./types";
 
 export interface PicketOptions {
@@ -51,6 +54,7 @@ export class Picket {
   #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
+  #chainCache: Record<string, ChainInfo> = {};
 
   constructor(
     apiKey: string,
@@ -132,6 +136,7 @@ export class Picket {
         walletAddress,
         signature,
         requirements,
+        context,
       }),
     };
 
@@ -183,6 +188,8 @@ export class Picket {
    * Function for retrieving chain information
    */
   async chainInfo(chain: string): Promise<ChainInfo> {
+    if (this.#chainCache[chain]) return this.#chainCache[chain];
+
     const url = `${this.baseURL}/chains/${chain}`;
     const res = await fetch(url, {
       method: "GET",
@@ -194,6 +201,9 @@ export class Picket {
     if (res.status > 201) {
       return Promise.reject(data as ErrorResponse);
     }
+
+    // save to cache
+    this.#chainCache[chain] = data as ChainInfo;
 
     return data as ChainInfo;
   }
@@ -213,6 +223,11 @@ export class Picket {
     // reject any error code > 201
     if (res.status > 201) {
       return Promise.reject(data as ErrorResponse);
+    }
+
+    // save to cache
+    for (const chain of data.data) {
+      this.#chainCache[chain.chainSlug] = chain;
     }
 
     return data.data as ChainInfo[];
@@ -570,14 +585,34 @@ export class Picket {
   }
 
   static createSigningMessage(
-    { nonce, statement, walletAddress, chainID }: SigningMessageRequest,
-    { format = SigningMessageFormat.SIMPLE }: { format?: SigningMessageFormat }
+    args: SigningMessageRequest,
+    {
+      format = SigningMessageFormat.SIMPLE,
+    }: { format?: SigningMessageFormat } = {
+      format: SigningMessageFormat.SIMPLE,
+    }
   ) {
     if (format === SigningMessageFormat.SIMPLE) {
-      return `${statement}\n\nNonce: ${nonce}`;
+      const { statement, walletAddress, nonce } =
+        args as SigningMessageRequestSimple;
+      return `${statement}\n\nAddress: ${walletAddress}\nNonce: ${nonce}`;
     }
 
-    return `${statement}\n\nNonce: ${nonce}`;
+    const { statement, walletAddress, nonce, domain, uri, issuedAt, chainID } =
+      args as SigningMessageRequestSIWE;
+
+    const message = new SiweMessage({
+      address: walletAddress,
+      nonce,
+      statement,
+      domain,
+      uri,
+      chainId: chainID,
+      issuedAt,
+      version: "1",
+    });
+
+    return message.prepareMessage();
   }
 
   /**
@@ -592,9 +627,12 @@ export class Picket {
     const uri = window.location.origin;
     const issuedAt = new Date().toISOString();
 
+    // use chain associated with the auth request
+    const { chainID, chainType } = await this.chainInfo(chain);
+
     // TODO: Support Multiple Solana Wallets
     // Connect to Solana Wallet
-    if (chain.toLowerCase().includes(ChainTypes.SOL)) {
+    if (chainType === ChainTypes.SOL) {
       const wallet = new PhantomWalletAdapter();
       await wallet.connect();
 
@@ -605,17 +643,6 @@ export class Picket {
       }
 
       const walletAddress = publicKey.toString();
-
-      // Hack: Hardcode Chain ID
-      // Chain ID is not available in the wallet
-      const chainID = chain.includes("testnet")
-        ? // testnet
-          102
-        : chain.includes("devnet")
-        ? // devnet
-          103
-        : // mainnet beta
-          101;
 
       // Get Nonce
       const { nonce, statement } = await this.nonce({ walletAddress, chain });
@@ -649,8 +676,6 @@ export class Picket {
     const wallet = new ethers.providers.Web3Provider(provider);
     const signer = wallet.getSigner();
     const walletAddress = await signer.getAddress();
-
-    const chainID = wallet.network.chainId;
 
     // Get Nonce
     const { nonce, statement } = await this.nonce({ walletAddress, chain });

@@ -76,14 +76,21 @@ export interface SigningMessageContext {
   issuedAt: string;
 }
 
-// TODO: Better typing!
-export interface SigningMessageRequest extends NonceResponse {
+export interface SigningMessageRequestSimple extends NonceResponse {
+  walletAddress: string;
+}
+
+export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
   domain: string;
   uri: string;
   chainID: number;
   issuedAt: string;
-  walletAddress?: string;
 }
+
+// TODO: Better typing!
+export type SigningMessageRequest =
+  | SigningMessageRequestSimple
+  | SigningMessageRequestSIWE;
 
 export interface ConnectRequest {
   chain?: string;
