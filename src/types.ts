@@ -14,7 +14,7 @@ export type ChainType = `${ChainTypes}`;
 
 export type ChainInfo = {
   chainSlug: string;
-  chainID: number;
+  chainId: number;
   chainType: ChainTypes;
   chainName: string;
   publicRPC: string;
@@ -72,7 +72,7 @@ export interface SigningMessageContext {
   // version: 1;
   domain: string;
   uri: string;
-  chainID: number;
+  chainId: number;
   issuedAt: string;
 }
 
@@ -83,7 +83,7 @@ export interface SigningMessageRequestSimple extends NonceResponse {
 export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
   domain: string;
   uri: string;
-  chainID: number;
+  chainId: number;
   issuedAt: string;
 }
 
