@@ -12,7 +12,7 @@ export type ProviderOptionsBehavior = "merge" | "override";
 export interface ConnectProviderOptions {
   infuraId?: string;
   rpc?: string;
-  chainID?: number;
+  chainId?: number;
   providerOptions?: IProviderOptions;
   behavior?: ProviderOptionsBehavior;
 }
@@ -20,7 +20,7 @@ export interface ConnectProviderOptions {
 export const getProviderOptions = ({
   infuraId,
   rpc = ETH_MAINNET_RPC_URL,
-  chainID = ETH_MAINNET_CHAIN_ID,
+  chainId = ETH_MAINNET_CHAIN_ID,
   providerOptions,
   behavior = "merge",
 }: ConnectProviderOptions): IProviderOptions => {
@@ -30,7 +30,7 @@ export const getProviderOptions = ({
       options: {
         infuraId,
         rpc: {
-          [chainID]: rpc,
+          [chainId]: rpc,
         },
       },
     },
