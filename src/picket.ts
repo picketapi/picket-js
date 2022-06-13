@@ -248,10 +248,10 @@ export class Picket {
     }
 
     // get chain information
-    const { chainID, publicRPC } = await this.chainInfo(chain);
+    const { chainId, publicRPC } = await this.chainInfo(chain);
 
     const providerOptions = getProviderOptions({
-      chainID,
+      chainId,
       rpc: publicRPC,
       ...this.#connectProviderOptions,
     });
@@ -598,7 +598,7 @@ export class Picket {
       return `${statement}\n\nAddress: ${walletAddress}\nNonce: ${nonce}`;
     }
 
-    const { statement, walletAddress, nonce, domain, uri, issuedAt, chainID } =
+    const { statement, walletAddress, nonce, domain, uri, issuedAt, chainId } =
       args as SigningMessageRequestSIWE;
 
     const message = new SiweMessage({
@@ -607,7 +607,7 @@ export class Picket {
       statement,
       domain,
       uri,
-      chainId: chainID,
+      chainId: chainId,
       issuedAt,
       version: "1",
     });
@@ -628,7 +628,7 @@ export class Picket {
     const issuedAt = new Date().toISOString();
 
     // use chain associated with the auth request
-    const { chainID, chainType } = await this.chainInfo(chain);
+    const { chainId, chainType } = await this.chainInfo(chain);
 
     // TODO: Support Multiple Solana Wallets
     // Connect to Solana Wallet
@@ -650,7 +650,7 @@ export class Picket {
         domain,
         uri,
         issuedAt,
-        chainID,
+        chainId,
       };
 
       const signingMessage = Picket.createSigningMessage(
@@ -683,7 +683,7 @@ export class Picket {
       domain,
       uri,
       issuedAt,
-      chainID,
+      chainId,
     };
 
     const signingMessage = Picket.createSigningMessage(
