@@ -272,8 +272,8 @@ export class Picket {
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
-  async login(req?: LoginRequest, opts?: LoginOptions): Promise<void> {
-    return await this.loginWithRedirect(req, opts);
+  async login(req?: LoginRequest): Promise<AuthState> {
+    return await this.loginWithTrustedWalletProivder(req);
   }
 
   /**
