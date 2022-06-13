@@ -14,7 +14,7 @@ export type ChainType = `${ChainTypes}`;
 
 export type ChainInfo = {
   chainSlug: string;
-  chainID: number;
+  chainId: number;
   chainType: ChainTypes;
   chainName: string;
   publicRPC: string;
@@ -28,6 +28,7 @@ export interface NonceRequest {
 
 export interface NonceResponse {
   nonce: string;
+  statement: string;
 }
 
 export interface AuthRequirements {
@@ -58,6 +59,43 @@ export interface AccessTokenPayload extends AuthenticatedUser {
   tid: string;
 }
 
+export enum SigningMessageFormat {
+  SIMPLE = "simple",
+  SIWE = "siwe",
+}
+
+// SigningMessageContext is the minumum additional fields for SIWE that are generated client-side
+// and needed to be passed to the server to regenerate the signed message.
+// For more details, see https://docs.login.xyz/general-information/siwe-overview/eip-4361#message-field-descriptions
+export interface SigningMessageContext {
+  // Exlcude version because it is always 1
+  // version: 1;
+  domain: string;
+  uri: string;
+  chainId: number;
+  issuedAt: string;
+}
+
+export interface SigningMessageRequestSimple extends NonceResponse {
+  walletAddress: string;
+}
+
+export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
+  domain: string;
+  uri: string;
+  chainId: number;
+  issuedAt: string;
+}
+
+export type SigningMessageRequest =
+  | SigningMessageRequestSimple
+  | SigningMessageRequestSIWE;
+
+export interface ConnectRequest {
+  chain?: string;
+  messageFormat?: SigningMessageFormat;
+}
+
 // support any for non-ethers libraries
 export type ConnectProvider =
   | providers.ExternalProvider
@@ -68,6 +106,7 @@ export interface ConnectResponse {
   walletAddress: string;
   signature: string;
   provider: ConnectProvider;
+  context?: SigningMessageContext;
 }
 
 export interface AppState extends Record<string, any> {
@@ -78,6 +117,7 @@ export interface LoginRequest extends AuthRequirements {
   chain?: string;
   walletAddress?: string;
   signature?: string;
+  context?: SigningMessageContext;
 }
 
 export interface LoginOptions {
@@ -106,4 +146,12 @@ export interface AuthorizationServerWebResponse {
   code?: string;
   error?: string;
   error_description?: string;
+}
+
+export interface AuthRequest {
+  chain: string;
+  walletAddress: string;
+  signature: string;
+  requirements?: AuthRequirements;
+  context?: SigningMessageContext;
 }

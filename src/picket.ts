@@ -3,6 +3,7 @@ import pkceChallenge from "pkce-challenge";
 // Ethereum imports
 import { ethers } from "ethers";
 import Web3Modal from "web3modal";
+import { SiweMessage } from "siwe";
 
 // Solana imports
 import bs58 from "bs58";
@@ -26,6 +27,12 @@ import {
   LoginCallbackResponse,
   ChainTypes,
   ChainInfo,
+  ConnectRequest,
+  SigningMessageFormat,
+  AuthRequest,
+  SigningMessageRequest,
+  SigningMessageRequestSIWE,
+  SigningMessageRequestSimple,
 } from "./types";
 
 export interface PicketOptions {
@@ -47,6 +54,7 @@ export class Picket {
   #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
+  #chainCache: Record<string, ChainInfo> = {};
 
   constructor(
     apiKey: string,
@@ -98,6 +106,52 @@ export class Picket {
   }
 
   /**
+   * auth
+   * Function for initiating auth / token gating
+   */
+  async auth({
+    chain = ChainTypes.ETH,
+    walletAddress,
+    signature,
+    requirements,
+    context,
+  }: AuthRequest): Promise<AuthState> {
+    if (!walletAddress) {
+      throw new Error(
+        "walletAddress parameter is required - see docs for reference."
+      );
+    }
+    if (!signature) {
+      throw new Error(
+        "signature parameter is required - see docs for reference."
+      );
+    }
+
+    const url = `${this.baseURL}/auth`;
+    const reqOptions = {
+      method: "POST",
+      headers: this.#defaultHeaders(),
+      body: JSON.stringify({
+        chain,
+        walletAddress,
+        signature,
+        requirements,
+        context,
+      }),
+    };
+
+    const res = await fetch(url, reqOptions);
+    const data = await res.json();
+
+    // reject any error code > 201
+    if (res.status > 201) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    return data as AuthState;
+  }
+
+  /**
    * Validate
    * Validate the given access token and requirements
    */
@@ -134,6 +188,8 @@ export class Picket {
    * Function for retrieving chain information
    */
   async chainInfo(chain: string): Promise<ChainInfo> {
+    if (this.#chainCache[chain]) return this.#chainCache[chain];
+
     const url = `${this.baseURL}/chains/${chain}`;
     const res = await fetch(url, {
       method: "GET",
@@ -145,6 +201,9 @@ export class Picket {
     if (res.status > 201) {
       return Promise.reject(data as ErrorResponse);
     }
+
+    // save to cache
+    this.#chainCache[chain] = data as ChainInfo;
 
     return data as ChainInfo;
   }
@@ -166,6 +225,11 @@ export class Picket {
       return Promise.reject(data as ErrorResponse);
     }
 
+    // save to cache
+    for (const chain of data.data) {
+      this.#chainCache[chain.chainSlug] = chain;
+    }
+
     return data.data as ChainInfo[];
   }
 
@@ -184,10 +248,10 @@ export class Picket {
     }
 
     // get chain information
-    const { chainID, publicRPC } = await this.chainInfo(chain);
+    const { chainId, publicRPC } = await this.chainInfo(chain);
 
     const providerOptions = getProviderOptions({
-      chainID,
+      chainId,
       rpc: publicRPC,
       ...this.#connectProviderOptions,
     });
@@ -210,6 +274,38 @@ export class Picket {
    */
   async login(req?: LoginRequest, opts?: LoginOptions): Promise<void> {
     return await this.loginWithRedirect(req, opts);
+  }
+
+  /**
+   * loginWithTrustedWalletProivder
+   * Login with a trusted wallet provider that supports Sign-In With Ethereum (EIP-4361) or similar standard
+   */
+  async loginWithTrustedWalletProivder({
+    chain = ChainTypes.ETH,
+    walletAddress,
+    signature,
+    context,
+    ...requirements
+  }: LoginRequest = {}): Promise<AuthState> {
+    // 1. If no signature provided, connect to local provider and get signature
+    if (!(walletAddress && signature)) {
+      const info = await this.connect({
+        chain,
+        messageFormat: SigningMessageFormat.SIWE,
+      });
+      walletAddress = info.walletAddress;
+      signature = info.signature;
+      context = info.context;
+    }
+
+    // 2. Exchange signature for access token
+    return await this.auth({
+      chain,
+      walletAddress,
+      signature,
+      context,
+      requirements,
+    });
   }
 
   /**
@@ -273,7 +369,7 @@ export class Picket {
   ): Promise<void> {
     // 1. If no signature provided, connect to local provider and get signature
     if (!(walletAddress && signature)) {
-      const info = await this.connect(chain);
+      const info = await this.connect({ chain });
       walletAddress = info.walletAddress;
       signature = info.signature;
     }
@@ -426,7 +522,7 @@ export class Picket {
   ): Promise<AuthState> {
     // 1. If no signature provided, connect to local provider and get signature
     if (!(walletAddress && signature)) {
-      const info = await this.connect(chain);
+      const info = await this.connect({ chain });
       walletAddress = info.walletAddress;
       signature = info.signature;
     }
@@ -488,14 +584,55 @@ export class Picket {
     return auth;
   }
 
+  static createSigningMessage(
+    args: SigningMessageRequest,
+    {
+      format = SigningMessageFormat.SIMPLE,
+    }: { format?: SigningMessageFormat } = {
+      format: SigningMessageFormat.SIMPLE,
+    }
+  ) {
+    if (format === SigningMessageFormat.SIMPLE) {
+      const { statement, walletAddress, nonce } =
+        args as SigningMessageRequestSimple;
+      return `${statement}\n\nAddress: ${walletAddress}\nNonce: ${nonce}`;
+    }
+
+    const { statement, walletAddress, nonce, domain, uri, issuedAt, chainId } =
+      args as SigningMessageRequestSIWE;
+
+    const message = new SiweMessage({
+      address: walletAddress,
+      nonce,
+      statement,
+      domain,
+      uri,
+      chainId: chainId,
+      issuedAt,
+      version: "1",
+    });
+
+    return message.prepareMessage();
+  }
+
   /**
    * connect
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
-  async connect(chain: string = ChainTypes.ETH): Promise<ConnectResponse> {
+  async connect({
+    chain = ChainTypes.ETH,
+    messageFormat = SigningMessageFormat.SIMPLE,
+  }: ConnectRequest): Promise<ConnectResponse> {
+    const domain = window.location.host;
+    const uri = window.location.origin;
+    const issuedAt = new Date().toISOString();
+
+    // use chain associated with the auth request
+    const { chainId, chainType } = await this.chainInfo(chain);
+
     // TODO: Support Multiple Solana Wallets
     // Connect to Solana Wallet
-    if (chain.toLowerCase().includes(ChainTypes.SOL)) {
+    if (chainType === ChainTypes.SOL) {
       const wallet = new PhantomWalletAdapter();
       await wallet.connect();
 
@@ -508,8 +645,19 @@ export class Picket {
       const walletAddress = publicKey.toString();
 
       // Get Nonce
-      const { nonce } = await this.nonce({ walletAddress, chain });
-      const message = new TextEncoder().encode(nonce);
+      const { nonce, statement } = await this.nonce({ walletAddress, chain });
+      const context = {
+        domain,
+        uri,
+        issuedAt,
+        chainId,
+      };
+
+      const signingMessage = Picket.createSigningMessage(
+        { nonce, statement, walletAddress, ...context },
+        { format: messageFormat }
+      );
+      const message = new TextEncoder().encode(signingMessage);
 
       const signatureBytes = await wallet.signMessage(message);
       const signature = bs58.encode(signatureBytes);
@@ -530,15 +678,27 @@ export class Picket {
     const walletAddress = await signer.getAddress();
 
     // Get Nonce
-    const { nonce } = await this.nonce({ chain, walletAddress });
+    const { nonce, statement } = await this.nonce({ walletAddress, chain });
+    const context = {
+      domain,
+      uri,
+      issuedAt,
+      chainId,
+    };
+
+    const signingMessage = Picket.createSigningMessage(
+      { nonce, statement, walletAddress, ...context },
+      { format: messageFormat }
+    );
 
     // Sign the nonce to get signature
-    const signature = await signer.signMessage(nonce);
+    const signature = await signer.signMessage(signingMessage);
 
     return {
       walletAddress,
       signature,
       provider,
+      context,
     };
   }
 
