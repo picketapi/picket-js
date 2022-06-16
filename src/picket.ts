@@ -148,6 +148,9 @@ export class Picket {
       return Promise.reject(data as ErrorResponse);
     }
 
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    this.#authState = data;
+
     return data as AuthState;
   }
 
