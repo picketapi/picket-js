@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { tw } from "twind";
 
+import "./styles.css";
+
 import { SigningMessageFormat, ChainTypes } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
