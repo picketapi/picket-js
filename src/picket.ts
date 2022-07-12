@@ -669,6 +669,7 @@ export class Picket {
         walletAddress,
         signature,
         provider: wallet,
+        context,
       };
     }
 
