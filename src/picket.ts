@@ -1,15 +1,10 @@
 import pkceChallenge from "pkce-challenge";
 
 // Ethereum imports
-import { ethers } from "ethers";
-import Web3Modal from "web3modal";
 import { SiweMessage } from "siwe";
 
-// Solana imports
-import bs58 from "bs58";
-import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
+import { connect as PicketConnect } from "./connect";
 
-import { getProviderOptions, ConnectProviderOptions } from "./providers";
 import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import * as popup from "./popup";
 import {
@@ -21,7 +16,6 @@ import {
   LoginOptions,
   AuthState,
   AccessTokenPayload,
-  ConnectProvider,
   ConnectResponse,
   AuthorizationURLRequest,
   LoginCallbackResponse,
@@ -36,7 +30,7 @@ import {
 } from "./types";
 
 export interface PicketOptions {
-  connectProviderOptions?: ConnectProviderOptions;
+  connectProviderOptions?: any;
   baseURL?: string;
 }
 
@@ -47,26 +41,25 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 const LOCAL_STORAGE_KEY = "_picketauth";
 const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 
+// TODO: Connect Provider Options
 // TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
-  #provider?: ConnectProvider;
-  #connectProviderOptions: ConnectProviderOptions;
   #apiKey;
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
 
-  constructor(
-    apiKey: string,
-    { connectProviderOptions = {}, baseURL = BASE_API_URL }: PicketOptions = {}
-  ) {
+  constructor(apiKey: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
 
-    this.#connectProviderOptions = connectProviderOptions;
     this.baseURL = baseURL;
+
+    if (typeof window !== "undefined") {
+      window.picket = this;
+    }
   }
 
   #defaultHeaders = () => ({
@@ -241,37 +234,6 @@ export class Picket {
   // -----------
 
   /**
-   * getEVMProvider
-   * connect to ethereum wallet provider
-   */
-  async getEVMProvider(chain: string): Promise<ConnectProvider> {
-    // return selected provider if it exists
-    if (this.#provider) {
-      return this.#provider;
-    }
-
-    // get chain information
-    const { chainId, publicRPC } = await this.chainInfo(chain);
-
-    const providerOptions = getProviderOptions({
-      chainId,
-      rpc: publicRPC,
-      ...this.#connectProviderOptions,
-    });
-
-    const web3Modal = new Web3Modal({
-      // for now, disable caching
-      cacheProvider: false,
-      providerOptions,
-    });
-
-    const provider = await web3Modal.connect();
-    this.#provider = provider;
-
-    return provider;
-  }
-
-  /**
    * login
    * Login with your wallet, and optionally, specify login requirements
    */
@@ -284,7 +246,7 @@ export class Picket {
    * Login with a trusted wallet provider that supports Sign-In With Ethereum (EIP-4361) or similar standard
    */
   async loginWithTrustedWalletProivder({
-    chain = ChainTypes.ETH,
+    chain,
     walletAddress,
     signature,
     context,
@@ -299,11 +261,12 @@ export class Picket {
       walletAddress = info.walletAddress;
       signature = info.signature;
       context = info.context;
+      chain = info.chain;
     }
 
     // 2. Exchange signature for access token
     return await this.auth({
-      chain,
+      chain: chain || ChainTypes.ETH,
       walletAddress,
       signature,
       context,
@@ -591,7 +554,7 @@ export class Picket {
     args: SigningMessageRequest,
     {
       format = SigningMessageFormat.SIMPLE,
-    }: { format?: SigningMessageFormat } = {
+    }: { format?: `${SigningMessageFormat}` } = {
       format: SigningMessageFormat.SIMPLE,
     }
   ) {
@@ -610,7 +573,7 @@ export class Picket {
       statement,
       domain,
       uri,
-      chainId: chainId,
+      chainId,
       issuedAt,
       version: "1",
     });
@@ -623,87 +586,13 @@ export class Picket {
    * Convenience function to connect wallet and sign nonce, prompts user to connect wallet and returns wallet object
    */
   async connect({
-    chain = ChainTypes.ETH,
+    chain,
     messageFormat = SigningMessageFormat.SIMPLE,
   }: ConnectRequest): Promise<ConnectResponse> {
-    const domain = window.location.host;
-    const uri = window.location.origin;
-    const issuedAt = new Date().toISOString();
-
-    // use chain associated with the auth request
-    const { chainId, chainType } = await this.chainInfo(chain);
-
-    // TODO: Support Multiple Solana Wallets
-    // Connect to Solana Wallet
-    if (chainType === ChainTypes.SOL) {
-      const wallet = new PhantomWalletAdapter();
-      await wallet.connect();
-
-      const { connected, publicKey } = wallet;
-
-      if (!connected || !publicKey) {
-        throw new Error("failed to connect to Phantom wallet");
-      }
-
-      const walletAddress = publicKey.toString();
-
-      // Get Nonce
-      const { nonce, statement } = await this.nonce({ walletAddress, chain });
-      const context = {
-        domain,
-        uri,
-        issuedAt,
-        chainId,
-      };
-
-      const signingMessage = Picket.createSigningMessage(
-        { nonce, statement, walletAddress, ...context },
-        { format: messageFormat }
-      );
-      const message = new TextEncoder().encode(signingMessage);
-
-      const signatureBytes = await wallet.signMessage(message);
-      const signature = bs58.encode(signatureBytes);
-
-      return {
-        walletAddress,
-        signature,
-        provider: wallet,
-        context,
-      };
-    }
-
-    // Connect to Ethereum Wallet
-
-    // connect to user's wallet provider
-    const provider = await this.getEVMProvider(chain);
-    const wallet = new ethers.providers.Web3Provider(provider);
-    const signer = wallet.getSigner();
-    const walletAddress = await signer.getAddress();
-
-    // Get Nonce
-    const { nonce, statement } = await this.nonce({ walletAddress, chain });
-    const context = {
-      domain,
-      uri,
-      issuedAt,
-      chainId,
-    };
-
-    const signingMessage = Picket.createSigningMessage(
-      { nonce, statement, walletAddress, ...context },
-      { format: messageFormat }
-    );
-
-    // Sign the nonce to get signature
-    const signature = await signer.signMessage(signingMessage);
-
-    return {
-      walletAddress,
-      signature,
-      provider,
-      context,
-    };
+    return await PicketConnect({
+      chain,
+      messageFormat,
+    });
   }
 
   /**
@@ -712,7 +601,6 @@ export class Picket {
    */
   async logout(): Promise<void> {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
-    this.#provider = undefined;
     return Promise.resolve();
   }
 
