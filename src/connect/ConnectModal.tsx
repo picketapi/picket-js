@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { tw } from "twind";
 
-import "./styles.css";
-
 import { SigningMessageFormat, ChainTypes } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
@@ -44,23 +42,6 @@ interface ConnectModalProps {
   chain?: string;
   messageFormat?: `${SigningMessageFormat}`;
 }
-
-// Chain cases
-// Not specified = all chains
-// Specified = only that chain
-//
-//
-//
-//
-// wallets need
-// -> chain
-// -> chainId
-// -> chainType
-//
-// on load
-// if no chain, show all
-// get chain display name
-// (chain_slug -> wallet) show only wallets for the chain
 
 const ConnectModal = ({
   chain,
@@ -219,7 +200,11 @@ const ConnectModal = ({
 
   return (
     <main
-      className={tw`fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1 font-[Inter] ${
+      style={{
+        fontFamily:
+          'Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
+      }}
+      className={tw`fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
         isOpen ? "visible backdrop-filter backdrop-blur-sm" : "invisible"
       }`}
     >
@@ -260,6 +245,7 @@ const ConnectModal = ({
                 // Use style for underline offset until twind supports Tailwind v3
                 style={{
                   textUnderlineOffset: "2px",
+                  outlineOffset: "4px",
                 }}
                 className={tw`font-bold hover:text-[#5469D4] ${
                   selectedChain === slug
@@ -306,6 +292,9 @@ const ConnectModal = ({
                 <button
                   key={wallet.id}
                   onClick={() => connect(wallet)}
+                  style={{
+                    outlineOffset: "4px",
+                  }}
                   className={tw`p-4 w-full bg-white rounded-lg shadow flex items-center font-semibold hover:bg-gray-100`}
                 >
                   <div className={tw`mr-2 rounded-full`}>{wallet.icon}</div>
@@ -342,6 +331,9 @@ const ConnectModal = ({
           className={tw`w-full mt-8 text-center font-light text-sm text-gray-500`}
         >
           <a
+            style={{
+              outlineOffset: "4px",
+            }}
             target="_blank"
             rel="noopener noreferrer"
             href="https://picketapi.com"

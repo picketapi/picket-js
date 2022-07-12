@@ -6,8 +6,9 @@ import ConnectModal from "./ConnectModal";
 import { MODAL_ID, MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 
 // TODOs
-// - Custom provider options
+// - TODO: Custom provider options
 // - Authenticate and authorize users
+// - Close on  click outside
 // - Time outs! for connecting (15s)
 // - Custom QR codes / Multi-step flow
 // - New Wallet Link
