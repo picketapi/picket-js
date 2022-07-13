@@ -10,7 +10,7 @@ import solanaWallets from "./wallets/solana";
 
 const displayAddress = (address: string) => {
   return (
-    address.substring(0, 6) + "..." + address.substring(address.length - 4)
+    address.substring(0, 5) + "..." + address.substring(address.length - 3)
   );
 };
 
@@ -212,7 +212,7 @@ const ConnectModal = ({
         className={tw`w-96 pt-12 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
         <h1
-          className={tw`text-2xl font-bold ${
+          className={tw`pt-2 text-2xl font-bold ${
             success ? "text-center" : "text-left"
           } `}
         >
@@ -245,7 +245,7 @@ const ConnectModal = ({
                 // Use style for underline offset until twind supports Tailwind v3
                 style={{
                   textUnderlineOffset: "2px",
-                  outlineOffset: "4px",
+                  outlineStyle: "none"
                 }}
                 className={tw`font-bold hover:text-[#5469D4] ${
                   selectedChain === slug
@@ -284,7 +284,7 @@ const ConnectModal = ({
             </div>
           </div>
         )}
-        <div className={tw`mt-4 mb-8 flex flex-col space-y-4 min-h-[300px]`}>
+        <div className={tw`mt-2 mb-6 flex flex-col space-y-4 min-h-[300px]`}>
           {!success &&
             walletOptions
               .filter(({ slug }) => slug === selectedChain)[0]
@@ -317,7 +317,7 @@ const ConnectModal = ({
                   clipRule="evenodd"
                 />
               </svg>
-              <div className={tw`flex flex-col items-center text-center`}>
+              <div className={tw`flex flex-col items-center text-center space-y-4`}>
                 {selectedWallet?.icon}
                 <p className={tw`text-center`}>
                   You have successfully authenticated with{" "}
