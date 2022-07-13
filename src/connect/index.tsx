@@ -8,8 +8,7 @@ import { MODAL_ID, MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 // TODOs
 // - TODO: Custom provider options
 // - Authenticate and authorize users
-// - Close on  click outside
-// - Time outs! for connecting (15s)
+// - Close on click outside
 // - Custom QR codes / Multi-step flow
 // - New Wallet Link
 // - More error messages

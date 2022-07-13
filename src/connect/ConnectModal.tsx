@@ -14,6 +14,8 @@ const displayAddress = (address: string) => {
   );
 };
 
+const CONNECT_TIMEOUT_MS = 15000;
+
 type WalletOption = {
   slug: string;
   name: string;
@@ -38,11 +40,6 @@ const defaultWalletOptions: WalletOption[] = [
   },
 ];
 
-interface ConnectModalProps {
-  chain?: string;
-  messageFormat?: `${SigningMessageFormat}`;
-}
-
 type ConnectState = null | "connect" | "signature" | "auth";
 
 const connectStateMessage = {
@@ -51,12 +48,34 @@ const connectStateMessage = {
   auth: "Authorizing...",
 };
 
+interface ConnectModalProps {
+  chain?: string;
+  messageFormat?: `${SigningMessageFormat}`;
+}
+
+const getWarningMessage = ({
+  wallet,
+  state,
+}: {
+  wallet?: Wallet;
+  state: ConnectState;
+}): string => {
+  const walletName = wallet?.name ?? "your wallet";
+
+  if (state === "connect") {
+    return `Still waiting to connect to ${walletName}. Open ${walletName} to connect.`;
+  }
+
+  return `Still waiting for your signature. Open ${walletName} to approve the request.`;
+};
+
 const ConnectModal = ({
   chain,
   messageFormat = SigningMessageFormat.SIWE,
 }: ConnectModalProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
+  const [warning, setWarning] = useState(false);
   const [error, setError] = useState("");
   const [connectState, setConnectState] = useState<ConnectState>(null);
 
@@ -114,9 +133,10 @@ const ConnectModal = ({
       // do nothing if already open
       if (isOpen) return;
 
-      // reset  state on open
+      // reset state on open
       setIsOpen(true);
       setSuccess(false);
+      setWarning(false);
       setError("");
       setSelectedWallet(undefined);
       setWalletAddress("");
@@ -146,13 +166,21 @@ const ConnectModal = ({
     // the catch clause for better error messages
     // This should be done with better error state w/ a function for displaying the message
     let state: ConnectState = "connect";
+
+    // show warning after elapsed time
+    setWarning(false);
+
+    const timeoutID = setTimeout(() => {
+      setWarning(true);
+      setError("");
+    }, CONNECT_TIMEOUT_MS);
+
     try {
       setSelectedWallet(wallet);
 
       state = "connect";
       setConnectState(state);
 
-      // TODO: Set timeout for connecting, show warning
       const { walletAddress, provider } = await wallet.connect();
 
       state = "signature";
@@ -231,6 +259,9 @@ const ConnectModal = ({
     } finally {
       // reset connect state
       setConnectState(null);
+      // clear warning and timeout
+      setWarning(false);
+      clearTimeout(timeoutID);
     }
   };
 
@@ -296,6 +327,50 @@ const ConnectModal = ({
             ))}
           </div>
         )}
+        {warning && (
+          <div className={tw`rounded-md bg-yellow-100 p-4 mt-2`}>
+            <div className={tw`flex`}>
+              <div className={tw`flex-shrink-0`}>
+                <svg
+                  className={tw`h-5 w-5 text-yellow-400`}
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className={tw`ml-3 text-sm text-yellow-700`}>
+                <div>
+                  <p>
+                    {getWarningMessage({
+                      wallet: selectedWallet,
+                      state: connectState,
+                    })}
+                  </p>
+                </div>
+                {selectedWallet && (
+                  <div className={tw`mt-2 text-xs`}>
+                    <p>
+                      Don{"'"}t see the request?{" "}
+                      <button
+                        className={tw`underline`}
+                        onClick={() => connect(selectedWallet)}
+                      >
+                        Try again.
+                      </button>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
         {error && (
           <div className={tw`rounded-md bg-red-100 p-4 mt-2`}>
             <div className={tw`flex`}>
@@ -309,7 +384,7 @@ const ConnectModal = ({
                 >
                   <path
                     fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
                     clipRule="evenodd"
                   />
                 </svg>
@@ -337,7 +412,12 @@ const ConnectModal = ({
                   style={{
                     outlineOffset: "4px",
                   }}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
+                  disabled={!!connectState}
+                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
+                    selectedWallet?.id === wallet.id
+                      ? "bg-gray-100"
+                      : "disabled:bg-white"
+                  }`}
                 >
                   <div className={tw`mr-8 rounded-md overflow-hidden`}>
                     {wallet.icon}
