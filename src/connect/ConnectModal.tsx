@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { tw } from "twind";
 
-import { SigningMessageFormat, ChainTypes } from "../types";
+import { SigningMessageFormat, ChainTypes, AuthRequirements } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
+import { PicketConnectResponse } from "./";
+
 import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
 import solanaWallets from "./wallets/solana";
@@ -49,9 +51,11 @@ const connectStateMessage = {
   auth: "Authorizing...",
 };
 
-interface ConnectModalProps {
+export interface ConnectModalProps {
   chain?: string;
   messageFormat?: `${SigningMessageFormat}`;
+  doAuth?: boolean;
+  requirements?: AuthRequirements;
 }
 
 const getWarningMessage = ({
@@ -73,6 +77,8 @@ const getWarningMessage = ({
 const ConnectModal = ({
   chain,
   messageFormat = SigningMessageFormat.SIWE,
+  doAuth = false,
+  requirements,
 }: ConnectModalProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -216,20 +222,37 @@ const ConnectModal = ({
 
       const signature = await wallet.signMessage(message);
 
-      // save provider to window for sharing b/c it isn't serializable
-      window.PicketProvider = provider;
+      let result: Omit<PicketConnectResponse, "provider"> = {
+        walletAddress,
+        signature,
+        context,
+        chain: selectedChain,
+      };
+
+      if (doAuth) {
+        state = "auth";
+        setConnectState(state);
+
+        const auth = await window.picket.auth({
+          chain: selectedChain,
+          walletAddress,
+          signature,
+          context,
+          requirements,
+        });
+
+        result = { ...result, auth };
+      }
 
       setWalletAddress(walletAddress);
       setSuccess(true);
       setError("");
+
+      // save provider to window for sharing b/c it isn't serializable
+      window.PicketProvider = provider;
       window.postMessage({
         type: MSG_SUCCESS,
-        data: {
-          walletAddress,
-          signature,
-          context,
-          chain: selectedChain,
-        },
+        data: result,
       });
 
       // start timer to close the modal
@@ -237,6 +260,13 @@ const ConnectModal = ({
     } catch (err: unknown) {
       console.log(err);
       setSelectedWallet(undefined);
+
+      if (state === "auth") {
+        setError(
+          "Unauthorized. Your wallet doesn't hold the necessary tokens to login."
+        );
+        return;
+      }
 
       if (
         err &&

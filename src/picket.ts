@@ -254,10 +254,15 @@ export class Picket {
   }: LoginRequest = {}): Promise<AuthState> {
     // 1. If no signature provided, connect to local provider and get signature
     if (!(walletAddress && signature)) {
-      const info = await this.connect({
+      const { auth, ...info } = await this.connect({
         chain,
         messageFormat: SigningMessageFormat.SIWE,
+        doAuth: true,
+        requirements,
       });
+
+      if (auth) return auth;
+
       walletAddress = info.walletAddress;
       signature = info.signature;
       context = info.context;
@@ -588,10 +593,14 @@ export class Picket {
   async connect({
     chain,
     messageFormat = SigningMessageFormat.SIMPLE,
+    doAuth = false,
+    requirements,
   }: ConnectRequest): Promise<ConnectResponse> {
     return await PicketConnect({
       chain,
       messageFormat,
+      doAuth,
+      requirements,
     });
   }
 
