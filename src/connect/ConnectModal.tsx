@@ -262,6 +262,17 @@ const ConnectModal = ({
       setSelectedWallet(undefined);
 
       if (state === "auth") {
+        if (
+          err &&
+          typeof err === "object" &&
+          "msg" in err &&
+          // @ts-ignore
+          err.msg.include("invalid signature")
+        ) {
+          setError("Signature expired. Please try again.");
+          return;
+        }
+
         setError(
           "Unauthorized. Your wallet doesn't hold the necessary tokens to login."
         );
