@@ -1,14 +1,15 @@
 import { createRoot } from "react-dom/client";
 
-import { SigningMessageFormat, SigningMessageContext } from "../types";
+import { SigningMessageContext, AuthState } from "../types";
 
-import ConnectModal from "./ConnectModal";
+import ConnectModal, { ConnectModalProps } from "./ConnectModal";
 import { MODAL_ID, MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 
 // TODOs
-// - TODO: Custom provider options
-// - Authenticate and authorize users
+// - Custom provider options
 // - Close on click outside
+// - Open success or error state on OAuth2 redirect
+// - Prompt to purchase tokens
 // - Custom QR codes / Multi-step flow
 // - New Wallet Link
 // - More error messages
@@ -19,7 +20,16 @@ interface PicketConnectEvent {
   data: object;
 }
 
-const mount = (props: PicketConnectRequest) => {
+export interface PicketConnectResponse {
+  walletAddress: string;
+  signature: string;
+  context: SigningMessageContext;
+  provider: any;
+  chain: string;
+  auth?: AuthState;
+}
+
+const mount = (props: ConnectModalProps) => {
   //  only mount once
   if (document.getElementById(MODAL_ID)) return;
 
@@ -33,33 +43,17 @@ const mount = (props: PicketConnectRequest) => {
   root.render(<ConnectModal {...props} />);
 };
 
-export interface PicketConnectRequest {
-  chain?: string;
-  messageFormat?: `${SigningMessageFormat}`;
-}
-
-export interface PicketConnectResponse {
-  walletAddress: string;
-  signature: string;
-  context: SigningMessageContext;
-  provider: any;
-  chain: string;
-}
-
-export const connect = ({
-  chain,
-  messageFormat = SigningMessageFormat.SIWE,
-}: PicketConnectRequest): Promise<PicketConnectResponse> =>
+export const connect = (
+  props: ConnectModalProps
+): Promise<PicketConnectResponse> =>
   new Promise((resolve, reject) => {
     //  make sure the modal is mounted
-    mount({ chain, messageFormat });
+    mount(props);
+
     //  make sure the modal is open
     window.postMessage({
       type: MSG_OPEN,
-      data: {
-        messageFormat,
-        chain,
-      },
+      data: props,
     });
     //  wait for close or connect
     window.addEventListener("message", (event) => {

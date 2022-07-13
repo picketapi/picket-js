@@ -94,6 +94,8 @@ export type SigningMessageRequest =
 export interface ConnectRequest {
   chain?: string;
   messageFormat?: `${SigningMessageFormat}`;
+  doAuth?: boolean;
+  requirements?: AuthRequirements;
 }
 
 // support any for non-ethers libraries
@@ -108,6 +110,7 @@ export interface ConnectResponse {
   provider: ConnectProvider;
   context?: SigningMessageContext;
   chain: string;
+  auth?: AuthState;
 }
 
 export interface AppState extends Record<string, any> {
