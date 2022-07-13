@@ -212,13 +212,13 @@ const ConnectModal = ({
         className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
         <h1
-          className={tw`pt-2 text-xl font-semibold ${
+          className={tw`pt-2 text-xl sm:text-2xl font-semibold ${
             success ? "text-center" : "text-left"
           } `}
         >
           {success
             ? `Welcome ${displayAddress(walletAddress as string)}`
-            : "Login with your wallet"}
+            : "Log In With Your Wallet"}
         </h1>
         <button onClick={close}>
           <svg
@@ -237,7 +237,9 @@ const ConnectModal = ({
           </svg>
         </button>
         {!success && (
-          <div className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm`}>
+          <div
+            className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base`}
+          >
             {walletOptions.map(({ slug, name }) => (
               <button
                 key={slug}
@@ -245,7 +247,7 @@ const ConnectModal = ({
                 // Use style for underline offset until twind supports Tailwind v3
                 style={{
                   textUnderlineOffset: "2px",
-                  outlineStyle: "none"
+                  outlineStyle: "none",
                 }}
                 className={tw`font-bold hover:text-[#5469D4] ${
                   selectedChain === slug
@@ -284,9 +286,11 @@ const ConnectModal = ({
             </div>
           </div>
         )}
-        <div className={tw`flex flex-col  min-h-[300px] ${
+        <div
+          className={tw`flex flex-col  min-h-[300px] ${
             success ? "space-y-0 mt-0 mb-0" : "space-y-2 mt-6 mb-6"
-          }`}>
+          }`}
+        >
           {!success &&
             walletOptions
               .filter(({ slug }) => slug === selectedChain)[0]
@@ -297,9 +301,11 @@ const ConnectModal = ({
                   style={{
                     outlineOffset: "4px",
                   }}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm hover:bg-gray-100`}
+                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
                 >
-                  <div className={tw`mr-8 rounded-md overflow-hidden`}>{wallet.icon}</div>
+                  <div className={tw`mr-8 rounded-md overflow-hidden`}>
+                    {wallet.icon}
+                  </div>
                   {selectedWallet?.id === wallet.id
                     ? "Connecting..."
                     : wallet.name}
@@ -319,9 +325,13 @@ const ConnectModal = ({
                   clipRule="evenodd"
                 />
               </svg>
-              <div className={tw`flex flex-col items-center text-center space-y-2`}>
+              <div
+                className={tw`flex flex-col items-center text-center space-y-2`}
+              >
                 {selectedWallet?.icon}
-                <p className={tw`text-sm font-regular w-45 text-center text-gray-400 break-normal`}>
+                <p
+                  className={tw`text-sm sm:text-base font-base w-45 text-center text-gray-400 break-normal`}
+                >
                   You have successfully authenticated with{" "}
                   {selectedWallet?.name}
                 </p>
@@ -330,7 +340,7 @@ const ConnectModal = ({
           )}
         </div>
         <div
-          className={tw`w-full mt-8 text-center font-regular text-sm text-gray-400`}
+          className={tw`w-full mt-8 text-center font-base text-sm text-gray-400`}
         >
           <a
             style={{
