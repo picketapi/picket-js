@@ -43,6 +43,14 @@ interface ConnectModalProps {
   messageFormat?: `${SigningMessageFormat}`;
 }
 
+type ConnectState = null | "connect" | "signature" | "auth";
+
+const connectStateMessage = {
+  connect: "Connecting...",
+  signature: "Requesting signature...",
+  auth: "Authorizing...",
+};
+
 const ConnectModal = ({
   chain,
   messageFormat = SigningMessageFormat.SIWE,
@@ -50,9 +58,10 @@ const ConnectModal = ({
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [selectedWallet, setSelectedWallet] = useState<Wallet>();
-  const [walletAddress, setWalletAddress] = useState<string>();
+  const [connectState, setConnectState] = useState<ConnectState>(null);
 
+  const [walletAddress, setWalletAddress] = useState<string>();
+  const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedChain, setSelectedChain] = useState<string>("");
 
@@ -111,6 +120,7 @@ const ConnectModal = ({
       setError("");
       setSelectedWallet(undefined);
       setWalletAddress("");
+      setConnectState(null);
     };
 
     window.addEventListener("message", handleOpenEvent);
@@ -127,13 +137,26 @@ const ConnectModal = ({
     });
   };
 
+  // options are
+  // error message function (error, state, selectedWallet)
+
   // useCallback
   const connect = async (wallet: Wallet) => {
+    // HACK: Keep local state variable to make it available to
+    // the catch clause for better error messages
+    // This should be done with better error state w/ a function for displaying the message
+    let state: ConnectState = "connect";
     try {
       setSelectedWallet(wallet);
 
+      state = "connect";
+      setConnectState(state);
+
       // TODO: Set timeout for connecting, show warning
       const { walletAddress, provider } = await wallet.connect();
+
+      state = "signature";
+      setConnectState(state);
 
       const domain = window.location.host;
       const uri = window.location.origin;
@@ -182,19 +205,32 @@ const ConnectModal = ({
     } catch (err: unknown) {
       console.log(err);
       setSelectedWallet(undefined);
+
       if (
         err &&
         typeof err === "object" &&
         "message" in err &&
         // @ts-ignore
-        err.message.includes("User rejected")
+        err.message.toLowerCase().includes("user rejected")
       ) {
+        if (state === "signature") {
+          setError(`The signature request was rejected by ${wallet.name}`);
+          return;
+        }
+
         setError(
           `The request to connect to ${wallet.name} was rejected. Is your wallet unlocked?`
         );
         return;
       }
+      if (state === "signature") {
+        setError(`Failed to get signature from ${wallet.name}`);
+        return;
+      }
       setError(`Failed to connect to ${wallet.name}`);
+    } finally {
+      // reset connect state
+      setConnectState(null);
     }
   };
 
@@ -249,7 +285,7 @@ const ConnectModal = ({
                   textUnderlineOffset: "2px",
                   outlineStyle: "none",
                 }}
-                className={tw`font-bold hover:text-[#5469D4] ${
+                className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] ${
                   selectedChain === slug
                     ? "underline underline-offset-2 text-[#5469D4]"
                     : ""
@@ -307,7 +343,7 @@ const ConnectModal = ({
                     {wallet.icon}
                   </div>
                   {selectedWallet?.id === wallet.id
-                    ? "Connecting..."
+                    ? connectStateMessage[connectState || "connect"]
                     : wallet.name}
                 </button>
               ))}
@@ -332,8 +368,8 @@ const ConnectModal = ({
                 <p
                   className={tw`text-sm sm:text-base font-base w-45 text-center text-gray-400 break-normal`}
                 >
-                  You have successfully authenticated with{" "}
-                  {selectedWallet?.name}
+                  You have successfully authenticated
+                  {selectedWallet ? ` with ${selectedWallet.name}` : ""}
                 </p>
               </div>
             </>
