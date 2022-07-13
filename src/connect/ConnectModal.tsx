@@ -267,7 +267,7 @@ const ConnectModal = ({
           typeof err === "object" &&
           "msg" in err &&
           // @ts-ignore
-          err.msg.include("invalid signature")
+          err.msg.includes("invalid signature")
         ) {
           setError("Signature expired. Please try again.");
           return;
