@@ -17,7 +17,7 @@ const displayAddress = (address: string) => {
 };
 
 const CONNECT_TIMEOUT_MS = 15000;
-const AUTO_CLOSE_MS = 5000;
+const AUTO_CLOSE_MS = 3000;
 
 type WalletOption = {
   slug: string;
@@ -273,9 +273,7 @@ const ConnectModal = ({
           return;
         }
 
-        setError(
-          "Unauthorized. Your wallet doesn't hold the necessary tokens to login."
-        );
+        setError("Your wallet doesn't hold the necessary tokens to login.");
         return;
       }
 
