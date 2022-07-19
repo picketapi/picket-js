@@ -208,6 +208,7 @@ const ConnectModal = ({
         uri,
         issuedAt,
         chainId,
+        chainType,
       };
 
       // TODO: Error messages
@@ -218,7 +219,7 @@ const ConnectModal = ({
       });
 
       const message = window.Picket.createSigningMessage(
-        { nonce, statement, walletAddress, chainType, ...context },
+        { nonce, statement, walletAddress, ...context },
         { format: messageFormat }
       );
 

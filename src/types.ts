@@ -74,6 +74,7 @@ export interface SigningMessageContext {
   uri: string;
   chainId: number;
   issuedAt: string;
+  chainType: ChainType;
 }
 
 export interface SigningMessageRequestSimple extends NonceResponse {
