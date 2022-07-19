@@ -10,7 +10,7 @@ import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
 import solanaWallets from "./wallets/solana";
 
-const displayAddress = (address: string) => {
+const displayWalletAddress = (address: string) => {
   return (
     address.substring(0, 5) + "..." + address.substring(address.length - 3)
   );
@@ -86,7 +86,7 @@ const ConnectModal = ({
   const [error, setError] = useState("");
   const [connectState, setConnectState] = useState<ConnectState>(null);
 
-  const [walletAddress, setWalletAddress] = useState<string>();
+  const [displayAddress, setDisplayAddress] = useState<string>();
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedChain, setSelectedChain] = useState<string>("");
@@ -146,7 +146,7 @@ const ConnectModal = ({
       setWarning(false);
       setError("");
       setSelectedWallet(undefined);
-      setWalletAddress("");
+      setDisplayAddress("");
       setConnectState(null);
     };
 
@@ -241,10 +241,17 @@ const ConnectModal = ({
           requirements,
         });
 
+        setDisplayAddress(
+          auth.user.displayAddress === walletAddress
+            ? displayWalletAddress(walletAddress)
+            : auth.user.displayAddress
+        );
+
         result = { ...result, auth };
+      } else {
+        setDisplayAddress(displayWalletAddress(walletAddress));
       }
 
-      setWalletAddress(walletAddress);
       setSuccess(true);
       setError("");
 
@@ -322,13 +329,11 @@ const ConnectModal = ({
         className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
         <h1
-          className={tw`pt-2 text-xl sm:text-2xl font-semibold ${
+          className={tw`pt-2 text-xl sm:text-2xl font-semibold break-words ${
             success ? "text-center" : "text-left"
           } `}
         >
-          {success
-            ? `Welcome ${displayAddress(walletAddress as string)}`
-            : "Log In With Your Wallet"}
+          {success ? `Welcome ${displayAddress}` : "Log In With Your Wallet"}
         </h1>
         <button onClick={close}>
           <svg
