@@ -199,7 +199,9 @@ const ConnectModal = ({
 
       // use chain associated with the auth request
       // should be cached at this point
-      const { chainId } = await window.picket.chainInfo(selectedChain);
+      const { chainId, chainType } = await window.picket.chainInfo(
+        selectedChain
+      );
 
       const context = {
         domain,
@@ -216,7 +218,7 @@ const ConnectModal = ({
       });
 
       const message = window.Picket.createSigningMessage(
-        { nonce, statement, walletAddress, ...context },
+        { nonce, statement, walletAddress, chainType, ...context },
         { format: messageFormat }
       );
 

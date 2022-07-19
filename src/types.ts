@@ -85,6 +85,7 @@ export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
   uri: string;
   chainId: number;
   issuedAt: string;
+  chainType: ChainType;
 }
 
 export type SigningMessageRequest =
