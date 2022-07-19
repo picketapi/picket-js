@@ -569,8 +569,16 @@ export class Picket {
       return `${statement}\n\nAddress: ${walletAddress}\nNonce: ${nonce}`;
     }
 
-    const { statement, walletAddress, nonce, domain, uri, issuedAt, chainId } =
-      args as SigningMessageRequestSIWE;
+    const {
+      statement,
+      walletAddress,
+      nonce,
+      domain,
+      uri,
+      issuedAt,
+      chainId,
+      chainType,
+    } = args as SigningMessageRequestSIWE;
 
     const message = new SiweMessage({
       address: walletAddress,
@@ -583,7 +591,14 @@ export class Picket {
       version: "1",
     });
 
-    return message.prepareMessage();
+    let signingMessage = message.prepareMessage();
+
+    if (chainType === ChainTypes.SOL) {
+      // Solana doesn't use the SIWE standard, so modifying the message is OK
+      signingMessage = signingMessage.replaceAll("Ethereum", "Solana");
+    }
+
+    return signingMessage;
   }
 
   /**
