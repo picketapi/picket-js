@@ -32,14 +32,24 @@ const defaultWalletOptions: WalletOption[] = [
     wallets: evmWallets,
   },
   {
+    slug: "solana",
+    name: "Solana",
+    wallets: solanaWallets,
+  },
+  {
     slug: "polygon",
     name: "Polygon",
     wallets: evmWallets,
   },
   {
-    slug: "solana",
-    name: "Solana",
-    wallets: solanaWallets,
+    slug: "optimism",
+    name: "Optimism",
+    wallets: evmWallets,
+  },
+  {
+    slug: "arbitrum",
+    name: "Arbitrum",
+    wallets: evmWallets,
   },
 ];
 
@@ -356,7 +366,8 @@ const ConnectModal = ({
         </button>
         {!success && (
           <div
-            className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base`}
+            className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
+            id="walletOptions"
           >
             {walletOptions.map(({ slug, name }) => (
               <button
@@ -521,6 +532,16 @@ const ConnectModal = ({
           </a>
         </div>
       </div>
+      <style
+        // A hacky way to to inject custom CSS without having to have users import the stylesheet
+        dangerouslySetInnerHTML={{
+          __html: `
+  #walletOptions::-webkit-scrollbar {
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+  }`,
+        }}
+      ></style>
     </main>
   );
 };
