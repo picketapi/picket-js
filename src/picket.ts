@@ -473,7 +473,7 @@ export class Picket {
   }
 
   /**
-   *ggloginWithPopup
+   * loginWithPopup
    * loginWithPopup starts the OAuth2.0 PKCE flow
    *
    * Implements https://datatracker.ietf.org/doc/html/draft-sakimura-oauth-wmrm-00#section-2.3
