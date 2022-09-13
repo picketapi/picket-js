@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { tw } from "twind";
 
-import { ChainTypes, AuthRequirements } from "../types";
+import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
@@ -221,7 +221,12 @@ const ConnectModal = ({
 
       // TODO: Error messages
       // TODO: Conditional based off Picket availability (refactor to separate library)
-      const { nonce, statement, format } = await window.picket.nonce({
+      const {
+        nonce,
+        statement,
+        // default to SIWE for backwards compatibility
+        format = SigningMessageFormat.SIWE,
+      } = await window.picket.nonce({
         walletAddress,
         chain: selectedChain,
       });
