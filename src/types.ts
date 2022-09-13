@@ -29,6 +29,7 @@ export interface NonceRequest {
 export interface NonceResponse {
   nonce: string;
   statement: string;
+  format: `${SigningMessageFormat}`;
 }
 
 export interface AuthRequirements {
@@ -95,7 +96,6 @@ export type SigningMessageRequest =
 
 export interface ConnectRequest {
   chain?: string;
-  messageFormat?: `${SigningMessageFormat}`;
   doAuth?: boolean;
   requirements?: AuthRequirements;
 }
