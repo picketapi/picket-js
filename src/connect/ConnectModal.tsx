@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { tw } from "twind";
 
-import { SigningMessageFormat, ChainTypes, AuthRequirements } from "../types";
+import { ChainTypes, AuthRequirements } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
@@ -63,7 +63,6 @@ const connectStateMessage = {
 
 export interface ConnectModalProps {
   chain?: string;
-  messageFormat?: `${SigningMessageFormat}`;
   doAuth?: boolean;
   requirements?: AuthRequirements;
 }
@@ -86,7 +85,6 @@ const getWarningMessage = ({
 
 const ConnectModal = ({
   chain,
-  messageFormat = SigningMessageFormat.SIWE,
   doAuth = false,
   requirements,
 }: ConnectModalProps) => {
@@ -223,15 +221,18 @@ const ConnectModal = ({
 
       // TODO: Error messages
       // TODO: Conditional based off Picket availability (refactor to separate library)
-      const { nonce, statement } = await window.picket.nonce({
+      const { nonce, statement, format } = await window.picket.nonce({
         walletAddress,
         chain: selectedChain,
       });
 
-      const message = window.Picket.createSigningMessage(
-        { nonce, statement, walletAddress, ...context },
-        { format: messageFormat }
-      );
+      const message = window.Picket.createSigningMessage({
+        nonce,
+        statement,
+        format,
+        walletAddress,
+        ...context,
+      });
 
       const signature = await wallet.signMessage(message);
 

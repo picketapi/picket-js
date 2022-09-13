@@ -256,7 +256,6 @@ export class Picket {
     if (!(walletAddress && signature)) {
       const { auth, ...info } = await this.connect({
         chain,
-        messageFormat: SigningMessageFormat.SIWE,
         doAuth: true,
         requirements,
       });
@@ -555,14 +554,8 @@ export class Picket {
     return auth;
   }
 
-  static createSigningMessage(
-    args: SigningMessageRequest,
-    {
-      format = SigningMessageFormat.SIMPLE,
-    }: { format?: `${SigningMessageFormat}` } = {
-      format: SigningMessageFormat.SIMPLE,
-    }
-  ) {
+  static createSigningMessage(args: SigningMessageRequest) {
+    const { format = SigningMessageFormat.SIMPLE } = args;
     if (format === SigningMessageFormat.SIMPLE) {
       const { statement, walletAddress, nonce } =
         args as SigningMessageRequestSimple;
@@ -607,13 +600,11 @@ export class Picket {
    */
   async connect({
     chain,
-    messageFormat = SigningMessageFormat.SIMPLE,
     doAuth = false,
     requirements,
   }: ConnectRequest): Promise<ConnectResponse> {
     return await PicketConnect({
       chain,
-      messageFormat,
       doAuth,
       requirements,
     });
