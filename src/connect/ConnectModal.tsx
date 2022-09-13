@@ -5,6 +5,7 @@ import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
+import { useIsMobile } from "./utils/hooks";
 
 import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
@@ -19,10 +20,16 @@ const displayWalletAddress = (address: string) => {
 const CONNECT_TIMEOUT_MS = 15000;
 const AUTO_CLOSE_MS = 3000;
 
+const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
+const RAINBOW_DOWNLOAD_URL = "https://rainbow.me/";
+const PHANTOM_DOWNLOAD_URL = "https://phantom.app/download";
+
 type WalletOption = {
   slug: string;
   name: string;
   wallets: Wallet[];
+  desktopPreferredWalletLink?: string;
+  mobilePreferredWalletLink?: string;
 };
 
 const defaultWalletOptions: WalletOption[] = [
@@ -30,31 +37,43 @@ const defaultWalletOptions: WalletOption[] = [
     slug: "ethereum",
     name: "Ethereum",
     wallets: evmWallets,
+    desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
+    mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "solana",
     name: "Solana",
     wallets: solanaWallets,
+    desktopPreferredWalletLink: PHANTOM_DOWNLOAD_URL,
+    mobilePreferredWalletLink: PHANTOM_DOWNLOAD_URL,
   },
   {
     slug: "polygon",
     name: "Polygon",
     wallets: evmWallets,
+    desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
+    mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "optimism",
     name: "Optimism",
     wallets: evmWallets,
+    desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
+    mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "arbitrum",
     name: "Arbitrum",
     wallets: evmWallets,
+    desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
+    mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "avalanche",
     name: "Avalanche",
     wallets: evmWallets,
+    desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
+    mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
 ];
 
@@ -97,6 +116,7 @@ const ConnectModal = ({
   doAuth = false,
   requirements,
 }: ConnectModalProps) => {
+  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -361,6 +381,10 @@ const ConnectModal = ({
     }
   };
 
+  const currentWalletOptions = walletOptions.filter(
+    ({ slug }) => slug === selectedChain
+  )[0];
+
   return (
     <main
       style={{
@@ -498,30 +522,57 @@ const ConnectModal = ({
           }`}
         >
           {!success &&
-            walletOptions
-              .filter(({ slug }) => slug === selectedChain)[0]
-              ?.wallets.map((wallet) => (
-                <button
-                  key={wallet.id}
-                  onClick={() => connect(wallet)}
-                  style={{
-                    outlineOffset: "4px",
-                  }}
-                  disabled={!!connectState}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
-                    selectedWallet?.id === wallet.id
-                      ? "bg-gray-100"
-                      : "disabled:bg-white"
-                  }`}
+            currentWalletOptions?.wallets.map((wallet) => (
+              <button
+                key={wallet.id}
+                onClick={() => connect(wallet)}
+                style={{
+                  outlineOffset: "4px",
+                }}
+                disabled={!!connectState}
+                className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
+                  selectedWallet?.id === wallet.id
+                    ? "bg-gray-100"
+                    : "disabled:bg-white"
+                }`}
+              >
+                <div className={tw`mr-8 rounded-md overflow-hidden`}>
+                  {wallet.icon}
+                </div>
+                {selectedWallet?.id === wallet.id
+                  ? connectStateMessage[connectState || "connect"]
+                  : wallet.name}
+              </button>
+            ))}
+          {!success && (
+            <div className={tw`flex-grow flex flex-col`}>
+              <div className={tw`w-full flex-grow flex flex-col-reverse`}>
+                <div
+                  className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
                 >
-                  <div className={tw`mr-8 rounded-md overflow-hidden`}>
-                    {wallet.icon}
-                  </div>
-                  {selectedWallet?.id === wallet.id
-                    ? connectStateMessage[connectState || "connect"]
-                    : wallet.name}
-                </button>
-              ))}
+                  <div className={tw`flex-grow border-t h-px mr-6`}></div>
+                  <div>or</div>
+                  <div className={tw`flex-grow border-t h-px ml-6`}></div>
+                </div>
+              </div>
+
+              <a
+                href={
+                  isMobile
+                    ? currentWalletOptions?.mobilePreferredWalletLink
+                    : currentWalletOptions?.desktopPreferredWalletLink
+                }
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  outlineOffset: "4px",
+                }}
+                className={tw`p-2.5 w-full bg-white rounded-lg shadow text-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
+              >
+                New Wallet
+              </a>
+            </div>
+          )}
           {success && (
             <>
               <svg
