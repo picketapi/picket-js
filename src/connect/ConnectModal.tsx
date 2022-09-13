@@ -51,6 +51,11 @@ const defaultWalletOptions: WalletOption[] = [
     name: "Arbitrum",
     wallets: evmWallets,
   },
+  {
+    slug: "avalnache",
+    name: "Avalanche",
+    wallets: evmWallets,
+  },
 ];
 
 type ConnectState = null | "connect" | "signature" | "auth";
@@ -292,17 +297,29 @@ const ConnectModal = ({
           err &&
           typeof err === "object" &&
           "msg" in err &&
-          // @ts-ignore
-          err.msg.includes("invalid signature")
+          // @ts-ignore TS isn't respecting "msg" in err
+          typeof err.msg === "string"
         ) {
-          setError("Signature expired. Please try again.");
-          return;
+          // @ts-ignore TS isn't respecting "msg" in err
+          if (err.msg.toLowerCase().includes("invalid signature")) {
+            setError("Signature expired. Please try again.");
+            return;
+          }
+          // @ts-ignore TS isn't respecting "msg" in err
+          if (err.msg.toLowerCase().includes("not support authorization")) {
+            setError(
+              `${selectedChain} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
+            );
+            return;
+          }
         }
 
+        // assume token-gating error
         setError("Your wallet doesn't hold the necessary tokens to login.");
         return;
       }
 
+      // check for user rejected error cases
       if (
         err &&
         typeof err === "object" &&
@@ -320,10 +337,14 @@ const ConnectModal = ({
         );
         return;
       }
+
+      // unknown error in signature state
       if (state === "signature") {
         setError(`Failed to get signature from ${wallet.name}`);
         return;
       }
+
+      // last resort
       setError(`Failed to connect to ${wallet.name}`);
     } finally {
       // reset connect state
