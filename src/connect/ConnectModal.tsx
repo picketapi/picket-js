@@ -52,13 +52,17 @@ const defaultWalletOptions: WalletOption[] = [
     wallets: evmWallets,
   },
   {
-    slug: "avalnache",
+    slug: "avalanche",
     name: "Avalanche",
     wallets: evmWallets,
   },
 ];
 
 type ConnectState = null | "connect" | "signature" | "auth";
+
+// toTitleCase upperacses the first letter of a string
+const toTitleCase = (str: string): string =>
+  str.charAt(0).toUpperCase() + str.slice(1);
 
 const connectStateMessage = {
   connect: "Connecting...",
@@ -308,7 +312,9 @@ const ConnectModal = ({
           // @ts-ignore TS isn't respecting "msg" in err
           if (err.msg.toLowerCase().includes("not support authorization")) {
             setError(
-              `${selectedChain} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
+              `${toTitleCase(
+                selectedChain
+              )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
             );
             return;
           }
