@@ -87,7 +87,9 @@ const hasTokenOwnershipRequirements = (
   Boolean(
     requirements &&
       (requirements.contractAddress ||
-        (requirements.tokenIds && requirements.tokenIds?.length > 0))
+        (requirements.tokenIds && requirements.tokenIds?.length > 0) ||
+        // @ts-ignore undocumented alpha collections feature
+        requirements.colletion)
   );
 
 // toTitleCase upperacses the first letter of a string
