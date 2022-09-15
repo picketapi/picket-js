@@ -5,13 +5,13 @@ import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
-import { useIsMobile } from "./utils/hooks";
 import { addOrSwitchEVMChain } from "./utils/chains";
 
 import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
 import solanaWallets from "./wallets/solana";
 
+import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
 import SuccessScreen from "./SuccessScreen";
 
@@ -129,7 +129,6 @@ const ConnectModal = ({
   doAuth = false,
   requirements,
 }: ConnectModalProps) => {
-  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
   const [warning, setWarning] = useState(false);
@@ -576,22 +575,16 @@ const ConnectModal = ({
                     <div className={tw`flex-grow border-t h-px ml-6`}></div>
                   </div>
                 </div>
-
-                <a
-                  href={
-                    isMobile
-                      ? currentWalletOptions?.mobilePreferredWalletLink
-                      : currentWalletOptions?.desktopPreferredWalletLink
+                <NewWalletButton
+                  mobilePreferredWalletLink={
+                    currentWalletOptions?.mobilePreferredWalletLink ||
+                    RAINBOW_DOWNLOAD_URL
                   }
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    outlineOffset: "4px",
-                  }}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow text-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
-                >
-                  New Wallet
-                </a>
+                  desktopPreferredWalletLink={
+                    currentWalletOptions?.desktopPreferredWalletLink ||
+                    METAMASK_DOWNLOAD_URL
+                  }
+                />
               </div>
             </div>
             <PoweredByPicket />
