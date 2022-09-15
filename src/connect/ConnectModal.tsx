@@ -6,6 +6,7 @@ import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
 import { useIsMobile } from "./utils/hooks";
+import { addOrSwitchEVMChain } from "./utils/chains";
 
 import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
@@ -236,9 +237,8 @@ const ConnectModal = ({
 
       // use chain associated with the auth request
       // should be cached at this point
-      const { chainId, chainType } = await window.picket.chainInfo(
-        selectedChain
-      );
+      const { chainSlug, chainId, chainType, publicRPC, chainName } =
+        await window.picket.chainInfo(selectedChain);
 
       const context = {
         domain,
@@ -267,6 +267,12 @@ const ConnectModal = ({
         walletAddress,
         ...context,
       });
+
+      // request to change chains
+      // only support EVM for now
+      if (chainType === ChainTypes.ETH) {
+        await addOrSwitchEVMChain({ chainSlug, chainId, chainName, publicRPC });
+      }
 
       const signature = await wallet.signMessage(message);
 
