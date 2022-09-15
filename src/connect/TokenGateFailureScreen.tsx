@@ -7,14 +7,61 @@ import { Wallet } from "./wallets";
 import PoweredByPicket from "./PoweredByPicket";
 
 interface TokenGateFailureScreenProps {
+  chain: string;
   displayAddress: string;
   selectedWallet: Wallet;
   requirements: AuthRequirements;
   back: () => void;
 }
 
-// TODO: Back button
+// TOOD: Distinguish between ERC20 and NFT, NFT SPL and fungible SPL
+const getPurchaseLink = (chain: string, requirements: AuthRequirements) => {
+  // case 1 Solana
+  // don't have a great way to surface the collectioon as of right now, so send to the marketplace
+  if (chain === "solana") {
+    return "https://magiceden.io/";
+  }
+
+  // EVM
+  // case 2 assume EVM NFT (for now)
+  const { contractAddress } = requirements;
+
+  if (chain === "ethereum") {
+    if (!contractAddress) return "https://opensea.io/";
+
+    return `https://opensea.io/assets?search[resultModel]=ASSETS&search[query]=${contractAddress}&search[chains][0]=ETHEREUM`;
+  }
+
+  if (chain === "polygon") {
+    if (!contractAddress) return "https://opensea.io/";
+
+    return `https://opensea.io/assets?search[resultModel]=ASSETS&search[query]=${contractAddress}&search[chains][0]=MATIC`;
+  }
+
+  if (chain === "optimism") {
+    if (!contractAddress) return "https://qx.app";
+
+    return `https://qx.app/search?query=${contractAddress}`;
+  }
+
+  if (chain === "arbitrum") {
+    if (!contractAddress) return "https://stratosnft.io";
+
+    return `https://stratosnft.io/search?query=${contractAddress}`;
+  }
+
+  if (chain === "avalanche") {
+    if (!contractAddress) return "https://joepegs.com";
+
+    return `https://joepegs.com/collections/${contractAddress}`;
+  }
+
+  // shouldn't get here but return opensea as default
+  return "https://opensea.io";
+};
+
 const TokenGateFailureScreen = ({
+  chain,
   displayAddress,
   selectedWallet,
   requirements,
@@ -23,7 +70,7 @@ const TokenGateFailureScreen = ({
   return (
     <>
       <h1
-        className={tw`text-xl sm:text-2xl font-semibold break-words text-center`}
+        className={tw`pt-1 text-xl sm:text-2xl font-semibold break-words text-center`}
       >
         Welcome {displayAddress}
       </h1>
@@ -41,7 +88,7 @@ const TokenGateFailureScreen = ({
             width="178.904"
             height="178.904"
             rx="89.4522"
-            fill="#5469D4"
+            fill="currentColor"
           />
           <path
             d="M90.3038 51.7285C59.8853 51.7285 35.1416 68.4501 35.1416 89.0003V108.154C35.1416 114.914 38.1373 121.236 43.3646 125.494C51.4899 132.119 61.428 136.783 72.3114 139.234C78.0885 140.534 84.1218 141.224 90.3044 141.224C96.4869 141.224 102.525 140.534 108.297 139.234C119.176 136.784 129.113 132.12 137.244 125.494C142.471 121.236 145.467 114.914 145.467 108.154V89.0003C145.467 68.4501 120.723 51.7285 90.305 51.7285H90.3038ZM52.5335 124.757C50.6513 123.555 48.8389 122.265 47.1291 120.867C43.3042 117.75 41.1051 113.115 41.1051 108.153V105.823C44.0169 109.695 47.8978 113.18 52.5335 116.129V124.757ZM69.9301 132.491C65.9327 131.364 62.1077 129.901 58.5017 128.126V119.427C62.0285 121.119 65.8629 122.53 69.9301 123.63V132.491ZM87.322 135.193C83.4225 135.044 79.6021 134.602 75.8936 133.894V124.972C79.5695 125.643 83.39 126.071 87.322 126.216V135.193ZM104.714 133.894C101.005 134.606 97.1804 135.049 93.2855 135.193V126.216C97.2177 126.076 101.043 125.647 104.714 124.972V133.894ZM139.502 108.153C139.502 113.115 137.303 117.75 133.478 120.867C131.769 122.265 129.956 123.551 128.074 124.757V123.29C128.074 121.645 126.737 120.308 125.092 120.308C123.448 120.308 122.111 121.645 122.111 123.29V128.126C118.505 129.905 114.675 131.364 110.682 132.491V123.625C123.186 120.252 133.446 113.878 139.507 105.823L139.502 108.153ZM107.192 118.407C107.122 118.421 107.053 118.435 106.983 118.454C101.774 119.651 96.1553 120.308 90.304 120.308C84.4528 120.308 78.8383 119.651 73.6254 118.454C73.5555 118.435 73.4856 118.421 73.4157 118.407C54.5795 114.014 41.1056 102.492 41.1056 89.0001C41.1056 71.7335 63.1752 57.6919 90.3043 57.6919C117.433 57.6919 139.503 71.7335 139.503 89.0001C139.503 102.492 126.029 114.015 107.193 118.407H107.192Z"
@@ -64,17 +111,20 @@ const TokenGateFailureScreen = ({
           />
           <path
             d="M165.332 6.16943C158.461 6.16943 151.871 8.90005 147.011 13.7584C142.153 18.6187 139.422 25.2081 139.422 32.0797C139.422 38.9513 142.152 45.5412 147.011 50.401C151.871 55.2592 158.461 57.99 165.332 57.99C172.204 57.99 178.794 55.2594 183.653 50.401C188.512 45.5407 191.242 38.9513 191.242 32.0797C191.242 25.2081 188.512 18.6182 183.653 13.7584C178.793 8.90027 172.204 6.16943 165.332 6.16943ZM165.332 46.6543C164.023 46.6543 162.842 45.8657 162.34 44.6553C161.838 43.445 162.117 42.0512 163.042 41.1255C163.968 40.1999 165.362 39.9215 166.572 40.4234C167.782 40.9252 168.571 42.106 168.571 43.4155C168.571 45.2035 167.12 46.6543 165.332 46.6543ZM168.571 35.3185H162.093V17.5052H168.571V35.3185Z"
-            fill="#5469D4"
+            fill="currentColor"
           />
         </svg>
         <p className={tw`text-sm text-center font-semibold text-gray-600 mb-2`}>
           Your wallet doesn't hold the necessary tokens
         </p>
-        <button
+        <a
+          href={getPurchaseLink(chain, requirements)}
+          target="_blank"
+          rel="noreferrer"
           className={tw`py-3 bg-[${selectedWallet.color}] text-white font-semibold text-center rounded-lg`}
         >
           Buy Tokens
-        </button>
+        </a>
         <button
           className={tw`py-3 bg-gray-300 text-gray-600 font-semibold text-center rounded-lg`}
           onClick={back}

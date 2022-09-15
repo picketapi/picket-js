@@ -14,6 +14,7 @@ import solanaWallets from "./wallets/solana";
 import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
 import SuccessScreen from "./SuccessScreen";
+import TokenGateFailureScreen from "./TokenGateFailureScreen";
 
 const displayWalletAddress = (address: string) => {
   return (
@@ -27,6 +28,9 @@ const AUTO_CLOSE_MS = 3000;
 const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
 const RAINBOW_DOWNLOAD_URL = "https://rainbow.me/";
 const PHANTOM_DOWNLOAD_URL = "https://phantom.app/download";
+
+const NOT_ENOUGH_TOKENS_ERROR =
+  "Your wallet doesn't hold the necessary tokens to login.";
 
 type WalletOption = {
   slug: string;
@@ -183,6 +187,16 @@ const ConnectModal = ({
     fetchChainData();
   }, []);
 
+  const reset = () => {
+    setIsOpen(true);
+    setSuccess(false);
+    setWarning(false);
+    setError("");
+    setSelectedWallet(undefined);
+    setDisplayAddress("");
+    setConnectState(null);
+  };
+
   useEffect(() => {
     const handleOpenEvent = (event: MessageEvent) => {
       if (!event.data?.type) return;
@@ -192,13 +206,7 @@ const ConnectModal = ({
       if (isOpen) return;
 
       // reset state on open
-      setIsOpen(true);
-      setSuccess(false);
-      setWarning(false);
-      setError("");
-      setSelectedWallet(undefined);
-      setDisplayAddress("");
-      setConnectState(null);
+      reset();
     };
 
     window.addEventListener("message", handleOpenEvent);
@@ -296,6 +304,9 @@ const ConnectModal = ({
         chain: selectedChain,
       };
 
+      // set displayAddress before doing auth in-case of failure
+      setDisplayAddress(displayWalletAddress(walletAddress));
+
       if (doAuth) {
         state = "auth";
         setConnectState(state);
@@ -315,8 +326,6 @@ const ConnectModal = ({
         );
 
         result = { ...result, auth };
-      } else {
-        setDisplayAddress(displayWalletAddress(walletAddress));
       }
 
       setSuccess(true);
@@ -333,7 +342,6 @@ const ConnectModal = ({
       setTimeout(() => setIsOpen(false), AUTO_CLOSE_MS);
     } catch (err: unknown) {
       console.log(err);
-      setSelectedWallet(undefined);
 
       if (state === "auth") {
         if (
@@ -346,6 +354,7 @@ const ConnectModal = ({
           // @ts-ignore TS isn't respecting "msg" in err
           if (err.msg.toLowerCase().includes("invalid signature")) {
             setError("Signature expired. Please try again.");
+            setSelectedWallet(undefined);
             return;
           }
           // @ts-ignore TS isn't respecting "msg" in err
@@ -355,14 +364,18 @@ const ConnectModal = ({
                 selectedChain
               )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
             );
+            setSelectedWallet(undefined);
             return;
           }
         }
 
         // assume token-gating error
-        setError("Your wallet doesn't hold the necessary tokens to login.");
+        // do not un-select wallet so we can customize the error screen
+        setError(NOT_ENOUGH_TOKENS_ERROR);
         return;
       }
+      // clear selected wallet in all errors below
+      setSelectedWallet(undefined);
 
       // check for user rejected error cases
       if (
@@ -404,6 +417,10 @@ const ConnectModal = ({
     ({ slug }) => slug === selectedChain
   )[0];
 
+  const showTokenGateFailureScreen =
+    hasTokenOwnershipRequirements(requirements) &&
+    error === NOT_ENOUGH_TOKENS_ERROR;
+
   return (
     <main
       style={{
@@ -417,10 +434,28 @@ const ConnectModal = ({
       <div
         className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
-        <button onClick={close}>
+        {showTokenGateFailureScreen && (
+          <button onClick={reset} className={tw`absolute top-3 left-3`}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
+            </svg>
+          </button>
+        )}
+        <button onClick={close} className={tw`absolute top-3 right-3`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={tw`w-8 h-8 absolute top-0 right-0 mr-3 mt-3 bg-white text-gray-400 rounded-lg hover:shadow`}
+            className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -441,10 +476,19 @@ const ConnectModal = ({
               requirements
             )}
           />
+        ) : showTokenGateFailureScreen ? (
+          <TokenGateFailureScreen
+            chain={selectedChain}
+            selectedWallet={selectedWallet as Wallet}
+            displayAddress={displayAddress as string}
+            // only get here when requirements are defined
+            requirements={requirements as AuthRequirements}
+            back={reset}
+          />
         ) : (
           <>
             <h1
-              className={tw`pt-2 text-xl sm:text-2xl font-semibold break-words text-left`}
+              className={tw`pt-1 mb-6 text-xl sm:text-2xl font-semibold break-words text-left`}
             >
               Log In With Your Wallet
             </h1>
