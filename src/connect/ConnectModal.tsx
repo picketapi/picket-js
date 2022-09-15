@@ -12,6 +12,9 @@ import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
 import solanaWallets from "./wallets/solana";
 
+import PoweredByPicket from "./PoweredByPicket";
+import SuccessScreen from "./SuccessScreen";
+
 const displayWalletAddress = (address: string) => {
   return (
     address.substring(0, 5) + "..." + address.substring(address.length - 3)
@@ -78,11 +81,20 @@ const defaultWalletOptions: WalletOption[] = [
   },
 ];
 
-type ConnectState = null | "connect" | "signature" | "auth";
+const hasTokenOwnershipRequirements = (
+  requirements: AuthRequirements | undefined
+) =>
+  Boolean(
+    requirements &&
+      (requirements.contractAddress ||
+        (requirements.tokenIds && requirements.tokenIds?.length > 0))
+  );
 
 // toTitleCase upperacses the first letter of a string
 const toTitleCase = (str: string): string =>
   str.charAt(0).toUpperCase() + str.slice(1);
+
+type ConnectState = null | "connect" | "signature" | "auth";
 
 const connectStateMessage = {
   connect: "Connecting...",
@@ -404,223 +416,187 @@ const ConnectModal = ({
       <div
         className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
-        <h1
-          className={tw`pt-2 text-xl sm:text-2xl font-semibold break-words ${
-            success ? "text-center" : "text-left"
-          } `}
-        >
-          {success ? `Welcome ${displayAddress}` : "Log In With Your Wallet"}
-        </h1>
-        <button onClick={close}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className={tw`w-8 h-8 absolute top-0 right-0 mr-3 mt-3 bg-white text-gray-400 rounded-lg hover:shadow`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-        {!success && (
-          <div
-            className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
-            id="walletOptions"
-          >
-            {walletOptions.map(({ slug, name }) => (
-              <button
-                key={slug}
-                onClick={() => setSelectedChain(slug)}
-                // Use style for underline offset until twind supports Tailwind v3
-                style={{
-                  textUnderlineOffset: "2px",
-                  outlineStyle: "none",
-                }}
-                className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] ${
-                  selectedChain === slug
-                    ? "underline underline-offset-2 text-[#5469D4]"
-                    : ""
-                }`}
-              >
-                {name}
-              </button>
-            ))}
-          </div>
-        )}
-        {warning && (
-          <div className={tw`rounded-md bg-yellow-100 p-4 mt-2`}>
-            <div className={tw`flex`}>
-              <div className={tw`flex-shrink-0`}>
-                <svg
-                  className={tw`h-5 w-5 text-yellow-400`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className={tw`ml-3 text-sm text-yellow-700`}>
-                <div>
-                  <p>
-                    {getWarningMessage({
-                      wallet: selectedWallet,
-                      state: connectState,
-                    })}
-                  </p>
-                </div>
-                {selectedWallet && (
-                  <div className={tw`mt-2 text-xs`}>
-                    <p>
-                      Don{"'"}t see the request?{" "}
-                      <button
-                        className={tw`underline`}
-                        onClick={() => connect(selectedWallet)}
-                      >
-                        Try again.
-                      </button>
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {error && (
-          <div className={tw`rounded-md bg-red-100 p-4 mt-2`}>
-            <div className={tw`flex`}>
-              <div className={tw`flex-shrink-0`}>
-                <svg
-                  className={tw`h-5 w-5 text-red-400`}
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className={tw`ml-3`}>
-                <div className={tw`text-sm text-red-700`}>
-                  <p>{error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div
-          className={tw`flex flex-col  min-h-[300px] ${
-            success ? "space-y-0 mt-0 mb-0" : "space-y-2 mt-6 mb-6"
-          }`}
-        >
-          {!success &&
-            currentWalletOptions?.wallets.map((wallet) => (
-              <button
-                key={wallet.id}
-                onClick={() => connect(wallet)}
-                style={{
-                  outlineOffset: "4px",
-                }}
-                disabled={!!connectState}
-                className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
-                  selectedWallet?.id === wallet.id
-                    ? "bg-gray-100"
-                    : "disabled:bg-white"
-                }`}
-              >
-                <div className={tw`mr-8 rounded-md overflow-hidden`}>
-                  {wallet.icon}
-                </div>
-                {selectedWallet?.id === wallet.id
-                  ? connectStateMessage[connectState || "connect"]
-                  : wallet.name}
-              </button>
-            ))}
-          {!success && (
-            <div className={tw`flex-grow flex flex-col`}>
-              <div className={tw`w-full flex-grow flex flex-col-reverse`}>
-                <div
-                  className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
-                >
-                  <div className={tw`flex-grow border-t h-px mr-6`}></div>
-                  <div>or</div>
-                  <div className={tw`flex-grow border-t h-px ml-6`}></div>
-                </div>
-              </div>
-
-              <a
-                href={
-                  isMobile
-                    ? currentWalletOptions?.mobilePreferredWalletLink
-                    : currentWalletOptions?.desktopPreferredWalletLink
-                }
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  outlineOffset: "4px",
-                }}
-                className={tw`p-2.5 w-full bg-white rounded-lg shadow text-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
-              >
-                New Wallet
-              </a>
-            </div>
-          )}
-          {success && (
-            <>
+        {success ? (
+          <SuccessScreen
+            selectedWallet={selectedWallet as Wallet}
+            displayAddress={displayAddress as string}
+            hasTokenOwnershipRequirements={hasTokenOwnershipRequirements(
+              requirements
+            )}
+            close={close}
+          />
+        ) : (
+          <>
+            <h1
+              className={tw`pt-2 text-xl sm:text-2xl font-semibold break-words text-left`}
+            >
+              Log In With Your Wallet
+            </h1>
+            <button onClick={close}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className={tw`pt-0 h-full w-full text-[${selectedWallet?.color}]`}
-                viewBox="0 0 20 20"
-                fill="currentColor"
+                className={tw`w-8 h-8 absolute top-0 right-0 mr-3 mt-3 bg-white text-gray-400 rounded-lg hover:shadow`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
                 <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
-              <div
-                className={tw`flex flex-col items-center text-center space-y-2`}
-              >
-                {selectedWallet?.icon}
-                <p
-                  className={tw`text-sm sm:text-base font-base w-45 text-center text-gray-400 break-normal`}
+            </button>
+            <div
+              className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
+              id="walletOptions"
+            >
+              {walletOptions.map(({ slug, name }) => (
+                <button
+                  key={slug}
+                  onClick={() => setSelectedChain(slug)}
+                  // Use style for underline offset until twind supports Tailwind v3
+                  style={{
+                    textUnderlineOffset: "2px",
+                    outlineStyle: "none",
+                  }}
+                  className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] ${
+                    selectedChain === slug
+                      ? "underline underline-offset-2 text-[#5469D4]"
+                      : ""
+                  }`}
                 >
-                  You have successfully authenticated
-                  {selectedWallet ? ` with ${selectedWallet.name}` : ""}
-                </p>
+                  {name}
+                </button>
+              ))}
+            </div>
+            {warning && (
+              <div className={tw`rounded-md bg-yellow-100 p-4 mt-2`}>
+                <div className={tw`flex`}>
+                  <div className={tw`flex-shrink-0`}>
+                    <svg
+                      className={tw`h-5 w-5 text-yellow-400`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className={tw`ml-3 text-sm text-yellow-700`}>
+                    <div>
+                      <p>
+                        {getWarningMessage({
+                          wallet: selectedWallet,
+                          state: connectState,
+                        })}
+                      </p>
+                    </div>
+                    {selectedWallet && (
+                      <div className={tw`mt-2 text-xs`}>
+                        <p>
+                          Don{"'"}t see the request?{" "}
+                          <button
+                            className={tw`underline`}
+                            onClick={() => connect(selectedWallet)}
+                          >
+                            Try again.
+                          </button>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </>
-          )}
-        </div>
-        <div
-          className={tw`w-full mt-8 text-center font-base text-sm text-gray-400`}
-        >
-          <a
-            style={{
-              outlineOffset: "4px",
-            }}
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://picketapi.com"
-          >
-            Powered by Picket
-          </a>
-        </div>
+            )}
+            {error && (
+              <div className={tw`rounded-md bg-red-100 p-4 mt-2`}>
+                <div className={tw`flex`}>
+                  <div className={tw`flex-shrink-0`}>
+                    <svg
+                      className={tw`h-5 w-5 text-red-400`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className={tw`ml-3`}>
+                    <div className={tw`text-sm text-red-700`}>
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div
+              className={tw`flex flex-col  min-h-[300px] space-y-2 mt-6 mb-6`}
+            >
+              {currentWalletOptions?.wallets.map((wallet) => (
+                <button
+                  key={wallet.id}
+                  onClick={() => connect(wallet)}
+                  style={{
+                    outlineOffset: "4px",
+                  }}
+                  disabled={!!connectState}
+                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
+                    selectedWallet?.id === wallet.id
+                      ? "bg-gray-100"
+                      : "disabled:bg-white"
+                  }`}
+                >
+                  <div className={tw`mr-8 rounded-md overflow-hidden`}>
+                    {wallet.icon}
+                  </div>
+                  {selectedWallet?.id === wallet.id
+                    ? connectStateMessage[connectState || "connect"]
+                    : wallet.name}
+                </button>
+              ))}
+              <div className={tw`flex-grow flex flex-col`}>
+                <div className={tw`w-full flex-grow flex flex-col-reverse`}>
+                  <div
+                    className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
+                  >
+                    <div className={tw`flex-grow border-t h-px mr-6`}></div>
+                    <div>or</div>
+                    <div className={tw`flex-grow border-t h-px ml-6`}></div>
+                  </div>
+                </div>
+
+                <a
+                  href={
+                    isMobile
+                      ? currentWalletOptions?.mobilePreferredWalletLink
+                      : currentWalletOptions?.desktopPreferredWalletLink
+                  }
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{
+                    outlineOffset: "4px",
+                  }}
+                  className={tw`p-2.5 w-full bg-white rounded-lg shadow text-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
+                >
+                  New Wallet
+                </a>
+              </div>
+            </div>
+            <PoweredByPicket />
+          </>
+        )}
       </div>
       <style
         // A hacky way to to inject custom CSS without having to have users import the stylesheet
@@ -635,5 +611,4 @@ const ConnectModal = ({
     </main>
   );
 };
-
 export default ConnectModal;
