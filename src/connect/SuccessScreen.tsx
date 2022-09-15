@@ -8,13 +8,11 @@ interface SuccessScreenProps {
   displayAddress: string;
   selectedWallet: Wallet;
   hasTokenOwnershipRequirements: boolean;
-  close: () => void;
 }
 
 const SuccessScreen = ({
   displayAddress,
   selectedWallet,
-  close,
   hasTokenOwnershipRequirements = false,
 }: SuccessScreenProps) => {
   return (
@@ -24,22 +22,6 @@ const SuccessScreen = ({
       >
         Welcome {displayAddress}
       </h1>
-      <button onClick={close}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className={tw`w-8 h-8 absolute top-0 right-0 mr-3 mt-3 bg-white text-gray-400 rounded-lg hover:shadow`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
       <div
         className={tw`flex flex-col  min-h-[300px] ${
           hasTokenOwnershipRequirements ? "space-y-4" : "space-y-0"
