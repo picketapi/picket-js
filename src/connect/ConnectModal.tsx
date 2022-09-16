@@ -367,6 +367,20 @@ const ConnectModal = ({
             setSelectedWallet(undefined);
             return;
           }
+          if (
+            // @ts-ignore TS isn't respecting "msg" in err
+            err.msg.toLowerCase().includes("any erc20, erc721, erc1155 tokens")
+          ) {
+            setError(
+              `${
+                requirements?.contractAddress
+                  ? displayWalletAddress(requirements.contractAddress)
+                  : "The provided contract"
+              } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`
+            );
+            setSelectedWallet(undefined);
+            return;
+          }
         }
 
         // assume token-gating error
