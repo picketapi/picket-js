@@ -72,7 +72,7 @@ const TokenGateFailureScreen = ({
       <h1
         className={tw`pt-1 text-xl sm:text-2xl font-semibold break-words text-center`}
       >
-        Welcome {displayAddress}
+        Almost There
       </h1>
       <div className={tw`flex flex-col min-h-[300px] space-y-4 mt-0 mb-0`}>
         <svg
@@ -115,7 +115,7 @@ const TokenGateFailureScreen = ({
           />
         </svg>
         <p className={tw`text-sm text-center font-semibold text-gray-600 mb-2`}>
-          Your wallet doesn't hold the necessary tokens
+          Your wallet {displayAddress} doesn't hold the necessary tokens
         </p>
         <a
           href={getPurchaseLink(chain, requirements)}
