@@ -1,6 +1,6 @@
+import { tw } from "twind";
 import { defaultChains } from "@wagmi/core";
 import { CoinbaseWalletConnector } from "@wagmi/core/connectors/coinbaseWallet";
-import { tw } from "twind";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 
