@@ -15,6 +15,7 @@ import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
 import SuccessScreen from "./SuccessScreen";
 import TokenGateFailureScreen from "./TokenGateFailureScreen";
+import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
 const displayWalletAddress = (address: string) => {
   return (
@@ -435,6 +436,9 @@ const ConnectModal = ({
     hasTokenOwnershipRequirements(requirements) &&
     error === NOT_ENOUGH_TOKENS_ERROR;
 
+  const showQRCodeConnectScreen = selectedWallet?.qrCode;
+  const showBackButton = showTokenGateFailureScreen || showQRCodeConnectScreen;
+
   return (
     <main
       style={{
@@ -448,7 +452,7 @@ const ConnectModal = ({
       <div
         className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
-        {showTokenGateFailureScreen && (
+        {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -499,6 +503,11 @@ const ConnectModal = ({
             requirements={requirements as AuthRequirements}
             back={reset}
           />
+        ) : selectedWallet?.qrCode ? (
+          <QRCodeConnectScreen
+            selectedWallet={selectedWallet as Wallet}
+            connectState={connectState}
+          />
         ) : (
           <>
             <h1
@@ -508,7 +517,7 @@ const ConnectModal = ({
             </h1>
             <div
               className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
-              id="walletOptions"
+              id="_picketWalletOptions"
             >
               {walletOptions.map(({ slug, name }) => (
                 <button
@@ -617,7 +626,7 @@ const ConnectModal = ({
                   }`}
                 >
                   <div className={tw`mr-8 rounded-md overflow-hidden`}>
-                    {wallet.icon}
+                    <wallet.Icon />
                   </div>
                   {selectedWallet?.id === wallet.id
                     ? connectStateMessage[connectState || "connect"]
@@ -654,7 +663,7 @@ const ConnectModal = ({
         // A hacky way to to inject custom CSS without having to have users import the stylesheet
         dangerouslySetInnerHTML={{
           __html: `
-  #walletOptions::-webkit-scrollbar {
+  #_picketWalletOptions::-webkit-scrollbar {
     width: 0px;
     background: transparent; /* make scrollbar transparent */
   }`,

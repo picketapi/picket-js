@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import type { FC } from "react";
+import { tw } from "twind";
 
 // Solana
 import { BaseMessageSignerWalletAdapter } from "@solana/wallet-adapter-base";
@@ -9,33 +10,48 @@ import { Connector } from "@wagmi/core";
 
 export const WALLET_ICON_SIZE = 28;
 
+export interface WalletIconProps {
+  width?: number;
+  height?: number;
+}
+
+export type WalletIcon = FC<WalletIconProps>;
+
 export interface Wallet {
   id: string;
   name: string;
   color: string;
-  icon: ReactNode;
+  Icon: WalletIcon;
+  qrCode?: boolean;
   connect: () => Promise<{
     walletAddress: string;
     provider: any;
   }>;
   signMessage: (message: string) => Promise<string>;
+  qrCodeURI?: () => Promise<string>;
 }
 
 export class WagmiWallet implements Wallet {
   id: string;
   name: string;
   color: string;
-  icon: ReactNode;
+  qrCode: boolean;
+  Icon: WalletIcon;
   connector: Connector;
+  getQRCodeURI?: (provider: any) => Promise<string>;
 
   constructor({
     connector,
     color,
-    icon,
+    Icon,
+    qrCode = false,
+    getQRCodeURI,
   }: {
     connector: Connector;
     color: string;
-    icon: ReactNode;
+    Icon: WalletIcon;
+    qrCode?: boolean;
+    getQRCodeURI?: (provider: any) => Promise<string>;
   }) {
     this.connector = connector;
 
@@ -43,7 +59,12 @@ export class WagmiWallet implements Wallet {
     this.name = connector.name;
 
     this.color = color;
-    this.icon = icon;
+    this.Icon = Icon;
+    this.qrCode = qrCode;
+
+    if (qrCode && getQRCodeURI) {
+      this.getQRCodeURI = getQRCodeURI;
+    }
   }
 
   async connect() {
@@ -59,13 +80,20 @@ export class WagmiWallet implements Wallet {
     const signature = await signer.signMessage(message);
     return signature;
   }
+
+  async qrCodeURI() {
+    if (!this.getQRCodeURI) return "";
+
+    const provider = await this.connector.getProvider();
+    return await this.getQRCodeURI(provider);
+  }
 }
 
 export class SolanaWalletAdpaterWallet implements Wallet {
   id: string;
   name: string;
   color: string;
-  icon: ReactNode;
+  Icon: WalletIcon;
   adapter: BaseMessageSignerWalletAdapter;
 
   constructor({
@@ -79,12 +107,16 @@ export class SolanaWalletAdpaterWallet implements Wallet {
 
     this.id = adapter.name;
     this.name = adapter.name;
-    this.icon = (
+    this.Icon = ({
+      height = WALLET_ICON_SIZE,
+      width = WALLET_ICON_SIZE,
+    }: WalletIconProps) => (
       <img
+        className={tw`rounded-md`}
         alt={adapter.name}
         src={adapter.icon}
-        height={WALLET_ICON_SIZE}
-        width={WALLET_ICON_SIZE}
+        height={height}
+        width={width}
       />
     );
 
