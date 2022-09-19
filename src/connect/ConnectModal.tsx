@@ -450,7 +450,7 @@ const ConnectModal = ({
       }`}
     >
       <div
-        className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
+        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
         {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>

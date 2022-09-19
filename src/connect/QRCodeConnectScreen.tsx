@@ -29,6 +29,13 @@ const getConnectMessage = (state: ConnectState, walletName: string) => {
   return `Connect to ${walletName}`;
 };
 
+// TODO:
+// 1. error and warning messages
+// <div
+// className={tw`absolute left-0 bottom-0 bg-yellow-500 w-full h-24`}
+// ></div>
+// 2. Handle iOS vs Android
+
 const QRCodeConnectScreen = ({
   selectedWallet,
   connectState,
@@ -95,7 +102,7 @@ const QRCodeConnectScreen = ({
                 />
               </svg>
               <div className={tw`font-semibold text-sm`}>
-                Signing in is free. It costs not gas.
+                Signing in is free. It costs no gas.
               </div>
             </div>
           </>
