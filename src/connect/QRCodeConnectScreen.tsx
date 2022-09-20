@@ -11,37 +11,62 @@ type ConnectState = null | "connect" | "signature" | "auth";
 interface QRCodeConnectScreenProps {
   selectedWallet: Wallet;
   connectState: ConnectState;
+  error?: string;
+  warning?: boolean;
+  connect: (wallet: Wallet) => void;
 }
 
-const getConnectMessage = (state: ConnectState, walletName: string) => {
+const getConnectMessage = (state: ConnectState) => {
   if (!state || state === "connect") {
-    return `Connect to ${walletName}`;
+    return "Open your phone camera or wallet to scan this QR code.";
   }
 
   if (state === "signature") {
-    return `Requesting Signature`;
+    return `We connected to your wallet. Open your wallet to sign the message and prove its you.`;
   }
 
   if (state === "auth") {
-    return `Authenticating`;
+    return `We've received your signature! Hold tight while we validate it.`;
   }
 
-  return `Connect to ${walletName}`;
+  return "Open your phone camera or wallet to scan this QR code.";
 };
 
 // TODO:
 // 1. error and warning messages
-// <div
-// className={tw`absolute left-0 bottom-0 bg-yellow-500 w-full h-24`}
-// ></div>
 // 2. Handle iOS vs Android
+
+const getWarningMessage = ({
+  wallet,
+  state,
+}: {
+  wallet?: Wallet;
+  state: ConnectState;
+}): string => {
+  let walletName =
+    // special case for WalletConnect
+    wallet?.name && wallet.name !== "WalletConnect"
+      ? wallet.name
+      : "your wallet";
+
+  if (state === "connect") {
+    // TODO: Ask if having issues and try regenerate QR code
+    return `Still waiting to connect. Scan the QR code with ${walletName} or your phone camera to connect.`;
+  }
+
+  return `Still waiting for your signature. Open ${walletName} to approve the request.`;
+};
 
 const QRCodeConnectScreen = ({
   selectedWallet,
   connectState,
+  error,
+  warning,
+  connect,
 }: QRCodeConnectScreenProps) => {
   const [qrCodeURI, setQRCodeURI] = useState<string | null>(null);
 
+  console.log({ error, warning });
   useEffect(() => {
     // should never happen
     if (!selectedWallet.qrCodeURI) return;
@@ -54,8 +79,57 @@ const QRCodeConnectScreen = ({
   return (
     <>
       <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
-        {getConnectMessage(connectState, selectedWallet.name)}
+        Connect to {selectedWallet.name}
       </h1>
+      {warning && connectState !== "auth" && (
+        <div
+          className={tw`absolute left-0 bottom-0 bg-yellow-100 w-full h-[120px] py-6 px-6 text-center text-sm text-yellow-700 flex flex-col rounded-b-xl`}
+        >
+          <div className="flex-1">
+            <p>
+              {getWarningMessage({
+                wallet: selectedWallet,
+                state: connectState,
+              })}
+            </p>
+          </div>
+          {selectedWallet && (
+            <div className={tw`mt-4 text-xs`}>
+              <p>
+                Don{"'"}t see the request?{" "}
+                <button
+                  className={tw`underline`}
+                  onClick={() => connect(selectedWallet)}
+                >
+                  Try again.
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+      {error && (
+        <div
+          className={tw`absolute left-0 bottom-0 bg-[#EE4870] w-full h-[120px] py-6 px-6 text-center text-sm text-white flex flex-col rounded-b-xl`}
+        >
+          <div className="flex-1 font-semibold">
+            <p>{error}</p>
+          </div>
+          {selectedWallet && (
+            <div className={tw`mt-4 text-xs`}>
+              <p>
+                Get here by accident?{" "}
+                <button
+                  className={tw`underline`}
+                  onClick={() => connect(selectedWallet)}
+                >
+                  Try again.
+                </button>
+              </p>
+            </div>
+          )}
+        </div>
+      )}
       <div
         className={tw`flex flex-col items-center min-h-[300px] space-y-4 mt-5 mb-0`}
       >
@@ -65,11 +139,12 @@ const QRCodeConnectScreen = ({
               uri={qrCodeURI}
               logoColor={selectedWallet.color}
               logo={selectedWallet.Icon}
+              disabled={!connectState || connectState !== "connect"}
             />
             <div
-              className={tw`bg-white px-4 py-2 text-center font-semibold text-sm`}
+              className={tw`bg-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
             >
-              Open your phone camera or wallet to scan this QR code.
+              {getConnectMessage(connectState)}
             </div>
             <div
               className={tw`flex flex-col justify-center items-center text-gray-500 space-y-2`}

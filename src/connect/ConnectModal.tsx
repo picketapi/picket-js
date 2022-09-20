@@ -234,9 +234,11 @@ const ConnectModal = ({
     // This should be done with better error state w/ a function for displaying the message
     let state: ConnectState = "connect";
 
+    // clear error state
+    setError("");
+
     // show warning after elapsed time
     setWarning(false);
-
     const timeoutID = setTimeout(() => {
       setWarning(true);
       setError("");
@@ -252,6 +254,9 @@ const ConnectModal = ({
 
       state = "signature";
       setConnectState(state);
+      // clear warning and error state transition
+      setWarning(false);
+      setError("");
 
       const domain = window.location.host;
       const uri = window.location.origin;
@@ -270,7 +275,6 @@ const ConnectModal = ({
         chainType,
       };
 
-      // TODO: Error messages
       // TODO: Conditional based off Picket availability (refactor to separate library)
       const {
         nonce,
@@ -311,6 +315,9 @@ const ConnectModal = ({
       if (doAuth) {
         state = "auth";
         setConnectState(state);
+        // clear warning and error state transition
+        setWarning(false);
+        setError("");
 
         const auth = await window.picket.auth({
           chain: selectedChain,
@@ -344,6 +351,11 @@ const ConnectModal = ({
     } catch (err: unknown) {
       console.log(err);
 
+      const shouldClearSelectedWallet = !wallet.qrCode;
+
+      console.log("shouldClearSelectedWallet", wallet, wallet?.qrCode);
+      console.log("shouldClearSelectedWallet", shouldClearSelectedWallet);
+
       if (state === "auth") {
         if (
           err &&
@@ -355,7 +367,7 @@ const ConnectModal = ({
           // @ts-ignore TS isn't respecting "msg" in err
           if (err.msg.toLowerCase().includes("invalid signature")) {
             setError("Signature expired. Please try again.");
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
           // @ts-ignore TS isn't respecting "msg" in err
@@ -365,7 +377,7 @@ const ConnectModal = ({
                 selectedChain
               )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
             );
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
           if (
@@ -379,7 +391,7 @@ const ConnectModal = ({
                   : "The provided contract"
               } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`
             );
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
         }
@@ -390,7 +402,7 @@ const ConnectModal = ({
         return;
       }
       // clear selected wallet in all errors below
-      setSelectedWallet(undefined);
+      shouldClearSelectedWallet && setSelectedWallet(undefined);
 
       // check for user rejected error cases
       if (
@@ -401,7 +413,7 @@ const ConnectModal = ({
         err.message.toLowerCase().includes("user rejected")
       ) {
         if (state === "signature") {
-          setError(`The signature request was rejected by ${wallet.name}`);
+          setError(`The signature request was rejected.`);
           return;
         }
 
@@ -413,12 +425,12 @@ const ConnectModal = ({
 
       // unknown error in signature state
       if (state === "signature") {
-        setError(`Failed to get signature from ${wallet.name}`);
+        setError(`Failed to get your signature.`);
         return;
       }
 
       // last resort
-      setError(`Failed to connect to ${wallet.name}`);
+      setError(`Failed to connect to ${wallet.name}.`);
     } finally {
       // reset connect state
       setConnectState(null);
@@ -507,6 +519,9 @@ const ConnectModal = ({
           <QRCodeConnectScreen
             selectedWallet={selectedWallet as Wallet}
             connectState={connectState}
+            connect={connect}
+            error={error}
+            warning={warning}
           />
         ) : (
           <>
@@ -538,8 +553,8 @@ const ConnectModal = ({
                 </button>
               ))}
             </div>
-            {warning && (
-              <div className={tw`rounded-md bg-yellow-100 p-4 mt-2`}>
+            {warning && connectState !== "auth" && (
+              <div className={tw`rounded-lg bg-yellow-100 p-4 mt-2`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -583,7 +598,7 @@ const ConnectModal = ({
               </div>
             )}
             {error && (
-              <div className={tw`rounded-md bg-red-100 p-4 mt-2`}>
+              <div className={tw`rounded-lg bg-red-100 p-4 mt-2`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -625,7 +640,7 @@ const ConnectModal = ({
                       : "disabled:bg-white"
                   }`}
                 >
-                  <div className={tw`mr-8 rounded-md overflow-hidden`}>
+                  <div className={tw`mr-8 rounded-lg overflow-hidden`}>
                     <wallet.Icon />
                   </div>
                   {selectedWallet?.id === wallet.id
