@@ -66,7 +66,6 @@ const QRCodeConnectScreen = ({
 }: QRCodeConnectScreenProps) => {
   const [qrCodeURI, setQRCodeURI] = useState<string | null>(null);
 
-  console.log({ error, warning });
   useEffect(() => {
     // should never happen
     if (!selectedWallet.qrCodeURI) return;

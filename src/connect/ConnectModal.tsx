@@ -353,9 +353,6 @@ const ConnectModal = ({
 
       const shouldClearSelectedWallet = !wallet.qrCode;
 
-      console.log("shouldClearSelectedWallet", wallet, wallet?.qrCode);
-      console.log("shouldClearSelectedWallet", shouldClearSelectedWallet);
-
       if (state === "auth") {
         if (
           err &&
