@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { tw } from "twind";
 
 import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
@@ -139,6 +139,7 @@ const ConnectModal = ({
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
   const [warning, setWarning] = useState(false);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [error, setError] = useState("");
   const [connectState, setConnectState] = useState<ConnectState>(null);
 
@@ -196,6 +197,8 @@ const ConnectModal = ({
     setSelectedWallet(undefined);
     setDisplayAddress("");
     setConnectState(null);
+    warningTimeoutRef.current &&
+      clearTimeout(warningTimeoutRef.current as ReturnType<typeof setTimeout>);
   };
 
   useEffect(() => {
@@ -243,6 +246,7 @@ const ConnectModal = ({
       setWarning(true);
       setError("");
     }, CONNECT_TIMEOUT_MS);
+    warningTimeoutRef.current = timeoutID;
 
     try {
       setSelectedWallet(wallet);
@@ -433,7 +437,7 @@ const ConnectModal = ({
       setConnectState(null);
       // clear warning and timeout
       setWarning(false);
-      clearTimeout(timeoutID);
+      clearTimeout(warningTimeoutRef.current);
     }
   };
 
