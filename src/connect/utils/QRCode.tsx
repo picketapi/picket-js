@@ -4,6 +4,8 @@ import { tw } from "twind";
 
 import { WalletIcon } from "../wallets";
 
+// Adapted from https://github.com/rainbow-me/rainbowkit/blob/main/packages/rainbowkit/src/components/QRCode/QRCode.tsx
+
 const generateMatrix = (
   value: string,
   errorCorrectionLevel: QRCodeUtil.QRCodeErrorCorrectionLevel

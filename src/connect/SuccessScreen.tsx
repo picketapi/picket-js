@@ -31,6 +31,7 @@ const SuccessScreen = ({
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          // default color to Picket purple
           className={tw`pt-0 h-full w-full text-[${
             selectedWallet?.color || "#5469d4"
           }]`}
