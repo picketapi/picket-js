@@ -33,8 +33,8 @@ const getConnectMessage = (state: ConnectState) => {
 };
 
 // TODO:
-// 1. error and warning messages
-// 2. Handle iOS vs Android
+// 1. Handle iOS vs Android
+// 2. Handle multi-chain login
 
 const getWarningMessage = ({
   wallet,
@@ -56,6 +56,10 @@ const getWarningMessage = ({
 
   return `Still waiting for your signature. Open ${walletName} to approve the request.`;
 };
+
+// Unused for now
+// const isValidQRURI = (uri: string | null): Boolean =>
+// Boolean(uri && !uri.startsWith("wc:@1?bridge="));
 
 const QRCodeConnectScreen = ({
   selectedWallet,
@@ -80,7 +84,7 @@ const QRCodeConnectScreen = ({
       <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
         Connect to {selectedWallet.name}
       </h1>
-      {warning && connectState !== "auth" && (
+      {warning && !error && connectState !== "auth" && (
         <div
           className={tw`absolute left-0 bottom-0 bg-yellow-100 w-full h-[120px] py-6 px-6 text-center text-sm text-yellow-700 flex flex-col rounded-b-xl`}
         >
@@ -95,12 +99,12 @@ const QRCodeConnectScreen = ({
           {selectedWallet && (
             <div className={tw`mt-4 text-xs`}>
               <p>
-                Don{"'"}t see the request?{" "}
+                QR code not working?{" "}
                 <button
                   className={tw`underline`}
                   onClick={() => connect(selectedWallet)}
                 >
-                  Try again.
+                  Get a new one.
                 </button>
               </p>
             </div>
