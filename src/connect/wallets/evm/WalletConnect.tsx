@@ -11,7 +11,7 @@ const Icon = ({
   width = WALLET_ICON_SIZE,
 }: WalletIconProps) => (
   <svg
-    className={tw`rounded-md`}
+    className={tw`rounded-lg`}
     height={height}
     width={width}
     viewBox="0 0 28 28"

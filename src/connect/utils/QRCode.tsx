@@ -111,6 +111,7 @@ type Props = {
   size?: number;
   uri: string;
   logo: WalletIcon;
+  disabled?: boolean;
 };
 
 export default function QRCode({
@@ -121,10 +122,11 @@ export default function QRCode({
   logo: Logo,
   size: sizeProp = 300,
   uri,
+  disabled = false,
 }: Props) {
   const padding: string = "10";
   // calculate size of the QRCode
-  const size = sizeProp - parseInt(padding, 10) * 2;
+  const size = sizeProp - parseInt(padding, 10) * 1;
 
   // create dots for QR code
   const dots = useMemo(
@@ -143,7 +145,10 @@ export default function QRCode({
 
   return (
     <div
-      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white p-[${padding}px]`}
+      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white p-[${padding}px] rounded-xl`}
+      style={{
+        filter: disabled ? "blur(4px)" : "none",
+      }}
     >
       <div
         className={tw`flex justify-center items-center`}
@@ -154,7 +159,7 @@ export default function QRCode({
         }}
       >
         <div
-          className={tw`absolute rounded-md`}
+          className={tw`absolute rounded-xl`}
           style={{
             height: logoSize,
             width: logoSize,
