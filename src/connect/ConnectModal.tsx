@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { tw } from "twind";
+import { InjectedConnector } from "@wagmi/core";
 
 import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
@@ -15,6 +16,7 @@ import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
 import SuccessScreen from "./SuccessScreen";
 import TokenGateFailureScreen from "./TokenGateFailureScreen";
+import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
 const displayWalletAddress = (address: string) => {
   return (
@@ -138,6 +140,7 @@ const ConnectModal = ({
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
   const [warning, setWarning] = useState(false);
+  const warningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [error, setError] = useState("");
   const [connectState, setConnectState] = useState<ConnectState>(null);
 
@@ -145,6 +148,7 @@ const ConnectModal = ({
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedChain, setSelectedChain] = useState<string>("");
+  const [qrCodeURI, setQRCodeURI] = useState<string>("");
 
   useEffect(() => {
     if (!chain) {
@@ -195,6 +199,8 @@ const ConnectModal = ({
     setSelectedWallet(undefined);
     setDisplayAddress("");
     setConnectState(null);
+    warningTimeoutRef.current &&
+      clearTimeout(warningTimeoutRef.current as ReturnType<typeof setTimeout>);
   };
 
   useEffect(() => {
@@ -233,13 +239,16 @@ const ConnectModal = ({
     // This should be done with better error state w/ a function for displaying the message
     let state: ConnectState = "connect";
 
+    // clear error state
+    setError("");
+
     // show warning after elapsed time
     setWarning(false);
-
     const timeoutID = setTimeout(() => {
       setWarning(true);
       setError("");
     }, CONNECT_TIMEOUT_MS);
+    warningTimeoutRef.current = timeoutID;
 
     try {
       setSelectedWallet(wallet);
@@ -247,19 +256,43 @@ const ConnectModal = ({
       state = "connect";
       setConnectState(state);
 
-      const { walletAddress, provider } = await wallet.connect();
-
-      state = "signature";
-      setConnectState(state);
-
-      const domain = window.location.host;
-      const uri = window.location.origin;
-      const issuedAt = new Date().toISOString();
-
       // use chain associated with the auth request
       // should be cached at this point
       const { chainSlug, chainId, chainType, publicRPC, chainName } =
         await window.picket.chainInfo(selectedChain);
+
+      // if the wallet is a QR code wallet and the
+      if (wallet.ready && wallet.qrCode && !!wallet.onConnecting) {
+        // HACK: RainbowKit implements a similar hack
+        // keep local variable to prevent multiple calls to the same callback
+        let hasCalledCallback = false;
+
+        wallet.onConnecting(async () => {
+          // should never happen
+          if (!wallet.qrCodeURI) return;
+          // prevent from calling multiple times
+          if (hasCalledCallback) return;
+
+          hasCalledCallback = true;
+          const uri = await wallet.qrCodeURI();
+
+          setQRCodeURI(uri);
+        });
+      }
+
+      const { walletAddress, provider } = await wallet.connect({
+        chainId,
+      });
+
+      state = "signature";
+      setConnectState(state);
+      // clear warning and error state transition
+      setWarning(false);
+      setError("");
+
+      const domain = window.location.host;
+      const uri = window.location.origin;
+      const issuedAt = new Date().toISOString();
 
       const context = {
         domain,
@@ -269,7 +302,6 @@ const ConnectModal = ({
         chainType,
       };
 
-      // TODO: Error messages
       // TODO: Conditional based off Picket availability (refactor to separate library)
       const {
         nonce,
@@ -290,9 +322,21 @@ const ConnectModal = ({
       });
 
       // request to change chains
-      // only support EVM for now
+      // only support EVM wallets for now
       if (chainType === ChainTypes.ETH) {
-        await addOrSwitchEVMChain({ chainSlug, chainId, chainName, publicRPC });
+        try {
+          // @ts-ignore accessing private property for now...
+          const p = await wallet.connector.getProvider();
+          await addOrSwitchEVMChain({
+            provider: p,
+            chainSlug,
+            chainId,
+            chainName,
+            publicRPC,
+          });
+        } catch {
+          // ignore error b/c auth will still work. network switch is for UX
+        }
       }
 
       const signature = await wallet.signMessage(message);
@@ -310,6 +354,9 @@ const ConnectModal = ({
       if (doAuth) {
         state = "auth";
         setConnectState(state);
+        // clear warning and error state transition
+        setWarning(false);
+        setError("");
 
         const auth = await window.picket.auth({
           chain: selectedChain,
@@ -328,6 +375,8 @@ const ConnectModal = ({
         result = { ...result, auth };
       }
 
+      // re-select wallet in case it was changed
+      setSelectedWallet(wallet);
       setSuccess(true);
       setError("");
 
@@ -343,6 +392,8 @@ const ConnectModal = ({
     } catch (err: unknown) {
       console.log(err);
 
+      const shouldClearSelectedWallet = !wallet.qrCode;
+
       if (state === "auth") {
         if (
           err &&
@@ -354,7 +405,7 @@ const ConnectModal = ({
           // @ts-ignore TS isn't respecting "msg" in err
           if (err.msg.toLowerCase().includes("invalid signature")) {
             setError("Signature expired. Please try again.");
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
           // @ts-ignore TS isn't respecting "msg" in err
@@ -364,7 +415,7 @@ const ConnectModal = ({
                 selectedChain
               )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
             );
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
           if (
@@ -378,7 +429,7 @@ const ConnectModal = ({
                   : "The provided contract"
               } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`
             );
-            setSelectedWallet(undefined);
+            shouldClearSelectedWallet && setSelectedWallet(undefined);
             return;
           }
         }
@@ -389,7 +440,7 @@ const ConnectModal = ({
         return;
       }
       // clear selected wallet in all errors below
-      setSelectedWallet(undefined);
+      shouldClearSelectedWallet && setSelectedWallet(undefined);
 
       // check for user rejected error cases
       if (
@@ -400,7 +451,7 @@ const ConnectModal = ({
         err.message.toLowerCase().includes("user rejected")
       ) {
         if (state === "signature") {
-          setError(`The signature request was rejected by ${wallet.name}`);
+          setError(`The signature request was rejected.`);
           return;
         }
 
@@ -412,18 +463,18 @@ const ConnectModal = ({
 
       // unknown error in signature state
       if (state === "signature") {
-        setError(`Failed to get signature from ${wallet.name}`);
+        setError(`Failed to get your signature.`);
         return;
       }
 
       // last resort
-      setError(`Failed to connect to ${wallet.name}`);
+      setError(`Failed to connect to ${wallet.name}.`);
     } finally {
       // reset connect state
       setConnectState(null);
       // clear warning and timeout
       setWarning(false);
-      clearTimeout(timeoutID);
+      clearTimeout(warningTimeoutRef.current);
     }
   };
 
@@ -434,6 +485,9 @@ const ConnectModal = ({
   const showTokenGateFailureScreen =
     hasTokenOwnershipRequirements(requirements) &&
     error === NOT_ENOUGH_TOKENS_ERROR;
+
+  const showQRCodeConnectScreen = selectedWallet?.qrCode;
+  const showBackButton = showTokenGateFailureScreen || showQRCodeConnectScreen;
 
   return (
     <main
@@ -446,9 +500,9 @@ const ConnectModal = ({
       }`}
     >
       <div
-        className={tw`w-96 pt-8 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
+        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
       >
-        {showTokenGateFailureScreen && (
+        {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -499,6 +553,15 @@ const ConnectModal = ({
             requirements={requirements as AuthRequirements}
             back={reset}
           />
+        ) : selectedWallet?.qrCode ? (
+          <QRCodeConnectScreen
+            uri={qrCodeURI}
+            selectedWallet={selectedWallet as Wallet}
+            connectState={connectState}
+            connect={connect}
+            error={error}
+            warning={warning}
+          />
         ) : (
           <>
             <h1
@@ -508,7 +571,7 @@ const ConnectModal = ({
             </h1>
             <div
               className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
-              id="walletOptions"
+              id="_picketWalletOptions"
             >
               {walletOptions.map(({ slug, name }) => (
                 <button
@@ -529,8 +592,8 @@ const ConnectModal = ({
                 </button>
               ))}
             </div>
-            {warning && (
-              <div className={tw`rounded-md bg-yellow-100 p-4 mt-2`}>
+            {warning && connectState !== "auth" && (
+              <div className={tw`rounded-lg bg-yellow-100 p-4 mt-2`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -574,7 +637,7 @@ const ConnectModal = ({
               </div>
             )}
             {error && (
-              <div className={tw`rounded-md bg-red-100 p-4 mt-2`}>
+              <div className={tw`rounded-lg bg-red-100 p-4 mt-2`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -616,8 +679,8 @@ const ConnectModal = ({
                       : "disabled:bg-white"
                   }`}
                 >
-                  <div className={tw`mr-8 rounded-md overflow-hidden`}>
-                    {wallet.icon}
+                  <div className={tw`mr-8 rounded-lg overflow-hidden`}>
+                    <wallet.Icon />
                   </div>
                   {selectedWallet?.id === wallet.id
                     ? connectStateMessage[connectState || "connect"]
@@ -654,7 +717,7 @@ const ConnectModal = ({
         // A hacky way to to inject custom CSS without having to have users import the stylesheet
         dangerouslySetInnerHTML={{
           __html: `
-  #walletOptions::-webkit-scrollbar {
+  #_picketWalletOptions::-webkit-scrollbar {
     width: 0px;
     background: transparent; /* make scrollbar transparent */
   }`,

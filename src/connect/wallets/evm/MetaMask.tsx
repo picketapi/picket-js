@@ -1,11 +1,14 @@
 import { MetaMaskConnector } from "@wagmi/core/connectors/metaMask";
 
-import { WagmiWallet } from "../../wallets";
+import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 
-const icon = (
+const Icon = ({
+  height = WALLET_ICON_SIZE,
+  width = WALLET_ICON_SIZE,
+}: WalletIconProps) => (
   <svg
-    width="28"
-    height="28"
+    width={width}
+    height={height}
     viewBox="0 0 28 28"
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
@@ -246,10 +249,10 @@ const icon = (
   </svg>
 );
 
-const walllet = new WagmiWallet({
+const wallet = new WagmiWallet({
   connector: new MetaMaskConnector(),
-  color: "#f6851a",
-  icon,
+  color: "#F6851B",
+  Icon,
 });
 
-export default walllet;
+export default wallet;

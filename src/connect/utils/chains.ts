@@ -5,7 +5,7 @@ import { utils } from "ethers";
 const NETWORK_DOESNT_EXIST_CODE = 4902;
 
 // pulled from https://github.com/ethereum-lists/chains/tree/master/_data/chains
-const chainWalletInfo: Record<string, object> = {
+export const evmChainWalleteInfo: Record<string, object> = {
   ethereum: {
     chainName: "Ethereum",
     nativeCurrency: {
@@ -58,26 +58,34 @@ const chainWalletInfo: Record<string, object> = {
 
 // switch or add chain
 export const addOrSwitchEVMChain = async ({
+  provider,
   chainId,
   chainSlug,
   chainName,
   publicRPC,
-}: Pick<
+}: {
+  provider: any;
+} & Pick<
   ChainInfo,
   "chainId" | "chainSlug" | "chainName" | "publicRPC"
 >): Promise<undefined> => {
-  // only support window.ethereum for now
+  // compare current chainId with chainId to switch to
+  const currentChainId = provider.chainId;
+
   if (
-    typeof window === "undefined" ||
-    !window.ethereum ||
-    // @ts-ignore
-    !window.ethereum.isConnected()
-  )
+    typeof currentChainId === "string" &&
+    parseInt(currentChainId) === chainId
+  ) {
     return;
+  }
+
+  if (typeof currentChainId === "number" && currentChainId === chainId) {
+    return;
+  }
 
   // https://docs.metamask.io/guide/rpc-api.html#unrestricted-methods
   try {
-    await window.ethereum?.request({
+    await provider?.request?.({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: utils.hexValue(chainId) }],
     });
@@ -91,8 +99,8 @@ export const addOrSwitchEVMChain = async ({
       err.code === NETWORK_DOESNT_EXIST_CODE
     ) {
       try {
-        const params = chainWalletInfo[chainSlug] || {};
-        await window.ethereum?.request({
+        const params = evmChainWalleteInfo[chainSlug] || {};
+        await provider?.request?.({
           method: "wallet_addEthereumChain",
           params: [
             {

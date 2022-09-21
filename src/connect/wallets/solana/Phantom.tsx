@@ -4,9 +4,9 @@ import { SolanaWalletAdpaterWallet } from "../../wallets";
 
 const color = "#5520f4";
 
-const walllet = new SolanaWalletAdpaterWallet({
+const wallet = new SolanaWalletAdpaterWallet({
   adapter: new PhantomWalletAdapter(),
   color,
 });
 
-export default walllet;
+export default wallet;

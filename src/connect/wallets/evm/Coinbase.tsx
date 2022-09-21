@@ -1,19 +1,24 @@
-import { defaultChains } from "@wagmi/core";
+import { tw } from "twind";
+import { allChains } from "@wagmi/core";
 import { CoinbaseWalletConnector } from "@wagmi/core/connectors/coinbaseWallet";
 
-import { WagmiWallet, WALLET_ICON_SIZE } from "../../wallets";
+import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 
 const color = "#2C5FF6";
 
-const icon = (
+const Icon = ({
+  height = WALLET_ICON_SIZE,
+  width = WALLET_ICON_SIZE,
+}: WalletIconProps) => (
   <svg
-    height={WALLET_ICON_SIZE}
-    width={WALLET_ICON_SIZE}
+    className={tw`rounded-lg`}
+    height={height}
+    width={width}
     viewBox="0 0 28 28"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <rect height={WALLET_ICON_SIZE} width={WALLET_ICON_SIZE} fill={color} />
+    <rect height={28} width={28} fill={color} />
     <path
       fillRule="evenodd"
       clipRule="evenodd"
@@ -23,16 +28,20 @@ const icon = (
   </svg>
 );
 
-const walllet = new WagmiWallet({
+const wallet = new WagmiWallet({
   connector: new CoinbaseWalletConnector({
-    chains: defaultChains,
+    chains: allChains,
     options: {
       appName: "Picket",
-      // headlessMode: true,
+      // headlessMode => means we show our own QR code
+      headlessMode: true,
     },
   }),
   color,
-  icon,
+  Icon,
+  getQRCodeURI: async (provider: any) => {
+    return provider.qrUrl;
+  },
 });
 
-export default walllet;
+export default wallet;

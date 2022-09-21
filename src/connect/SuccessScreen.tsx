@@ -1,6 +1,7 @@
 import { tw } from "twind";
 
 import { Wallet } from "./wallets";
+import InjectedWallet from "./wallets/evm/Injected";
 
 import PoweredByPicket from "./PoweredByPicket";
 
@@ -12,7 +13,8 @@ interface SuccessScreenProps {
 
 const SuccessScreen = ({
   displayAddress,
-  selectedWallet,
+  // default to injected wallet if we end up here with no selected wallet
+  selectedWallet = InjectedWallet,
   hasTokenOwnershipRequirements = false,
 }: SuccessScreenProps) => {
   return (
@@ -29,7 +31,10 @@ const SuccessScreen = ({
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className={tw`pt-0 h-full w-full text-[${selectedWallet.color}]`}
+          // default color to Picket purple
+          className={tw`pt-0 h-full w-full text-[${
+            selectedWallet?.color || "#5469d4"
+          }]`}
           viewBox="0 0 20 20"
           fill="currentColor"
         >
@@ -46,14 +51,18 @@ const SuccessScreen = ({
               : "flex-col text-center space-y-2"
           }`}
         >
-          <div className={tw`w-7 h-7`}>{selectedWallet.icon}</div>
+          <div className={tw`w-7 h-7`}>
+            <selectedWallet.Icon />
+          </div>
           <p
             className={tw`text-sm sm:text-base font-base w-45 text-gray-400 break-normal ${
               hasTokenOwnershipRequirements ? "text-left" : "text-center"
             }`}
           >
             You have successfully authenticated
-            {selectedWallet ? ` with ${selectedWallet.name}` : ""}
+            {selectedWallet && selectedWallet.name
+              ? ` with ${selectedWallet.name}`
+              : ""}
           </p>
         </div>
         {hasTokenOwnershipRequirements && (
