@@ -2,7 +2,10 @@ import type { FC } from "react";
 import { tw } from "twind";
 
 // Solana
-import { BaseMessageSignerWalletAdapter } from "@solana/wallet-adapter-base";
+import {
+  BaseMessageSignerWalletAdapter,
+  WalletReadyState,
+} from "@solana/wallet-adapter-base";
 import bs58 from "bs58";
 
 // EVM
@@ -17,18 +20,24 @@ export interface WalletIconProps {
 
 export type WalletIcon = FC<WalletIconProps>;
 
+interface ConnectOpts {
+  chainId?: number;
+}
+
 export interface Wallet {
   id: string;
   name: string;
   color: string;
   Icon: WalletIcon;
   qrCode?: boolean;
-  connect: () => Promise<{
+  ready: boolean;
+  connect: ({ chainId }?: ConnectOpts) => Promise<{
     walletAddress: string;
     provider: any;
   }>;
+  onConnecting?: (fn: () => void | Promise<void>) => void;
   signMessage: (message: string) => Promise<string>;
-  qrCodeURI?: () => Promise<string>;
+  qrCodeURI?: ({ chainId }?: ConnectOpts) => Promise<string>;
 }
 
 export class WagmiWallet implements Wallet {
@@ -44,7 +53,6 @@ export class WagmiWallet implements Wallet {
     connector,
     color,
     Icon,
-    qrCode = false,
     getQRCodeURI,
   }: {
     connector: Connector;
@@ -60,15 +68,32 @@ export class WagmiWallet implements Wallet {
 
     this.color = color;
     this.Icon = Icon;
-    this.qrCode = qrCode;
+    this.qrCode = Boolean(getQRCodeURI);
 
-    if (qrCode && getQRCodeURI) {
+    if (getQRCodeURI) {
       this.getQRCodeURI = getQRCodeURI;
     }
   }
 
-  async connect() {
-    const { account, provider } = await this.connector.connect();
+  get ready() {
+    return this.connector.ready;
+  }
+
+  // onConnecting exposes the start of the connecting event to the client
+  // This is needed for getting the QR code URI. The WalletConnect session and it's associated QR code URI are only available
+  // once only available once the connector starts "connecting"
+  onConnecting(fn: () => void | Promise<void>) {
+    this.connector.on("message", ({ type }) =>
+      type === "connecting" ? fn() : undefined
+    );
+  }
+
+  // switch to onConnecting for QR Code models
+  async connect({ chainId }: ConnectOpts = {}) {
+    const { account, provider } = await this.connector.connect({
+      chainId,
+    });
+
     return {
       walletAddress: account,
       provider,
@@ -81,10 +106,13 @@ export class WagmiWallet implements Wallet {
     return signature;
   }
 
-  async qrCodeURI() {
+  async qrCodeURI({ chainId }: ConnectOpts = {}) {
     if (!this.getQRCodeURI) return "";
 
-    const provider = await this.connector.getProvider();
+    const provider = await this.connector.getProvider({
+      chainId,
+    });
+
     return await this.getQRCodeURI(provider);
   }
 }
@@ -122,7 +150,17 @@ export class SolanaWalletAdpaterWallet implements Wallet {
 
     this.color = color;
   }
-  async connect() {
+
+  // TODO: In future, we can use Ready state to show the "get wallet" vs "use wallet" based on what is installed on the user's device
+  get ready() {
+    return (
+      this.adapter.readyState === WalletReadyState.Installed ||
+      this.adapter.readyState === WalletReadyState.Loadable
+    );
+  }
+
+  // for now, ignore chainId on Solana
+  async connect({}: ConnectOpts = {}) {
     await this.adapter.connect();
 
     const { connected, publicKey } = this.adapter;
