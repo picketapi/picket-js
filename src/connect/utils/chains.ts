@@ -58,26 +58,35 @@ export const evmChainWalleteInfo: Record<string, object> = {
 
 // switch or add chain
 export const addOrSwitchEVMChain = async ({
+  provider,
   chainId,
   chainSlug,
   chainName,
   publicRPC,
-}: Pick<
+}: {
+  provider: any;
+} & Pick<
   ChainInfo,
   "chainId" | "chainSlug" | "chainName" | "publicRPC"
 >): Promise<undefined> => {
-  // only support window.ethereum for now
-  if (
-    typeof window === "undefined" ||
-    !window.ethereum ||
-    // @ts-ignore
-    !window.ethereum.isConnected()
-  )
-    return;
+  // compare current chainId with chainId to switch to
+  const currentChainId = provider.chainId;
+
+  if (currentChainId) {
+    if (
+      typeof currentChainId === "string" &&
+      parseInt(currentChainId) === chainId
+    ) {
+      return;
+    }
+    if (typeof currentChainId === "number" && currentChainId === chainId) {
+      return;
+    }
+  }
 
   // https://docs.metamask.io/guide/rpc-api.html#unrestricted-methods
   try {
-    await window.ethereum?.request({
+    await provider?.request?.({
       method: "wallet_switchEthereumChain",
       params: [{ chainId: utils.hexValue(chainId) }],
     });
@@ -92,7 +101,7 @@ export const addOrSwitchEVMChain = async ({
     ) {
       try {
         const params = evmChainWalleteInfo[chainSlug] || {};
-        await window.ethereum?.request({
+        await provider?.request?.({
           method: "wallet_addEthereumChain",
           params: [
             {

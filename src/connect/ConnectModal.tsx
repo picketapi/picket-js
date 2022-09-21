@@ -323,18 +323,20 @@ const ConnectModal = ({
 
       // request to change chains
       // only support browser-based EVM for now
-      if (
-        chainType === ChainTypes.ETH &&
-        // check if it is a injected browser wallet
-        // @ts-ignore accessing a private property for now...
-        wallet.connector instanceof InjectedConnector
-      ) {
-        await addOrSwitchEVMChain({
-          chainSlug,
-          chainId,
-          chainName,
-          publicRPC,
-        });
+      if (chainType === ChainTypes.ETH) {
+        try {
+          // @ts-ignore accessing private property for now...
+          const p = await wallet.connector.getProvider();
+          await addOrSwitchEVMChain({
+            provider: p,
+            chainSlug,
+            chainId,
+            chainName,
+            publicRPC,
+          });
+        } catch {
+          // ignore error b/c auth will still work. network switch is for UX
+        }
       }
 
       const signature = await wallet.signMessage(message);
