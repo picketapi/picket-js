@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { tw } from "twind";
 
 import { Wallet } from "./wallets";
@@ -9,6 +8,7 @@ import QRCode from "./utils/QRCode";
 type ConnectState = null | "connect" | "signature" | "auth";
 
 interface QRCodeConnectScreenProps {
+  uri: string;
   selectedWallet: Wallet;
   connectState: ConnectState;
   error?: string;
@@ -16,17 +16,21 @@ interface QRCodeConnectScreenProps {
   connect: (wallet: Wallet) => void;
 }
 
-const getConnectMessage = (state: ConnectState) => {
-  if (!state || state === "connect") {
+const getConnectMessage = (state: ConnectState, error?: string) => {
+  if (state === "connect") {
     return "Open your phone camera or wallet to scan this QR code.";
   }
 
   if (state === "signature") {
-    return `We connected to your wallet. Open your wallet to sign the message and prove its you.`;
+    return `We've connected to your wallet. Open it to sign the message and prove its you.`;
   }
 
   if (state === "auth") {
     return `We've received your signature! Hold tight while we validate it.`;
+  }
+
+  if (error) {
+    return "There was an error connecting to your wallet.";
   }
 
   return "Open your phone camera or wallet to scan this QR code.";
@@ -57,28 +61,14 @@ const getWarningMessage = ({
   return `Still waiting for your signature. Open ${walletName} to approve the request.`;
 };
 
-// Unused for now
-// const isValidQRURI = (uri: string | null): Boolean =>
-// Boolean(uri && !uri.startsWith("wc:@1?bridge="));
-
 const QRCodeConnectScreen = ({
+  uri,
   selectedWallet,
   connectState,
   error,
   warning,
   connect,
 }: QRCodeConnectScreenProps) => {
-  const [qrCodeURI, setQRCodeURI] = useState<string | null>(null);
-
-  useEffect(() => {
-    // should never happen
-    if (!selectedWallet.qrCodeURI) return;
-
-    selectedWallet.qrCodeURI().then((uri) => {
-      setQRCodeURI(uri);
-    });
-  }, [selectedWallet]);
-
   return (
     <>
       <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
@@ -96,19 +86,19 @@ const QRCodeConnectScreen = ({
               })}
             </p>
           </div>
-          {selectedWallet && (
-            <div className={tw`mt-4 text-xs`}>
-              <p>
-                QR code not working?{" "}
-                <button
-                  className={tw`underline`}
-                  onClick={() => connect(selectedWallet)}
-                >
-                  Get a new one.
-                </button>
-              </p>
-            </div>
-          )}
+          <div className={tw`mt-4 text-xs`}>
+            <p>
+              {connectState === "connect"
+                ? "QR code not working?"
+                : "Don't see the signing request?"}{" "}
+              <button
+                className={tw`underline`}
+                onClick={() => connect(selectedWallet)}
+              >
+                Get a new one.
+              </button>
+            </p>
+          </div>
         </div>
       )}
       {error && (
@@ -136,18 +126,18 @@ const QRCodeConnectScreen = ({
       <div
         className={tw`flex flex-col items-center min-h-[300px] space-y-4 mt-5 mb-0`}
       >
-        {qrCodeURI ? (
+        {uri ? (
           <>
             <QRCode
-              uri={qrCodeURI}
+              uri={uri}
               logoColor={selectedWallet.color}
               logo={selectedWallet.Icon}
-              disabled={!connectState || connectState !== "connect"}
+              disabled={connectState !== "connect"}
             />
             <div
               className={tw`bg-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
             >
-              {getConnectMessage(connectState)}
+              {getConnectMessage(connectState, error)}
             </div>
             <div
               className={tw`flex flex-col justify-center items-center text-gray-500 space-y-2`}
