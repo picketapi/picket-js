@@ -1,4 +1,4 @@
-import { createRoot } from "react-dom/client";
+import { render } from "react-dom";
 
 import { SigningMessageContext, AuthState } from "../types";
 
@@ -38,9 +38,7 @@ const mount = (props: ConnectModalProps) => {
   document.body.appendChild(el);
 
   const container = document.getElementById(MODAL_ID);
-  const root = createRoot(container!);
-
-  root.render(<ConnectModal {...props} />);
+  render(<ConnectModal {...props} />, container);
 };
 
 export const connect = (
