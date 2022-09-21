@@ -1,5 +1,5 @@
 import { tw } from "twind";
-import { defaultChains } from "@wagmi/core";
+import { allChains } from "@wagmi/core";
 import { CoinbaseWalletConnector } from "@wagmi/core/connectors/coinbaseWallet";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
@@ -30,15 +30,15 @@ const Icon = ({
 
 const wallet = new WagmiWallet({
   connector: new CoinbaseWalletConnector({
-    chains: defaultChains,
+    chains: allChains,
     options: {
       appName: "Picket",
+      // headlessMode => means we show our own QR code
       headlessMode: true,
     },
   }),
   color,
   Icon,
-  qrCode: true,
   getQRCodeURI: async (provider: any) => {
     return provider.qrUrl;
   },

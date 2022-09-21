@@ -1,4 +1,4 @@
-import { createClient, configureChains, defaultChains } from "@wagmi/core";
+import { createClient, configureChains, allChains } from "@wagmi/core";
 import { publicProvider } from "@wagmi/core/providers/public";
 
 import MetaMask from "./MetaMask";
@@ -6,7 +6,7 @@ import Injected from "./Injected";
 import WalletConnect from "./WalletConnect";
 import Coinbase from "./Coinbase";
 
-const { provider } = configureChains(defaultChains, [publicProvider()]);
+const { provider } = configureChains(allChains, [publicProvider()]);
 
 // https://github.com/rainbow-me/rainbowkit/blob/main/packages/rainbowkit/src/wallets/walletConnectors/metaMask/metaMask.ts
 export function isMetaMask(

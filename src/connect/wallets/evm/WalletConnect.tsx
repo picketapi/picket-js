@@ -1,5 +1,5 @@
 import { tw } from "twind";
-import { defaultChains } from "@wagmi/core";
+import { allChains } from "@wagmi/core";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
@@ -28,17 +28,15 @@ const Icon = ({
 
 const wallet = new WagmiWallet({
   connector: new WalletConnectConnector({
-    chains: defaultChains,
+    chains: allChains,
     options: {
       qrcode: false,
     },
   }),
   color,
   Icon,
-  qrCode: true,
   getQRCodeURI: async (provider: any) => {
     return provider.connector.uri;
   },
 });
-
 export default wallet;

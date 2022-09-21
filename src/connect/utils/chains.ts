@@ -5,7 +5,7 @@ import { utils } from "ethers";
 const NETWORK_DOESNT_EXIST_CODE = 4902;
 
 // pulled from https://github.com/ethereum-lists/chains/tree/master/_data/chains
-const chainWalletInfo: Record<string, object> = {
+export const evmChainWalleteInfo: Record<string, object> = {
   ethereum: {
     chainName: "Ethereum",
     nativeCurrency: {
@@ -91,7 +91,7 @@ export const addOrSwitchEVMChain = async ({
       err.code === NETWORK_DOESNT_EXIST_CODE
     ) {
       try {
-        const params = chainWalletInfo[chainSlug] || {};
+        const params = evmChainWalleteInfo[chainSlug] || {};
         await window.ethereum?.request({
           method: "wallet_addEthereumChain",
           params: [
