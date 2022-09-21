@@ -3,6 +3,7 @@ import { allChains } from "@wagmi/core";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
+import { isIOS } from "../../utils/device";
 
 const color = "#3B99FC";
 
@@ -26,17 +27,26 @@ const Icon = ({
   </svg>
 );
 
+const iOS = isIOS();
+
 const wallet = new WagmiWallet({
   connector: new WalletConnectConnector({
     chains: allChains,
     options: {
-      qrcode: false,
+      // on iOS, enable built-in WalletConnect selection modal
+      qrcode: iOS,
     },
   }),
   color,
   Icon,
-  getQRCodeURI: async (provider: any) => {
-    return provider.connector.uri;
-  },
+  // on iOS, disable custom QR code
+  ...(iOS
+    ? {}
+    : {
+        getQRCodeURI: async (provider: any) => {
+          return provider.connector.uri;
+        },
+      }),
 });
+
 export default wallet;
