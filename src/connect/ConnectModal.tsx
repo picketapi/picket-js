@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { tw } from "twind";
-import { InjectedConnector } from "@wagmi/core";
 
 import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
