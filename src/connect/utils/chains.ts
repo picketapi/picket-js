@@ -72,16 +72,15 @@ export const addOrSwitchEVMChain = async ({
   // compare current chainId with chainId to switch to
   const currentChainId = provider.chainId;
 
-  if (currentChainId) {
-    if (
-      typeof currentChainId === "string" &&
-      parseInt(currentChainId) === chainId
-    ) {
-      return;
-    }
-    if (typeof currentChainId === "number" && currentChainId === chainId) {
-      return;
-    }
+  if (
+    typeof currentChainId === "string" &&
+    parseInt(currentChainId) === chainId
+  ) {
+    return;
+  }
+
+  if (typeof currentChainId === "number" && currentChainId === chainId) {
+    return;
   }
 
   // https://docs.metamask.io/guide/rpc-api.html#unrestricted-methods
