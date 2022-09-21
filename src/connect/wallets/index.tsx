@@ -31,13 +31,13 @@ export interface Wallet {
   Icon: WalletIcon;
   qrCode?: boolean;
   ready: boolean;
-  connect: ({ chainId }?: ConnectOpts) => Promise<{
+  connect: (opts?: ConnectOpts) => Promise<{
     walletAddress: string;
     provider: any;
   }>;
   onConnecting?: (fn: () => void | Promise<void>) => void;
   signMessage: (message: string) => Promise<string>;
-  qrCodeURI?: ({ chainId }?: ConnectOpts) => Promise<string>;
+  qrCodeURI?: (opts?: ConnectOpts) => Promise<string>;
 }
 
 export class WagmiWallet implements Wallet {
@@ -50,11 +50,13 @@ export class WagmiWallet implements Wallet {
   getQRCodeURI?: (provider: any) => Promise<string>;
 
   constructor({
+    name,
     connector,
     color,
     Icon,
     getQRCodeURI,
   }: {
+    name?: string;
     connector: Connector;
     color: string;
     Icon: WalletIcon;
@@ -64,7 +66,7 @@ export class WagmiWallet implements Wallet {
     this.connector = connector;
 
     this.id = connector.id;
-    this.name = connector.name;
+    this.name = name || connector.name;
 
     this.color = color;
     this.Icon = Icon;

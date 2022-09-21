@@ -3,6 +3,7 @@ import { allChains } from "@wagmi/core";
 import { CoinbaseWalletConnector } from "@wagmi/core/connectors/coinbaseWallet";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
+import { isIOS } from "../../utils/device";
 
 const color = "#2C5FF6";
 
@@ -39,9 +40,14 @@ const wallet = new WagmiWallet({
   }),
   color,
   Icon,
-  getQRCodeURI: async (provider: any) => {
-    return provider.qrUrl;
-  },
+  // on iOS, disable custom QR code because it will automatically deep link
+  ...(isIOS()
+    ? {}
+    : {
+        getQRCodeURI: async (provider: any) => {
+          return provider.qrUrl;
+        },
+      }),
 });
 
 export default wallet;

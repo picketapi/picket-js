@@ -4,6 +4,7 @@ import { publicProvider } from "@wagmi/core/providers/public";
 import MetaMask from "./MetaMask";
 import Injected from "./Injected";
 import WalletConnect from "./WalletConnect";
+import Rainbow from "./Rainbow";
 import Coinbase from "./Coinbase";
 
 const { provider } = configureChains(allChains, [publicProvider()]);
@@ -43,9 +44,10 @@ const needsInjectedWallet =
 // TODO: Consider adding brave native wallet support (for icon)
 
 export const wallets = needsInjectedWallet
-  ? [Injected, MetaMask, WalletConnect, Coinbase]
-  : [MetaMask, WalletConnect, Coinbase];
+  ? [Injected, MetaMask, Rainbow, Coinbase, WalletConnect]
+  : [MetaMask, Rainbow, Coinbase, WalletConnect];
 
+// this is never referenced but is needed!
 export const wagmiClient = createClient({
   connectors: wallets.map((wallet) => wallet.connector),
   provider,
