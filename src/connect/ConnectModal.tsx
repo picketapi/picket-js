@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { tw } from "twind";
+import { InjectedConnector } from "@wagmi/core";
 
 import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 
@@ -147,6 +148,7 @@ const ConnectModal = ({
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedChain, setSelectedChain] = useState<string>("");
+  const [qrCodeURI, setQRCodeURI] = useState<string>("");
 
   useEffect(() => {
     if (!chain) {
@@ -254,7 +256,33 @@ const ConnectModal = ({
       state = "connect";
       setConnectState(state);
 
-      const { walletAddress, provider } = await wallet.connect();
+      // use chain associated with the auth request
+      // should be cached at this point
+      const { chainSlug, chainId, chainType, publicRPC, chainName } =
+        await window.picket.chainInfo(selectedChain);
+
+      // if the wallet is a QR code wallet and the
+      if (wallet.ready && wallet.qrCode && !!wallet.onConnecting) {
+        // HACK: RainbowKit implements a similar hack
+        // keep local variable to prevent multiple calls to the same callback
+        let hasCalledCallback = false;
+
+        wallet.onConnecting(async () => {
+          // should never happen
+          if (!wallet.qrCodeURI) return;
+          // prevent from calling multiple times
+          if (hasCalledCallback) return;
+
+          hasCalledCallback = true;
+          const uri = await wallet.qrCodeURI();
+
+          setQRCodeURI(uri);
+        });
+      }
+
+      const { walletAddress, provider } = await wallet.connect({
+        chainId,
+      });
 
       state = "signature";
       setConnectState(state);
@@ -265,11 +293,6 @@ const ConnectModal = ({
       const domain = window.location.host;
       const uri = window.location.origin;
       const issuedAt = new Date().toISOString();
-
-      // use chain associated with the auth request
-      // should be cached at this point
-      const { chainSlug, chainId, chainType, publicRPC, chainName } =
-        await window.picket.chainInfo(selectedChain);
 
       const context = {
         domain,
@@ -299,9 +322,21 @@ const ConnectModal = ({
       });
 
       // request to change chains
-      // only support EVM for now
+      // only support EVM wallets for now
       if (chainType === ChainTypes.ETH) {
-        await addOrSwitchEVMChain({ chainSlug, chainId, chainName, publicRPC });
+        try {
+          // @ts-ignore accessing private property for now...
+          const p = await wallet.connector.getProvider();
+          await addOrSwitchEVMChain({
+            provider: p,
+            chainSlug,
+            chainId,
+            chainName,
+            publicRPC,
+          });
+        } catch {
+          // ignore error b/c auth will still work. network switch is for UX
+        }
       }
 
       const signature = await wallet.signMessage(message);
@@ -518,6 +553,7 @@ const ConnectModal = ({
           />
         ) : selectedWallet?.qrCode ? (
           <QRCodeConnectScreen
+            uri={qrCodeURI}
             selectedWallet={selectedWallet as Wallet}
             connectState={connectState}
             connect={connect}
