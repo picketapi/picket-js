@@ -375,6 +375,8 @@ const ConnectModal = ({
         result = { ...result, auth };
       }
 
+      // re-select wallet in case it was changed
+      setSelectedWallet(wallet);
       setSuccess(true);
       setError("");
 
