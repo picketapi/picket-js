@@ -44,7 +44,7 @@
     "@types/qrcode": "^1.5.0",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
-    "@wagmi/core": "^0.5.3",
+    "@wagmi/core": "^0.5.4",
     "@walletconnect/ethereum-provider": "^1.8.0",
     "@walletconnect/web3-provider": "^1.8.0",
     "bs58": "^4.0.1",
