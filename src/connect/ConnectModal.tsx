@@ -322,7 +322,7 @@ const ConnectModal = ({
       });
 
       // request to change chains
-      // only support browser-based EVM for now
+      // only support EVM wallets for now
       if (chainType === ChainTypes.ETH) {
         try {
           // @ts-ignore accessing private property for now...
