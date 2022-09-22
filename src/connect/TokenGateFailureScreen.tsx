@@ -27,13 +27,15 @@ const getPurchaseLink = (chain: string, requirements: AuthRequirements) => {
   const { contractAddress } = requirements;
 
   if (chain === "ethereum") {
-    if (!contractAddress) return "https://opensea.io/";
+    if (!contractAddress)
+      return "https://opensea.io/assets?search[chains][0]=ETHEREUM&search[resultModel]=ASSETS";
 
     return `https://opensea.io/assets?search[resultModel]=ASSETS&search[query]=${contractAddress}&search[chains][0]=ETHEREUM`;
   }
 
   if (chain === "polygon") {
-    if (!contractAddress) return "https://opensea.io/";
+    if (!contractAddress)
+      return "https://opensea.io/assets?search[chains][0]=MATIC&search[resultModel]=ASSETS";
 
     return `https://opensea.io/assets?search[resultModel]=ASSETS&search[query]=${contractAddress}&search[chains][0]=MATIC`;
   }
@@ -45,9 +47,10 @@ const getPurchaseLink = (chain: string, requirements: AuthRequirements) => {
   }
 
   if (chain === "arbitrum") {
-    if (!contractAddress) return "https://stratosnft.io";
+    if (!contractAddress)
+      return "https://opensea.io/assets?search[chains][0]=ARBITRUM&search[resultModel]=ASSETS";
 
-    return `https://stratosnft.io/search?query=${contractAddress}`;
+    return `https://opensea.io/assets?search[resultModel]=ASSETS&search[query]=${contractAddress}&search[chains][0]=ARBITRUM`;
   }
 
   if (chain === "avalanche") {
@@ -134,5 +137,4 @@ const TokenGateFailureScreen = ({
     </>
   );
 };
-
 export default TokenGateFailureScreen;
