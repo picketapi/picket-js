@@ -203,9 +203,7 @@ const getErrorMessage = ({
       }
     }
 
-    // TODO!!!
     // assume token-gating error
-    // do not un-select wallet so we can customize the error screen
     return NOT_ENOUGH_TOKENS_ERROR;
   }
 
