@@ -50,12 +50,14 @@ export class WagmiWallet implements Wallet {
   getQRCodeURI?: (provider: any) => Promise<string>;
 
   constructor({
+    id,
     name,
     connector,
     color,
     Icon,
     getQRCodeURI,
   }: {
+    id?: string;
     name?: string;
     connector: Connector;
     color: string;
@@ -65,7 +67,7 @@ export class WagmiWallet implements Wallet {
   }) {
     this.connector = connector;
 
-    this.id = connector.id;
+    this.id = id || connector.id;
     this.name = name || connector.name;
 
     this.color = color;
