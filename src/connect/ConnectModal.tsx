@@ -135,12 +135,14 @@ const getWarningMessage = ({
 const getErrorMessage = ({
   err,
   wallet,
+  walletAddress,
   state,
   selectedChain,
   requirements,
 }: {
   err?: Error;
   wallet: Wallet;
+  walletAddress?: string;
   state: ConnectState;
   selectedChain: string;
   requirements?: AuthRequirements;
@@ -181,17 +183,7 @@ const getErrorMessage = ({
       }
       if (
         // @ts-ignore TS isn't respecting "msg" in err
-        err.msg.toLowerCase().includes("any erc20, erc721, erc1155 tokens")
-      ) {
-        return `${
-          requirements?.contractAddress
-            ? displayWalletAddress(requirements.contractAddress)
-            : "The provided contract"
-        } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`;
-      }
-      if (
-        // @ts-ignore TS isn't respecting "msg" in err
-        err.msg.toLowerCase().includes("allowedWallets must be an array")
+        err.msg.toLowerCase().includes("allowedwallets must be an array")
       ) {
         return `Incorrect parameter type for "allowedWallets". If this error persists, please contact your site administrator or team@picketapi.com.`;
       }
@@ -199,7 +191,11 @@ const getErrorMessage = ({
         // @ts-ignore TS isn't respecting "msg" in err
         err.msg.toLowerCase().includes("allowed wallet addresses")
       ) {
-        return "Your wallet address is not on the allowed list of wallet addresses.";
+        return `${
+          walletAddress
+            ? displayWalletAddress(walletAddress)
+            : "Your wallet address"
+        } is not on the allowed list of wallet addresses.`;
       }
     }
 
@@ -349,6 +345,9 @@ const ConnectModal = ({
     }, CONNECT_TIMEOUT_MS);
     warningTimeoutRef.current = timeoutID;
 
+    // keep in scope for error messages
+    let walletAddress: string | undefined;
+
     try {
       setSelectedWallet(wallet);
 
@@ -409,9 +408,12 @@ const ConnectModal = ({
         });
       }
 
-      const { walletAddress, provider } = await wallet.connect({
+      // do not deconstruct to avoid duplicate walletAddress variables
+      const connectResult = await wallet.connect({
         chainId,
       });
+      walletAddress = connectResult.walletAddress;
+      const { provider } = connectResult;
 
       state = "signature";
       setConnectState(state);
@@ -527,6 +529,7 @@ const ConnectModal = ({
         err: err as Error | undefined,
         state,
         wallet,
+        walletAddress,
         selectedChain,
         requirements,
       });
