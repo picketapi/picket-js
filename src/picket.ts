@@ -289,6 +289,7 @@ export class Picket {
     tokenIds,
     contractAddress,
     minTokenBalance,
+    allowedWallets,
     redirectURI,
     codeChallenge,
     state,
@@ -316,6 +317,12 @@ export class Picket {
       }
     }
 
+    if (allowedWallets) {
+      for (let address of allowedWallets) {
+        url.searchParams.append("allowedWallets", address);
+      }
+    }
+
     return url.toString();
   }
 
@@ -331,6 +338,7 @@ export class Picket {
       tokenIds,
       contractAddress,
       minTokenBalance,
+      allowedWallets,
     }: LoginRequest = {},
     { redirectURI = window.location.href, appState = {} }: LoginOptions = {
       redirectURI: window.location.href,
@@ -366,6 +374,7 @@ export class Picket {
       contractAddress,
       tokenIds,
       minTokenBalance,
+      allowedWallets,
       redirectURI,
       state,
       codeChallenge: code_challenge,
@@ -485,6 +494,7 @@ export class Picket {
       contractAddress,
       tokenIds,
       minTokenBalance,
+      allowedWallets,
     }: LoginRequest = {},
     { redirectURI = window.location.href }: LoginOptions = {
       redirectURI: window.location.href,
@@ -510,6 +520,7 @@ export class Picket {
       contractAddress,
       tokenIds,
       minTokenBalance,
+      allowedWallets,
       state,
       codeChallenge: code_challenge,
       redirectURI,

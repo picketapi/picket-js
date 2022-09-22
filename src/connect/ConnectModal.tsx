@@ -132,6 +132,101 @@ const getWarningMessage = ({
   return `Still waiting for your signature. Open ${walletName} to approve the request.`;
 };
 
+const getErrorMessage = ({
+  err,
+  wallet,
+  walletAddress,
+  state,
+  selectedChain,
+  requirements,
+}: {
+  err?: Error;
+  wallet: Wallet;
+  walletAddress?: string;
+  state: ConnectState;
+  selectedChain: string;
+  requirements?: AuthRequirements;
+}): string => {
+  const walletName =
+    // special case for WalletConnect
+    wallet?.name && wallet.name !== "WalletConnect"
+      ? wallet.name
+      : "your wallet";
+
+  if (state === "auth") {
+    if (
+      err &&
+      typeof err === "object" &&
+      "msg" in err &&
+      // @ts-ignore TS isn't respecting "msg" in err
+      typeof err.msg === "string"
+    ) {
+      // @ts-ignore TS isn't respecting "msg" in err
+      if (err.msg.toLowerCase().includes("invalid signature")) {
+        return "Signature expired. Please try again.";
+      }
+      // @ts-ignore TS isn't respecting "msg" in err
+      if (err.msg.toLowerCase().includes("token gating")) {
+        return `${toTitleCase(
+          selectedChain
+        )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`;
+      }
+      if (
+        // @ts-ignore TS isn't respecting "msg" in err
+        err.msg.toLowerCase().includes("any erc20, erc721, erc1155 tokens")
+      ) {
+        return `${
+          requirements?.contractAddress
+            ? displayWalletAddress(requirements.contractAddress)
+            : "The provided contract"
+        } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`;
+      }
+      if (
+        // @ts-ignore TS isn't respecting "msg" in err
+        err.msg.toLowerCase().includes("allowedwallets must be an array")
+      ) {
+        return `Incorrect parameter type for "allowedWallets". If this error persists, please contact your site administrator or team@picketapi.com.`;
+      }
+      if (
+        // @ts-ignore TS isn't respecting "msg" in err
+        err.msg.toLowerCase().includes("allowed wallet addresses")
+      ) {
+        return `${
+          walletAddress
+            ? displayWalletAddress(walletAddress)
+            : "Your wallet address"
+        } is not on the allowed list of wallet addresses.`;
+      }
+    }
+
+    // assume token-gating error
+    return NOT_ENOUGH_TOKENS_ERROR;
+  }
+
+  // check for user rejected error cases
+  if (
+    err &&
+    typeof err === "object" &&
+    "message" in err &&
+    // @ts-ignore
+    err.message.toLowerCase().includes("user rejected")
+  ) {
+    if (state === "signature") {
+      return `The signature request was rejected.`;
+    }
+
+    return `The request to connect to ${walletName} was rejected. Is your wallet unlocked?`;
+  }
+
+  // unknown error in signature state
+  if (state === "signature") {
+    return `Failed to get your signature.`;
+  }
+
+  // last resort
+  return `Failed to connect to ${walletName}.`;
+};
+
 const ConnectModal = ({
   chain,
   doAuth = false,
@@ -250,6 +345,9 @@ const ConnectModal = ({
     }, CONNECT_TIMEOUT_MS);
     warningTimeoutRef.current = timeoutID;
 
+    // keep in scope for error messages
+    let walletAddress: string | undefined;
+
     try {
       setSelectedWallet(wallet);
 
@@ -310,9 +408,12 @@ const ConnectModal = ({
         });
       }
 
-      const { walletAddress, provider } = await wallet.connect({
+      // do not deconstruct to avoid duplicate walletAddress variables
+      const connectResult = await wallet.connect({
         chainId,
       });
+      walletAddress = connectResult.walletAddress;
+      const { provider } = connectResult;
 
       state = "signature";
       setConnectState(state);
@@ -424,81 +525,21 @@ const ConnectModal = ({
 
       const shouldClearSelectedWallet = !wallet.qrCode;
 
-      if (state === "auth") {
-        if (
-          err &&
-          typeof err === "object" &&
-          "msg" in err &&
-          // @ts-ignore TS isn't respecting "msg" in err
-          typeof err.msg === "string"
-        ) {
-          // @ts-ignore TS isn't respecting "msg" in err
-          if (err.msg.toLowerCase().includes("invalid signature")) {
-            setError("Signature expired. Please try again.");
-            shouldClearSelectedWallet && setSelectedWallet(undefined);
-            return;
-          }
-          // @ts-ignore TS isn't respecting "msg" in err
-          if (err.msg.toLowerCase().includes("not support authorization")) {
-            setError(
-              `${toTitleCase(
-                selectedChain
-              )} doesn't support token gating yet. Reach out to team@picketapi.com for more info.`
-            );
-            shouldClearSelectedWallet && setSelectedWallet(undefined);
-            return;
-          }
-          if (
-            // @ts-ignore TS isn't respecting "msg" in err
-            err.msg.toLowerCase().includes("any erc20, erc721, erc1155 tokens")
-          ) {
-            setError(
-              `${
-                requirements?.contractAddress
-                  ? displayWalletAddress(requirements.contractAddress)
-                  : "The provided contract"
-              } is not an ERC20, ERC721, or ERC1155 token. If this error persists, please contact your site administrator or team@picketapi.com.`
-            );
-            shouldClearSelectedWallet && setSelectedWallet(undefined);
-            return;
-          }
-        }
+      const errorMsg = getErrorMessage({
+        err: err as Error | undefined,
+        state,
+        wallet,
+        walletAddress,
+        selectedChain,
+        requirements,
+      });
 
-        // assume token-gating error
-        // do not un-select wallet so we can customize the error screen
-        setError(NOT_ENOUGH_TOKENS_ERROR);
-        return;
-      }
-      // clear selected wallet in all errors below
-      shouldClearSelectedWallet && setSelectedWallet(undefined);
-
-      // check for user rejected error cases
-      if (
-        err &&
-        typeof err === "object" &&
-        "message" in err &&
-        // @ts-ignore
-        err.message.toLowerCase().includes("user rejected")
-      ) {
-        if (state === "signature") {
-          setError(`The signature request was rejected.`);
-          return;
-        }
-
-        setError(
-          `The request to connect to ${wallet.name} was rejected. Is your wallet unlocked?`
-        );
-        return;
+      // do not un-select wallet on token gating error so we can customize the error screen
+      if (shouldClearSelectedWallet && errorMsg !== NOT_ENOUGH_TOKENS_ERROR) {
+        setSelectedWallet(undefined);
       }
 
-      // unknown error in signature state
-      if (state === "signature") {
-        setError(`Failed to get your signature.`);
-        return;
-      }
-
-      // last resort
-      setError(`Failed to connect to ${wallet.name}.`);
+      setError(errorMsg);
     } finally {
       // reset connect state
       setConnectState(null);
