@@ -3,7 +3,7 @@ import { MetaMaskConnector } from "@wagmi/core/connectors/metaMask";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
-import { isIOS, isMobile } from "../../utils/device";
+import { isAndroid } from "../../utils/device";
 
 const Icon = ({
   height = WALLET_ICON_SIZE,
@@ -252,13 +252,44 @@ const Icon = ({
   </svg>
 );
 
-const isMetaMaskInjected =
-  typeof window !== "undefined" && window.ethereum?.isMetaMask;
+export const isMetaMask = (
+  ethereum: NonNullable<typeof window["ethereum"]>
+) => {
+  // Logic borrowed from wagmi's MetaMaskConnector
+  // https://github.com/tmm/wagmi/blob/main/packages/core/src/connectors/metaMask.ts
+  const isMetaMask = Boolean(ethereum.isMetaMask);
 
-const shouldUseWalletConnect = isMobile() && !isMetaMaskInjected;
+  if (!isMetaMask) {
+    return false;
+  }
+
+  // Brave tries to make itself look like MetaMask
+  // Could also try RPC `web3_clientVersion` if following is unreliable
+  if (ethereum.isBraveWallet && !ethereum._events && !ethereum._state) {
+    return false;
+  }
+
+  if (ethereum.isTokenPocket) {
+    return false;
+  }
+
+  if (ethereum.isTokenary) {
+    return false;
+  }
+
+  return true;
+};
+
+const isMetaMaskInjected =
+  typeof window !== "undefined" &&
+  typeof window.ethereum !== "undefined" &&
+  isMetaMask(window.ethereum);
+
+const shouldUseWalletConnect = !isMetaMaskInjected;
 
 const wallet = new WagmiWallet({
   id: "metamask",
+  name: "MetaMask",
   connector: shouldUseWalletConnect
     ? new WalletConnectConnector({
         chains: allChains,
@@ -276,12 +307,12 @@ const wallet = new WagmiWallet({
     ? {
         getQRCodeURI: async (provider: any) => {
           const { uri } = provider.connector;
-          const iOS = isIOS();
+          const android = isAndroid();
 
-          // non-iOS devices can use the default QR code
-          if (!iOS) return uri;
+          // android devices can use the default QR code
+          if (!android) return uri;
 
-          // on iOS, use the deep link
+          // non-android, use the deep link
           return `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
         },
       }
