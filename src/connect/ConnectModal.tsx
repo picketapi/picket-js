@@ -564,7 +564,7 @@ const ConnectModal = ({
         ) : (
           <>
             <h1
-              className={tw`pt-1 mb-6 text-xl sm:text-2xl font-semibold break-words text-left`}
+              className={tw`mb-6 text-xl font-semibold break-words text-left`}
             >
               Log In With Your Wallet
             </h1>
