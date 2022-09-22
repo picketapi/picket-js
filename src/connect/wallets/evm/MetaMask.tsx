@@ -1,6 +1,9 @@
+import { allChains } from "@wagmi/core";
 import { MetaMaskConnector } from "@wagmi/core/connectors/metaMask";
+import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
+import { isIOS, isMobile } from "../../utils/device";
 
 const Icon = ({
   height = WALLET_ICON_SIZE,
@@ -249,10 +252,40 @@ const Icon = ({
   </svg>
 );
 
+const isMetaMaskInjected =
+  typeof window !== "undefined" && window.ethereum?.isMetaMask;
+
+const shouldUseWalletConnect = isMobile() && !isMetaMaskInjected;
+
 const wallet = new WagmiWallet({
-  connector: new MetaMaskConnector(),
+  id: "metamask",
+  connector: shouldUseWalletConnect
+    ? new WalletConnectConnector({
+        chains: allChains,
+        options: {
+          qrcode: false,
+        },
+      })
+    : new MetaMaskConnector({
+        chains: allChains,
+      }),
   color: "#F6851B",
   Icon,
+  // show QR code if using wallet connect
+  ...(shouldUseWalletConnect
+    ? {
+        getQRCodeURI: async (provider: any) => {
+          const { uri } = provider.connector;
+          const iOS = isIOS();
+
+          // non-iOS devices can use the default QR code
+          if (!iOS) return uri;
+
+          // on iOS, use the deep link
+          return `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
+        },
+      }
+    : {}),
 });
 
 export default wallet;
