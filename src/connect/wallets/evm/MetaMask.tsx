@@ -252,6 +252,7 @@ const Icon = ({
   </svg>
 );
 
+// https://github.com/rainbow-me/rainbowkit/blob/main/packages/rainbowkit/src/wallets/walletConnectors/metaMask/metaMask.ts
 export const isMetaMask = (
   ethereum: NonNullable<typeof window["ethereum"]>
 ) => {
@@ -310,7 +311,7 @@ const wallet = new WagmiWallet({
           const android = isAndroid();
 
           // android devices can use the default QR code
-          if (!android) return uri;
+          if (android) return uri;
 
           // non-android, use the deep link
           return `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
