@@ -69,9 +69,7 @@ const TokenGateFailureScreen = ({
 }: TokenGateFailureScreenProps) => {
   return (
     <>
-      <h1
-        className={tw`pt-1 text-xl sm:text-2xl font-semibold break-words text-center`}
-      >
+      <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
         Almost There
       </h1>
       <div className={tw`flex flex-col min-h-[300px] space-y-4 mt-0 mb-0`}>

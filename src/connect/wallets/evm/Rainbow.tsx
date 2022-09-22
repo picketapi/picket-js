@@ -59,8 +59,8 @@ const Icon = ({
         y2="120"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#174299" />
-        <stop offset="1" stop-color="#001E59" />
+        <stop stopColor="#174299" />
+        <stop offset="1" stopColor="#001E59" />
       </linearGradient>
       <radialGradient
         id="paint1_radial_62_329"
@@ -70,8 +70,8 @@ const Icon = ({
         gradientUnits="userSpaceOnUse"
         gradientTransform="translate(26 94) rotate(-90) scale(74)"
       >
-        <stop offset="0.770277" stop-color="#FF4000" />
-        <stop offset="1" stop-color="#8754C9" />
+        <stop offset="0.770277" stopColor="#FF4000" />
+        <stop offset="1" stopColor="#8754C9" />
       </radialGradient>
       <linearGradient
         id="paint2_linear_62_329"
@@ -81,8 +81,8 @@ const Icon = ({
         y2="97"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#FF4000" />
-        <stop offset="1" stop-color="#8754C9" />
+        <stop stopColor="#FF4000" />
+        <stop offset="1" stopColor="#8754C9" />
       </linearGradient>
       <linearGradient
         id="paint3_linear_62_329"
@@ -92,8 +92,8 @@ const Icon = ({
         y2="37"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#8754C9" />
-        <stop offset="1" stop-color="#FF4000" />
+        <stop stopColor="#8754C9" />
+        <stop offset="1" stopColor="#FF4000" />
       </linearGradient>
       <radialGradient
         id="paint4_radial_62_329"
@@ -103,8 +103,8 @@ const Icon = ({
         gradientUnits="userSpaceOnUse"
         gradientTransform="translate(26 94) rotate(-90) scale(58)"
       >
-        <stop offset="0.723929" stop-color="#FFF700" />
-        <stop offset="1" stop-color="#FF9901" />
+        <stop offset="0.723929" stopColor="#FFF700" />
+        <stop offset="1" stopColor="#FF9901" />
       </radialGradient>
       <linearGradient
         id="paint5_linear_62_329"
@@ -114,8 +114,8 @@ const Icon = ({
         y2="97"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#FFF700" />
-        <stop offset="1" stop-color="#FF9901" />
+        <stop stopColor="#FFF700" />
+        <stop offset="1" stopColor="#FF9901" />
       </linearGradient>
       <linearGradient
         id="paint6_linear_62_329"
@@ -125,8 +125,8 @@ const Icon = ({
         y2="36"
         gradientUnits="userSpaceOnUse"
       >
-        <stop stop-color="#FFF700" />
-        <stop offset="1" stop-color="#FF9901" />
+        <stop stopColor="#FFF700" />
+        <stop offset="1" stopColor="#FF9901" />
       </linearGradient>
       <radialGradient
         id="paint7_radial_62_329"
@@ -136,8 +136,8 @@ const Icon = ({
         gradientUnits="userSpaceOnUse"
         gradientTransform="translate(26 94) rotate(-90) scale(42)"
       >
-        <stop offset="0.59513" stop-color="#00AAFF" />
-        <stop offset="1" stop-color="#01DA40" />
+        <stop offset="0.59513" stopColor="#00AAFF" />
+        <stop offset="1" stopColor="#01DA40" />
       </radialGradient>
       <radialGradient
         id="paint8_radial_62_329"
@@ -147,8 +147,8 @@ const Icon = ({
         gradientUnits="userSpaceOnUse"
         gradientTransform="translate(51 97) scale(17 45.3333)"
       >
-        <stop stop-color="#00AAFF" />
-        <stop offset="1" stop-color="#01DA40" />
+        <stop stopColor="#00AAFF" />
+        <stop offset="1" stopColor="#01DA40" />
       </radialGradient>
       <radialGradient
         id="paint9_radial_62_329"
@@ -158,14 +158,15 @@ const Icon = ({
         gradientUnits="userSpaceOnUse"
         gradientTransform="translate(23 69) rotate(-90) scale(17 322.37)"
       >
-        <stop stop-color="#00AAFF" />
-        <stop offset="1" stop-color="#01DA40" />
+        <stop stopColor="#00AAFF" />
+        <stop offset="1" stopColor="#01DA40" />
       </radialGradient>
     </defs>
   </svg>
 );
 
 const wallet = new WagmiWallet({
+  id: "rainbow",
   name: "Rainbow",
   connector: new WalletConnectConnector({
     chains: allChains,
