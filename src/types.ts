@@ -36,6 +36,7 @@ export interface AuthRequirements {
   contractAddress?: string;
   tokenIds?: string[];
   minTokenBalance?: number | string;
+  allowedWallets?: string[];
 }
 
 export interface AuthenticatedUser {
