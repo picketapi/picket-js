@@ -153,6 +153,21 @@ const getErrorMessage = ({
       ? wallet.name
       : "your wallet";
 
+  // generic errors
+  if (
+    err &&
+    typeof err === "object" &&
+    "msg" in err &&
+    // @ts-ignore TS isn't respecting "msg" in err
+    typeof err.msg === "string"
+  ) {
+    // @ts-ignore TS isn't respecting "msg" in err
+    if (err.msg.toLowerCase().includes("invalid project key")) {
+      return "Invalid API key. Copy your project's publishable key from your Picket dashboard: https://picketapi.com/dashboard";
+    }
+  }
+
+  // auth state specific errors
   if (state === "auth") {
     if (
       err &&
@@ -203,6 +218,7 @@ const getErrorMessage = ({
     return NOT_ENOUGH_TOKENS_ERROR;
   }
 
+  // provider/wallet (Metamask, etc) errors
   // check for user rejected error cases
   if (
     err &&
