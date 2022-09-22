@@ -6,6 +6,7 @@ import { ChainTypes, AuthRequirements, SigningMessageFormat } from "../types";
 import { MSG_OPEN, MSG_CLOSE, MSG_SUCCESS } from "./constants";
 import { PicketConnectResponse } from "./";
 import { addOrSwitchEVMChain } from "./utils/chains";
+import { isMobile } from "./utils/device";
 
 import { Wallet } from "./wallets";
 import evmWallets from "./wallets/evm";
@@ -260,7 +261,7 @@ const ConnectModal = ({
       const { chainSlug, chainId, chainType, publicRPC, chainName } =
         await window.picket.chainInfo(selectedChain);
 
-      // if the wallet is a QR code wallet and the
+      // if the wallet is ready and a QR code wallet and has onConnecting callback
       if (wallet.ready && wallet.qrCode && !!wallet.onConnecting) {
         // HACK: RainbowKit implements a similar hack
         // keep local variable to prevent multiple calls to the same callback
@@ -271,11 +272,41 @@ const ConnectModal = ({
           if (!wallet.qrCodeURI) return;
           // prevent from calling multiple times
           if (hasCalledCallback) return;
-
           hasCalledCallback = true;
+
           const uri = await wallet.qrCodeURI();
 
-          setQRCodeURI(uri);
+          const mobile = isMobile();
+
+          // on desktop display the QR code screen
+          if (!mobile) {
+            setQRCodeURI(uri);
+            return;
+          }
+
+          // on mobile open the QR code URI
+          // adapted from
+          // https://github.com/rainbow-me/rainbowkit/blob/main/packages/rainbowkit/src/components/ConnectOptions/MobileOptions.tsx#L64
+          // NOTE: This might not work if the modal is in an iFrame (haven't tested)
+          if (uri.startsWith("http")) {
+            // Workaround for https://github.com/rainbow-me/rainbowkit/issues/524.
+            // Using 'window.open' causes issues on iOS in non-Safari browsers and
+            // WebViews where a blank tab is left behind after connecting.
+            // This is especially bad in some WebView scenarios (e.g. following a
+            // link from Twitter) where the user doesn't have any mechanism for
+            // closing the blank tab.
+            // For whatever reason, links with a target of "_blank" don't suffer
+            // from this problem, and programmatically clicking a detached link
+            // element with the same attributes also avoids the issue.
+            const link = document.createElement("a");
+            link.href = uri;
+            link.target = "_blank";
+            link.rel = "noreferrer noopener";
+            link.click();
+            return;
+          }
+          // else navigate navigate to the URI per usual
+          window.location.href = uri;
         });
       }
 
@@ -485,7 +516,7 @@ const ConnectModal = ({
     hasTokenOwnershipRequirements(requirements) &&
     error === NOT_ENOUGH_TOKENS_ERROR;
 
-  const showQRCodeConnectScreen = selectedWallet?.qrCode;
+  const showQRCodeConnectScreen = selectedWallet?.qrCode && !isMobile();
   const showBackButton = showTokenGateFailureScreen || showQRCodeConnectScreen;
 
   return (
@@ -552,7 +583,7 @@ const ConnectModal = ({
             requirements={requirements as AuthRequirements}
             back={reset}
           />
-        ) : selectedWallet?.qrCode ? (
+        ) : showQRCodeConnectScreen ? (
           <QRCodeConnectScreen
             uri={qrCodeURI}
             selectedWallet={selectedWallet as Wallet}
