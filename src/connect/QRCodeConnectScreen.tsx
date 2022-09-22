@@ -36,10 +36,6 @@ const getConnectMessage = (state: ConnectState, error?: string) => {
   return "Open your phone camera or wallet to scan this QR code.";
 };
 
-// TODO:
-// 1. Handle iOS vs Android
-// 2. Handle multi-chain login
-
 const getWarningMessage = ({
   wallet,
   state,
@@ -47,7 +43,7 @@ const getWarningMessage = ({
   wallet?: Wallet;
   state: ConnectState;
 }): string => {
-  let walletName =
+  const walletName =
     // special case for WalletConnect
     wallet?.name && wallet.name !== "WalletConnect"
       ? wallet.name
