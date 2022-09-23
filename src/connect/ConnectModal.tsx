@@ -574,7 +574,8 @@ const ConnectModal = ({
     error === NOT_ENOUGH_TOKENS_ERROR;
 
   const showQRCodeConnectScreen = selectedWallet?.qrCode && !isMobile();
-  const showBackButton = showTokenGateFailureScreen || showQRCodeConnectScreen;
+  const showBackButton =
+    !success && (showTokenGateFailureScreen || showQRCodeConnectScreen);
 
   return (
     <main

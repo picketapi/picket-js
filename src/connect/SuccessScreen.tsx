@@ -19,7 +19,7 @@ const SuccessScreen = ({
 }: SuccessScreenProps) => {
   return (
     <>
-      <h1 className={tw`text-xl font-semibold break-words text-center pr-7`}>
+      <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
         Welcome {displayAddress}
       </h1>
       <div
