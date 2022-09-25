@@ -26,6 +26,7 @@ const displayWalletAddress = (address: string) => {
 
 const CONNECT_TIMEOUT_MS = 15000;
 const AUTO_CLOSE_MS = 3000;
+const WALLET_LOCAL_STORAGE_KEY = "_picket_wallet";
 
 const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
 const RAINBOW_DOWNLOAD_URL = "https://rainbow.me/";
@@ -349,6 +350,21 @@ const ConnectModal = ({
     // the catch clause for better error messages
     // This should be done with better error state w/ a function for displaying the message
     let state: ConnectState = "connect";
+
+    // get last connected wallet
+    // force the wallet to disconnect if we are connecting to a different wallet connect (aka QRCode) wallet
+    const prevWallet = window.localStorage.getItem(WALLET_LOCAL_STORAGE_KEY);
+    if (prevWallet && prevWallet !== wallet.id && wallet.qrCode) {
+      try {
+        // remove wallet connect session and cache
+        await wallet.disconnect();
+      } catch (err) {
+        console.log("error on disconnect", err);
+      }
+    }
+
+    // save wallet to localStorage
+    window.localStorage.setItem(WALLET_LOCAL_STORAGE_KEY, wallet.id);
 
     // clear error state
     setError("");
