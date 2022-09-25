@@ -67,7 +67,9 @@ const QRCodeConnectScreen = ({
 }: QRCodeConnectScreenProps) => {
   return (
     <>
-      <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
+      <h1
+        className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
+      >
         Connect to {selectedWallet.name}
       </h1>
       {warning && !error && connectState !== "auth" && (
@@ -120,7 +122,7 @@ const QRCodeConnectScreen = ({
         </div>
       )}
       <div
-        className={tw`flex flex-col items-center min-h-[300px] space-y-4 mt-5 mb-0`}
+        className={tw`flex-1 flex flex-col items-center min-h-[350px] space-y-4`}
       >
         {uri ? (
           <>
