@@ -588,7 +588,7 @@ const ConnectModal = ({
       }`}
     >
       <div
-        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg`}
+        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
       >
         {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
@@ -681,7 +681,7 @@ const ConnectModal = ({
               ))}
             </div>
             {warning && connectState !== "auth" && (
-              <div className={tw`rounded-lg bg-yellow-100 p-4 mt-2`}>
+              <div className={tw`rounded-lg bg-yellow-100 p-4 mb-4`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -725,7 +725,7 @@ const ConnectModal = ({
               </div>
             )}
             {error && (
-              <div className={tw`rounded-lg bg-red-100 p-4 mt-2`}>
+              <div className={tw`rounded-lg bg-red-100 p-4 mb-4`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -750,9 +750,7 @@ const ConnectModal = ({
                 </div>
               </div>
             )}
-            <div
-              className={tw`flex flex-col  min-h-[300px] space-y-2 mt-6 mb-6`}
-            >
+            <div className={tw`flex-1 flex flex-col min-h-[350px] space-y-2`}>
               {currentWalletOptions?.wallets.map((wallet) => (
                 <button
                   key={wallet.id}

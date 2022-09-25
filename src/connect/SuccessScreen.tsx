@@ -19,11 +19,13 @@ const SuccessScreen = ({
 }: SuccessScreenProps) => {
   return (
     <>
-      <h1 className={tw`text-xl font-semibold break-words text-center px-7`}>
+      <h1
+        className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
+      >
         Welcome {displayAddress}
       </h1>
       <div
-        className={tw`flex flex-col  min-h-[300px] ${
+        className={tw`flex-1 flex flex-col min-h-[350px] ${
           hasTokenOwnershipRequirements ? "space-y-4" : "space-y-0"
         } mt-0 mb-0`}
       >
