@@ -35,6 +35,7 @@ export interface Wallet {
     walletAddress: string;
     provider: any;
   }>;
+  disconnect: () => Promise<void>;
   onConnecting?: (fn: () => void | Promise<void>) => void;
   signMessage: (message: string) => Promise<string>;
   qrCodeURI?: (opts?: ConnectOpts) => Promise<string>;
@@ -102,6 +103,23 @@ export class WagmiWallet implements Wallet {
       walletAddress: account,
       provider,
     };
+  }
+
+  async disconnect() {
+    // clear wallet link session
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:version"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:id"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:secret"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:linked"
+    );
+    return this.connector.disconnect();
   }
 
   async signMessage(message: string) {
@@ -179,6 +197,10 @@ export class SolanaWalletAdpaterWallet implements Wallet {
       walletAddress,
       provider: this.adapter,
     };
+  }
+
+  async disconnect() {
+    return this.adapter.disconnect();
   }
 
   async signMessage(message: string) {
