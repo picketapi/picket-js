@@ -599,7 +599,7 @@ const ConnectModal = ({
         fontFamily:
           'Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
       }}
-      className={tw`fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
+      className={tw`z-50 fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
         isOpen ? "visible backdrop-filter backdrop-blur-sm" : "invisible"
       }`}
     >
@@ -794,9 +794,13 @@ const ConnectModal = ({
                   <div
                     className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
                   >
-                    <div className={tw`flex-grow border-t h-px mr-6`}></div>
-                    <div>or</div>
-                    <div className={tw`flex-grow border-t h-px ml-6`}></div>
+                    <div
+                      className={tw`block flex-grow border-t h-px mr-6`}
+                    ></div>
+                    <div className={tw`block`}>or</div>
+                    <div
+                      className={tw`block flex-grow border-t h-px ml-6`}
+                    ></div>
                   </div>
                 </div>
                 <NewWalletButton
