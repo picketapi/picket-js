@@ -1,5 +1,7 @@
 import { render } from "react-dom";
+import { setup, Configuration } from "twind";
 
+import twindConfig from "./twind.config";
 import { SigningMessageContext, AuthState } from "../types";
 
 import ConnectModal, { ConnectModalProps } from "./ConnectModal";
@@ -32,6 +34,9 @@ export interface PicketConnectResponse {
 const mount = (props: ConnectModalProps) => {
   //  only mount once
   if (document.getElementById(MODAL_ID)) return;
+
+  //  setup tailwind
+  setup(twindConfig as unknown as Configuration);
 
   const el = document.createElement("div");
   el.id = MODAL_ID;
