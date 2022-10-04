@@ -24,6 +24,7 @@ export type ChainInfo = {
 export interface NonceRequest {
   chain: string;
   walletAddress: string;
+  locale?: string;
 }
 
 export interface NonceResponse {
@@ -77,19 +78,17 @@ export interface SigningMessageContext {
   chainId: number;
   issuedAt: string;
   chainType: ChainType;
+  // add locale to the context even though it is not part of the SIWE spec
+  locale?: string;
 }
 
 export interface SigningMessageRequestSimple extends NonceResponse {
   walletAddress: string;
 }
 
-export interface SigningMessageRequestSIWE extends SigningMessageRequestSimple {
-  domain: string;
-  uri: string;
-  chainId: number;
-  issuedAt: string;
-  chainType: ChainType;
-}
+export interface SigningMessageRequestSIWE
+  extends SigningMessageRequestSimple,
+    SigningMessageContext {}
 
 export type SigningMessageRequest =
   | SigningMessageRequestSimple
@@ -146,6 +145,7 @@ export interface AuthorizationURLRequest extends AuthRequirements {
   walletAddress?: string;
   signature?: string;
   responseMode: AuthorizationResponseMode;
+  locale?: string;
 }
 
 export interface AuthorizationServerWebResponse {
