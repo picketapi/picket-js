@@ -27,6 +27,7 @@ const displayWalletAddress = (address: string) => {
 const CONNECT_TIMEOUT_MS = 15000;
 const AUTO_CLOSE_MS = 3000;
 const WALLET_LOCAL_STORAGE_KEY = "_picket_wallet";
+const HAS_CONNECTED_SESSION_KEY = "_picket_has_connected";
 
 const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
 const RAINBOW_DOWNLOAD_URL = "https://rainbow.me/";
@@ -353,8 +354,16 @@ const ConnectModal = ({
 
     // get last connected wallet
     // force the wallet to disconnect if we are connecting to a different wallet connect (aka QRCode) wallet
+    // or if it has not connected in this tab session
     const prevWallet = window.localStorage.getItem(WALLET_LOCAL_STORAGE_KEY);
-    if (prevWallet && prevWallet !== wallet.id && wallet.qrCode) {
+    const hasConnected = window.sessionStorage.getItem(
+      HAS_CONNECTED_SESSION_KEY
+    );
+    // TODO: Check injected wallets
+    if (
+      !hasConnected ||
+      (prevWallet && prevWallet !== wallet.id && wallet.qrCode)
+    ) {
       try {
         // remove wallet connect session and cache
         await wallet.disconnect();
@@ -365,6 +374,8 @@ const ConnectModal = ({
 
     // save wallet to localStorage
     window.localStorage.setItem(WALLET_LOCAL_STORAGE_KEY, wallet.id);
+    // do not disconnect while the session (tab) is active
+    window.sessionStorage.setItem(HAS_CONNECTED_SESSION_KEY, "true");
 
     // clear error state
     setError("");
