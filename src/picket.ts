@@ -34,6 +34,8 @@ export interface PicketOptions {
   baseURL?: string;
 }
 
+const DEFAULT_LOCALE = "en";
+
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
@@ -78,6 +80,8 @@ export class Picket {
   async nonce({
     walletAddress,
     chain = ChainTypes.ETH,
+    // default to English
+    locale = DEFAULT_LOCALE,
   }: NonceRequest): Promise<NonceResponse> {
     const url = `${this.baseURL}/auth/nonce`;
     const res = await fetch(url, {
@@ -86,6 +90,7 @@ export class Picket {
       body: JSON.stringify({
         chain,
         walletAddress,
+        locale,
       }),
     });
     const data = await res.json();
@@ -294,6 +299,7 @@ export class Picket {
     codeChallenge,
     state,
     responseMode,
+    locale = DEFAULT_LOCALE,
   }: AuthorizationURLRequest): string {
     const url = new URL(`${this.baseURL}/oauth2/authorize`);
     url.searchParams.set("client_id", this.#apiKey);
@@ -303,6 +309,8 @@ export class Picket {
 
     url.searchParams.set("code_challenge_method", "S256");
     url.searchParams.set("response_mode", responseMode);
+
+    url.searchParams.set("locale", locale);
 
     chain && url.searchParams.set("chain", chain);
     walletAddress && url.searchParams.set("walletAddress", walletAddress);
