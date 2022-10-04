@@ -635,6 +635,20 @@ export class Picket {
    */
   async logout(): Promise<void> {
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+    // clear wallet connect session on logout
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:version"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:id"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:secret"
+    );
+    window.localStorage.removeItem(
+      "-walletlink:https://www.walletlink.org:session:linked"
+    );
+    window.localStorage.removeItem("walletconnect");
     return Promise.resolve();
   }
 
