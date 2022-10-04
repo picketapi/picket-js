@@ -354,12 +354,11 @@ const ConnectModal = ({
 
     // get last connected wallet
     // force the wallet to disconnect if we are connecting to a different wallet connect (aka QRCode) wallet
-    // or if it has not connected in this tab session
+    // or if it has not connected in this tab session (force reconnect)
     const prevWallet = window.localStorage.getItem(WALLET_LOCAL_STORAGE_KEY);
     const hasConnected = window.sessionStorage.getItem(
       HAS_CONNECTED_SESSION_KEY
     );
-    // TODO: Check injected wallets
     if (
       !hasConnected ||
       (prevWallet && prevWallet !== wallet.id && wallet.qrCode)
