@@ -473,6 +473,7 @@ const ConnectModal = ({
         issuedAt,
         chainId,
         chainType,
+        locale: navigator?.language,
       };
 
       // TODO: Conditional based off Picket availability (refactor to separate library)
@@ -484,6 +485,7 @@ const ConnectModal = ({
       } = await window.picket.nonce({
         walletAddress,
         chain: selectedChain,
+        locale: context.locale,
       });
 
       const message = window.Picket.createSigningMessage({
