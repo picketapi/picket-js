@@ -322,9 +322,8 @@ export class Picket {
       url.searchParams.set("minTokenBalance", String(minTokenBalance));
 
     // START: Solana-specific
-    collection &&
-      creatorAddress &&
-      url.searchParams.set("creatorAddress", creatorAddress);
+    collection && url.searchParams.set("collection", collection);
+    creatorAddress && url.searchParams.set("creatorAddress", creatorAddress);
 
     if (tokenIds) {
       for (let id of tokenIds) {
