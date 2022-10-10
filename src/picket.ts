@@ -291,8 +291,10 @@ export class Picket {
     chain,
     walletAddress,
     signature,
-    tokenIds,
     contractAddress,
+    tokenIds,
+    collection,
+    creatorAddress,
     minTokenBalance,
     allowedWallets,
     redirectURI,
@@ -319,11 +321,17 @@ export class Picket {
     minTokenBalance &&
       url.searchParams.set("minTokenBalance", String(minTokenBalance));
 
+    // START: Solana-specific
+    collection &&
+      creatorAddress &&
+      url.searchParams.set("creatorAddress", creatorAddress);
+
     if (tokenIds) {
       for (let id of tokenIds) {
         url.searchParams.append("tokenIds", id);
       }
     }
+    // END: Solana-specific
 
     if (allowedWallets) {
       for (let address of allowedWallets) {

@@ -35,9 +35,12 @@ export interface NonceResponse {
 
 export interface AuthRequirements {
   contractAddress?: string;
-  tokenIds?: string[];
   minTokenBalance?: number | string;
   allowedWallets?: string[];
+  // Solana specific auth requirement options
+  tokenIds?: string[];
+  collection?: string;
+  creatorAddress?: string;
 }
 
 export interface AuthenticatedUser {
