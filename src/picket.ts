@@ -43,8 +43,10 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 const LOCAL_STORAGE_KEY = "_picketauth";
 const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 
+const isSuccessfulStatusCode = (status: number) =>
+  status >= 200 && status < 300;
+
 // TODO: Connect Provider Options
-// TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
@@ -95,8 +97,8 @@ export class Picket {
     });
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -141,8 +143,8 @@ export class Picket {
     const res = await fetch(url, reqOptions);
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -176,8 +178,8 @@ export class Picket {
 
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -198,8 +200,8 @@ export class Picket {
     });
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -641,6 +643,7 @@ export class Picket {
    * Clears authentication information
    */
   async logout(): Promise<void> {
+    this.#authState = undefined;
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
     // clear wallet connect session on logout
     window.localStorage.removeItem(
