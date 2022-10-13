@@ -155,6 +155,56 @@ export class Picket {
   }
 
   /**
+   * authz
+   * Function for checking if a given user is authorized (aka meets the requirements)
+   */
+  async authz({
+    accessToken,
+    requirements,
+    revalidate = false,
+  }: {
+    accessToken: string;
+    requirements: AuthRequirements;
+    revalidate?: boolean;
+  }): Promise<AuthState> {
+    if (!accessToken) {
+      throw new Error(
+        "accessToken parameter is required - see docs for reference."
+      );
+    }
+    if (!requirements) {
+      throw new Error(
+        "requirements parameter is required - see docs for reference."
+      );
+    }
+
+    const url = `${this.baseURL}/authz`;
+    const reqOptions = {
+      method: "POST",
+      headers: this.#defaultHeaders(),
+      body: JSON.stringify({
+        accessToken,
+        requirements,
+        revalidate,
+      }),
+    };
+
+    const res = await fetch(url, reqOptions);
+    const data = await res.json();
+
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    // on success update auth state
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    this.#authState = data;
+
+    return data as AuthState;
+  }
+
+  /**
    * Validate
    * Validate the given access token and requirements
    */
@@ -690,5 +740,4 @@ export class Picket {
     return Promise.resolve(authState);
   }
 }
-
 export default Picket;
