@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import pkceChallenge from "pkce-challenge";
 
 // Ethereum imports
@@ -8,6 +9,7 @@ import { connect as PicketConnect } from "./connect";
 import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import * as popup from "./popup";
 import {
+  AuthenticatedUser,
   ErrorResponse,
   NonceRequest,
   NonceResponse,
@@ -739,5 +741,134 @@ export class Picket {
 
     return Promise.resolve(authState);
   }
+
+  /**
+   * isUserAuthorized
+   * Does the current user meet the authorization requirements?
+   */
+  async isUserAuthorized({
+    requirements,
+    revalidate = false,
+  }: {
+    requirements: AuthRequirements;
+    revalidate?: boolean;
+  }): Promise<boolean> {
+    const authState = await this.authState();
+
+    // TODO: Is it better to error? prompt login? for logged out users
+    if (!authState) return false;
+
+    const { accessToken, user } = authState;
+
+    // first check local user balance before hitting API
+    if (!revalidate) {
+      const allowed = Picket.meetsRequirements({
+        user,
+        requirements,
+      });
+
+      if (allowed) return true;
+    }
+
+    try {
+      await this.authz({
+        accessToken,
+        requirements,
+        revalidate,
+      });
+
+      return true;
+    } catch (err) {
+      console.warn("user is not authorized", err);
+
+      return false;
+    }
+  }
+
+  /**
+   * meetsRequirements
+   * Does the given user meet the authorization requirements?
+   * Synchronous, helper function for users to check easily if the user meets the auth requirements.
+   * Example usage is for setting "disabled" property on a button
+   */
+  static meetsRequirements({
+    user,
+    requirements,
+  }: {
+    user: AuthenticatedUser;
+    requirements: AuthRequirements;
+  }): boolean {
+    if (!user) return false;
+    // no requirements (shouldn't happen, but let's handle)
+    if (!requirements || Object.keys(requirements).length === 0) return true;
+
+    const { tokenBalances } = user;
+
+    if (!tokenBalances || Object.keys(tokenBalances).length === 0) return false;
+
+    let { minTokenBalance } = requirements;
+    // default to -1 (any tokens) if 0 or undefined
+    if (!minTokenBalance) minTokenBalance = -1;
+
+    let totalBalance = new BigNumber(0);
+
+    // EVM
+    if (requirements.contractAddress && tokenBalances.contractAddress) {
+      const { contractAddress } = requirements;
+
+      const balance = tokenBalances.contractAddress[contractAddress];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    // Solana
+    const { collection, tokenIds, creatorAddress } = requirements;
+
+    if (collection && tokenBalances.collection) {
+      const balance = tokenBalances.collection[collection];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    if (creatorAddress && tokenBalances.creatorAddress) {
+      const balance = tokenBalances.creatorAddress[creatorAddress];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    if (tokenIds && tokenIds.length > 0 && tokenBalances.tokenIds) {
+      for (let tokenId of tokenIds) {
+        const balance = tokenBalances.tokenIds[tokenId];
+
+        if (!balance) continue;
+
+        totalBalance = totalBalance.plus(balance);
+        const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+        if (allowed) return true;
+      }
+    }
+
+    return totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+  }
 }
+
 export default Picket;
