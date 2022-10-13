@@ -743,10 +743,10 @@ export class Picket {
   }
 
   /**
-   * isUserAuthorized
-   * Does the current user meet the authorization requirements?
+   * isCurrentUserAuthorized
+   * Does the current user authorized given the requirements?
    */
-  async isUserAuthorized({
+  async isCurrentUserAuthorized({
     requirements,
     revalidate = false,
   }: {
@@ -780,7 +780,6 @@ export class Picket {
       return true;
     } catch (err) {
       console.warn("user is not authorized", err);
-
       return false;
     }
   }
@@ -789,7 +788,7 @@ export class Picket {
    * meetsRequirements
    * Does the given user meet the authorization requirements?
    * Synchronous, helper function for users to check easily if the user meets the auth requirements.
-   * Example usage is for setting "disabled" property on a button
+   * Example usage is for setting "disabled" property on a button.
    */
   static meetsRequirements({
     user,
