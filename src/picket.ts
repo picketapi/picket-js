@@ -762,7 +762,7 @@ export class Picket {
 
     // first check local user balance before hitting API
     if (!revalidate) {
-      const allowed = Picket.meetsRequirements({
+      const allowed = Picket.meetsAuthRequirements({
         user,
         requirements,
       });
@@ -785,12 +785,12 @@ export class Picket {
   }
 
   /**
-   * meetsRequirements
+   * meetsAuthRequirements
    * Does the given user meet the authorization requirements?
    * Synchronous, helper function for users to check easily if the user meets the auth requirements.
    * Example usage is for setting "disabled" property on a button.
    */
-  static meetsRequirements({
+  static meetsAuthRequirements({
     user,
     requirements,
   }: {
