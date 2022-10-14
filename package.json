@@ -1,6 +1,6 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.72",
+  "version": "0.0.73",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -47,6 +47,7 @@
     "@wagmi/core": "^0.5.4",
     "@walletconnect/ethereum-provider": "^1.8.0",
     "@walletconnect/web3-provider": "^1.8.0",
+    "bignumber.js": "^9.1.0",
     "bs58": "^4.0.1",
     "ethers": "^5.5.1",
     "pkce-challenge": "^3.0.0",

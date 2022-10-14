@@ -43,12 +43,20 @@ export interface AuthRequirements {
   creatorAddress?: string;
 }
 
+// TokenRequirementsBalances maps type of requirements to balances for the ID/address/name
+export type TokenRequirementsBalances = {
+  contractAddress?: Record<string, string>;
+  collection?: Record<string, string>;
+  tokenIds?: Record<string, string>;
+  creatorAddress?: Record<string, string>;
+};
+
 export interface AuthenticatedUser {
   chain: string;
   walletAddress: string;
   displayAddress: string;
   contractAddress?: string;
-  tokenBalance?: string;
+  tokenBalances?: TokenRequirementsBalances;
 }
 
 export interface AuthState {

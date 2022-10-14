@@ -1,3 +1,4 @@
+import BigNumber from "bignumber.js";
 import pkceChallenge from "pkce-challenge";
 
 // Ethereum imports
@@ -8,6 +9,7 @@ import { connect as PicketConnect } from "./connect";
 import { randomState, parseAuthorizationCodeParams } from "./pkce";
 import * as popup from "./popup";
 import {
+  AuthenticatedUser,
   ErrorResponse,
   NonceRequest,
   NonceResponse,
@@ -43,13 +45,16 @@ const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 const LOCAL_STORAGE_KEY = "_picketauth";
 const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 
+const isSuccessfulStatusCode = (status: number) =>
+  status >= 200 && status < 300;
+
 // TODO: Connect Provider Options
-// TODO: Delete AuthState on 401
 export class Picket {
   baseURL = BASE_API_URL;
   #apiKey;
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
+  #isAuthorizing = false;
 
   constructor(apiKey: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
     if (!apiKey) {
@@ -95,8 +100,8 @@ export class Picket {
     });
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -141,14 +146,76 @@ export class Picket {
     const res = await fetch(url, reqOptions);
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     this.#authState = data;
 
+    return data as AuthState;
+  }
+
+  /**
+   * authz
+   * Function for checking if a given user is authorized (aka meets the requirements)
+   */
+  async authz({
+    accessToken,
+    requirements,
+    revalidate = false,
+  }: {
+    accessToken: string;
+    requirements: AuthRequirements;
+    revalidate?: boolean;
+  }): Promise<AuthState> {
+    if (!accessToken) {
+      throw new Error(
+        "accessToken parameter is required - see docs for reference."
+      );
+    }
+    if (!requirements) {
+      throw new Error(
+        "requirements parameter is required - see docs for reference."
+      );
+    }
+
+    if (this.#isAuthorizing) {
+      console.warn(
+        "Already authorizing. Concurrent authorization requests are not supported yet and may cause unexpected behavior."
+      );
+    }
+
+    // TODO: Add request queue to ensure only one request is made at a time
+    // Temporary flag for warning developers
+    this.#isAuthorizing = true;
+
+    const url = `${this.baseURL}/authz`;
+    const reqOptions = {
+      method: "POST",
+      headers: this.#defaultHeaders(),
+      body: JSON.stringify({
+        accessToken,
+        requirements,
+        revalidate,
+      }),
+    };
+
+    const res = await fetch(url, reqOptions);
+    const data = await res.json();
+
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
+      this.#isAuthorizing = false;
+      return Promise.reject(data as ErrorResponse);
+    }
+
+    // on success update auth state
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    this.#authState = data;
+
+    this.#isAuthorizing = false;
     return data as AuthState;
   }
 
@@ -176,8 +243,8 @@ export class Picket {
 
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -198,8 +265,8 @@ export class Picket {
     });
     const data = await res.json();
 
-    // reject any error code > 201
-    if (res.status > 201) {
+    // Reject non-successful responses
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -641,6 +708,7 @@ export class Picket {
    * Clears authentication information
    */
   async logout(): Promise<void> {
+    this.#authState = undefined;
     window.localStorage.removeItem(LOCAL_STORAGE_KEY);
     // clear wallet connect session on logout
     window.localStorage.removeItem(
@@ -686,6 +754,132 @@ export class Picket {
 
     return Promise.resolve(authState);
   }
-}
 
+  /**
+   * isCurrentUserAuthorized
+   * Does the current user authorized given the requirements?
+   */
+  async isCurrentUserAuthorized({
+    requirements,
+    revalidate = false,
+  }: {
+    requirements: AuthRequirements;
+    revalidate?: boolean;
+  }): Promise<boolean> {
+    const authState = await this.authState();
+
+    // TODO: Is it better to error? prompt login? for logged out users
+    if (!authState) return false;
+
+    const { accessToken, user } = authState;
+
+    // first check local user balance before hitting API
+    if (!revalidate) {
+      const allowed = Picket.meetsAuthRequirements({
+        user,
+        requirements,
+      });
+
+      if (allowed) return true;
+    }
+
+    try {
+      await this.authz({
+        accessToken,
+        requirements,
+        revalidate,
+      });
+
+      return true;
+    } catch (err) {
+      console.warn("user is not authorized", err);
+      return false;
+    }
+  }
+
+  /**
+   * meetsAuthRequirements
+   * Does the given user meet the authorization requirements?
+   * Synchronous, helper function for users to check easily if the user meets the auth requirements.
+   * Example usage is for setting "disabled" property on a button.
+   */
+  static meetsAuthRequirements({
+    user,
+    requirements,
+  }: {
+    user: AuthenticatedUser;
+    requirements: AuthRequirements;
+  }): boolean {
+    if (!user) return false;
+    // no requirements (shouldn't happen, but let's handle)
+    if (!requirements || Object.keys(requirements).length === 0) return true;
+
+    const { tokenBalances } = user;
+
+    if (!tokenBalances || Object.keys(tokenBalances).length === 0) return false;
+
+    let { minTokenBalance } = requirements;
+    // default to -1 (any tokens) if 0 or undefined
+    if (!minTokenBalance) minTokenBalance = -1;
+
+    let totalBalance = new BigNumber(0);
+
+    // EVM
+    if (requirements.contractAddress && tokenBalances.contractAddress) {
+      const { contractAddress } = requirements;
+
+      const balance = tokenBalances.contractAddress[contractAddress];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    // Solana
+    const { collection, tokenIds, creatorAddress } = requirements;
+
+    if (collection && tokenBalances.collection) {
+      const balance = tokenBalances.collection[collection];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    if (creatorAddress && tokenBalances.creatorAddress) {
+      const balance = tokenBalances.creatorAddress[creatorAddress];
+
+      if (balance) {
+        totalBalance = totalBalance.plus(balance);
+      }
+
+      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+      if (allowed) return true;
+    }
+
+    if (tokenIds && tokenIds.length > 0 && tokenBalances.tokenIds) {
+      for (let tokenId of tokenIds) {
+        const balance = tokenBalances.tokenIds[tokenId];
+
+        if (!balance) continue;
+
+        totalBalance = totalBalance.plus(balance);
+        const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+
+        if (allowed) return true;
+      }
+    }
+
+    return totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+  }
+}
 export default Picket;
