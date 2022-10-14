@@ -54,6 +54,7 @@ export class Picket {
   #apiKey;
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
+  #isAuthorizing = false;
 
   constructor(apiKey: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
     if (!apiKey) {
@@ -180,6 +181,16 @@ export class Picket {
       );
     }
 
+    if (this.#isAuthorizing) {
+      console.warn(
+        "Already authorizing. Concurrent authorization requests are not supported yet and may cause unexpected behavior."
+      );
+    }
+
+    // TODO: Add request queue to ensure only one request is made at a time
+    // Temporary flag for warning developers
+    this.#isAuthorizing = true;
+
     const url = `${this.baseURL}/authz`;
     const reqOptions = {
       method: "POST",
@@ -196,6 +207,7 @@ export class Picket {
 
     // Reject non-successful responses
     if (!isSuccessfulStatusCode(res.status)) {
+      this.#isAuthorizing = false;
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -203,6 +215,7 @@ export class Picket {
     window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
     this.#authState = data;
 
+    this.#isAuthorizing = false;
     return data as AuthState;
   }
 
@@ -869,5 +882,4 @@ export class Picket {
     return totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
   }
 }
-
 export default Picket;
