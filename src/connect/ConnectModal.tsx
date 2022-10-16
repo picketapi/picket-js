@@ -836,6 +836,8 @@ const ConnectModal = ({
         dangerouslySetInnerHTML={{
           __html: `
   #_picketWalletOptions::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 0px;
     width: 0px;
     background: transparent; /* make scrollbar transparent */
   }`,

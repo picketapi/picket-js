@@ -21,6 +21,11 @@ export type ChainInfo = {
   authorizationSupported: boolean;
 };
 
+export enum SigningMessageFormat {
+  SIMPLE = "simple",
+  SIWE = "siwe",
+}
+
 export interface NonceRequest {
   chain: string;
   walletAddress: string;
@@ -71,11 +76,6 @@ export interface AccessTokenPayload extends AuthenticatedUser {
   sub: string;
   aud: string;
   tid: string;
-}
-
-export enum SigningMessageFormat {
-  SIMPLE = "simple",
-  SIWE = "siwe",
 }
 
 // SigningMessageContext is the minumum additional fields for SIWE that are generated client-side

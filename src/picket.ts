@@ -289,7 +289,7 @@ export class Picket {
     const data = await res.json();
 
     // reject any error code > 201
-    if (res.status > 201) {
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
@@ -495,7 +495,7 @@ export class Picket {
     const data = await res.json();
 
     // reject any error code > 201
-    if (res.status > 201) {
+    if (!isSuccessfulStatusCode(res.status)) {
       return Promise.reject(data as ErrorResponse);
     }
 
