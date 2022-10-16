@@ -756,30 +756,6 @@ export class Picket {
   }
 
   /**
-   * isAuthorized
-   * Is the given user, or the current user, authorized to access the given resource?
-   */
-  async isAuthorized({
-    // should this be auth state?
-    accessToken,
-    requirements,
-    revalidate = false,
-  }: {
-    accessToken?: string;
-    requirements: AuthRequirements;
-    revalidate?: boolean;
-  }): Promise<boolean> {
-    // if accessToken is used, use it
-    // else check if the user is logged in
-    // // if so, run isCurrentUserAuthorized();
-    // else log the user in with requirements
-    // check local balance
-    // fetch remote
-
-    return false;
-  }
-
-  /**
    * isCurrentUserAuthorized
    * Does the current user authorized given the requirements?
    */
