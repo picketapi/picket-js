@@ -608,6 +608,8 @@ const ConnectModal = ({
   return (
     <main
       style={{
+        // default color to dark gray
+        color: "#414552",
         fontFamily:
           'Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
       }}
