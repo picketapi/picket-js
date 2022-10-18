@@ -1,3 +1,4 @@
+import React from "react";
 import { createClient, configureChains, allChains } from "@wagmi/core";
 import { publicProvider } from "@wagmi/core/providers/public";
 

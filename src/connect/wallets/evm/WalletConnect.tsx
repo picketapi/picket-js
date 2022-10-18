@@ -1,3 +1,4 @@
+import React from "react";
 import { tw } from "twind";
 import { allChains } from "@wagmi/core";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";

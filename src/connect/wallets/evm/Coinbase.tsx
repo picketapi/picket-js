@@ -1,3 +1,4 @@
+import React from "react";
 import { tw } from "twind";
 import { allChains } from "@wagmi/core";
 import { CoinbaseWalletConnector } from "@wagmi/core/connectors/coinbaseWallet";
