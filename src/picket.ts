@@ -48,6 +48,17 @@ const PKCE_STORAGE_KEY = `${LOCAL_STORAGE_KEY}_pkce`;
 const isSuccessfulStatusCode = (status: number) =>
   status >= 200 && status < 300;
 
+// If b is 0, then it checks if a is positive
+// If b is non-zero, then check for greater than or equal to
+const isGreaterThanOrEqualToOrNonZero = (a: BigNumber, b: BigNumber) => {
+  if (b.isZero()) {
+    // use isGreaterThan because isPositive returns true for 0
+    return a.isGreaterThan(0);
+  }
+
+  return a.isGreaterThanOrEqualTo(b);
+};
+
 // TODO: Connect Provider Options
 export class Picket {
   baseURL = BASE_API_URL;
@@ -818,10 +829,7 @@ export class Picket {
 
     if (!tokenBalances || Object.keys(tokenBalances).length === 0) return false;
 
-    let { minTokenBalance } = requirements;
-    // default to -1 (any tokens) if 0 or undefined
-    if (!minTokenBalance) minTokenBalance = -1;
-
+    const minTokenBalance = new BigNumber(requirements.minTokenBalance || 0);
     let totalBalance = new BigNumber(0);
 
     // EVM
@@ -834,7 +842,10 @@ export class Picket {
         totalBalance = totalBalance.plus(balance);
       }
 
-      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+      const allowed = isGreaterThanOrEqualToOrNonZero(
+        totalBalance,
+        minTokenBalance
+      );
 
       if (allowed) return true;
     }
@@ -849,7 +860,10 @@ export class Picket {
         totalBalance = totalBalance.plus(balance);
       }
 
-      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+      const allowed = isGreaterThanOrEqualToOrNonZero(
+        totalBalance,
+        minTokenBalance
+      );
 
       if (allowed) return true;
     }
@@ -861,7 +875,10 @@ export class Picket {
         totalBalance = totalBalance.plus(balance);
       }
 
-      const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+      const allowed = isGreaterThanOrEqualToOrNonZero(
+        totalBalance,
+        minTokenBalance
+      );
 
       if (allowed) return true;
     }
@@ -873,13 +890,16 @@ export class Picket {
         if (!balance) continue;
 
         totalBalance = totalBalance.plus(balance);
-        const allowed = totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+        const allowed = isGreaterThanOrEqualToOrNonZero(
+          totalBalance,
+          minTokenBalance
+        );
 
         if (allowed) return true;
       }
     }
 
-    return totalBalance.isGreaterThanOrEqualTo(minTokenBalance);
+    return isGreaterThanOrEqualToOrNonZero(totalBalance, minTokenBalance);
   }
 }
 export default Picket;
