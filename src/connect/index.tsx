@@ -42,9 +42,23 @@ const mount = (props: ConnectModalProps) => {
   const el = document.createElement("div");
   el.id = MODAL_ID;
   document.body.appendChild(el);
-
   const container = document.getElementById(MODAL_ID);
+
   render(<ConnectModal {...props} />, container);
+  // dynamically choose React 18 syntax is blocked on
+  // https://github.com/parcel-bundler/parcel/issues/7268
+  //
+  // try {
+  // // React 18
+  // console.log("react >=18");
+  // const { createRoot } = await import("react-dom/client");
+  // const root = createRoot(container!);
+  // root.render(<ConnectModal {...props} />);
+  // } catch (err) {
+  // console.log("react <18");
+  // // React <18
+  // render(<ConnectModal {...props} />, container);
+  // }
 };
 
 export const connect = (
