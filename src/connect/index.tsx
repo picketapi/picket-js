@@ -33,7 +33,6 @@ export interface PicketConnectResponse {
 }
 
 const mount = (props: ConnectModalProps) => {
-  console.log("mounting connect modal");
   //  only mount once
   if (document.getElementById(MODAL_ID)) return;
 
