@@ -1,3 +1,4 @@
+import React from "react";
 import { tw } from "twind";
 
 import { AuthRequirements } from "../types";

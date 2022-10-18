@@ -1,3 +1,4 @@
+import React from "react";
 import { InjectedConnector } from "@wagmi/core";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";

@@ -1,3 +1,4 @@
+import React from "react";
 import { allChains } from "@wagmi/core";
 import { MetaMaskConnector } from "@wagmi/core/connectors/metaMask";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";

@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from "react";
+import React, { ReactElement, useMemo } from "react";
 import QRCodeUtil from "qrcode";
 import { tw } from "twind";
 

@@ -1,3 +1,4 @@
+import React from "react";
 import { SolflareWalletAdapter } from "@solana/wallet-adapter-wallets";
 
 import { SolanaWalletAdpaterWallet } from "../../wallets";
