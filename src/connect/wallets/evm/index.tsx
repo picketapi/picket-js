@@ -15,7 +15,9 @@ const needsInjectedWallet =
   typeof window !== "undefined" &&
   window.ethereum &&
   !isMetaMask(window.ethereum) &&
-  !window.ethereum.isCoinbaseWallet;
+  // hide in Coinbase and Trust Wallet in-app browsers
+  !window.ethereum.isCoinbaseWallet &&
+  !window.ethereum.isTrust;
 // &&
 // !window.ethereum.isBraveWallet;
 // TODO: Consider adding brave native wallet support (for icon)
