@@ -7,6 +7,7 @@ import Injected from "./Injected";
 import WalletConnect from "./WalletConnect";
 import Rainbow from "./Rainbow";
 import Coinbase from "./Coinbase";
+import Trust from "./Trust";
 
 const { provider } = configureChains(allChains, [publicProvider()]);
 
@@ -20,8 +21,8 @@ const needsInjectedWallet =
 // TODO: Consider adding brave native wallet support (for icon)
 
 export const wallets = needsInjectedWallet
-  ? [Injected, MetaMask, Rainbow, Coinbase, WalletConnect]
-  : [MetaMask, Rainbow, Coinbase, WalletConnect];
+  ? [Injected, MetaMask, Rainbow, Coinbase, Trust, WalletConnect]
+  : [MetaMask, Rainbow, Coinbase, Trust, WalletConnect];
 
 // this is never referenced but is needed!
 export const wagmiClient = createClient({
