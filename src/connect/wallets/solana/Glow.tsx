@@ -8,6 +8,7 @@ const color = "#bb2dc7";
 const wallet = new SolanaWalletAdpaterWallet({
   // Ignoring the type difference for now
   // GlowWalletAdapter sendTransaction is extends BaseMessageSignerWalletAdapter in an incompatible way
+  // @ts-ignore
   adapter: new GlowWalletAdapter(),
   color,
 });
