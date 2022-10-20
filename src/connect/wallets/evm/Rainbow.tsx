@@ -4,7 +4,7 @@ import { allChains } from "@wagmi/core";
 import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
-import { isAndroid } from "../../utils/device";
+import { isAndroid, isMobile } from "../../utils/device";
 
 const color = "#0C2F78";
 
@@ -181,9 +181,10 @@ const wallet = new WagmiWallet({
   getQRCodeURI: async (provider: any) => {
     const { uri } = provider.connector;
     const android = isAndroid();
+    const desktop = !isMobile();
 
     // android devices can use the default QR code
-    if (android) return uri;
+    if (android || desktop) return uri;
 
     // non-android, use the deep link
     return `https://rnbwapp.com/wc?uri=${encodeURIComponent(uri)}`;
