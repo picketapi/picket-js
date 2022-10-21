@@ -32,7 +32,7 @@ export interface PicketConnectResponse {
   auth?: AuthState;
 }
 
-const mount = (props: ConnectModalProps) => {
+const mount = async (props: ConnectModalProps) => {
   //  only mount once
   if (document.getElementById(MODAL_ID)) return;
 
@@ -44,21 +44,20 @@ const mount = (props: ConnectModalProps) => {
   document.body.appendChild(el);
   const container = document.getElementById(MODAL_ID);
 
-  render(<ConnectModal {...props} />, container);
+  // render(<ConnectModal {...props} />, container);
   // dynamically choose React 18 syntax is blocked on
   // https://github.com/parcel-bundler/parcel/issues/7268
   //
-  // try {
-  // // React 18
-  // console.log("react >=18");
-  // const { createRoot } = await import("react-dom/client");
-  // const root = createRoot(container!);
-  // root.render(<ConnectModal {...props} />);
-  // } catch (err) {
-  // console.log("react <18");
-  // // React <18
-  // render(<ConnectModal {...props} />, container);
-  // }
+  try {
+    // React 18
+    const { createRoot } = await import("react-dom/client");
+    const root = createRoot(container!);
+    root.render(<ConnectModal {...props} />);
+  } catch (err) {
+    console.log("falling back to react <18", err);
+    // React <18
+    render(<ConnectModal {...props} />, container);
+  }
 };
 
 export const connect = (
@@ -66,30 +65,30 @@ export const connect = (
 ): Promise<PicketConnectResponse> =>
   new Promise((resolve, reject) => {
     //  make sure the modal is mounted
-    mount(props);
+    mount(props).then(() => {
+      //  make sure the modal is open
+      window.postMessage({
+        type: MSG_OPEN,
+        data: props,
+      });
+      //  wait for close or connect
+      window.addEventListener("message", (event) => {
+        if (!event.data?.type) return;
+        const { type, data } = event.data as PicketConnectEvent;
 
-    //  make sure the modal is open
-    window.postMessage({
-      type: MSG_OPEN,
-      data: props,
-    });
-    //  wait for close or connect
-    window.addEventListener("message", (event) => {
-      if (!event.data?.type) return;
-      const { type, data } = event.data as PicketConnectEvent;
+        if (type === MSG_CLOSE) {
+          return reject("Modal closed");
+        }
 
-      if (type === MSG_CLOSE) {
-        return reject("Modal closed");
-      }
-
-      // pass data
-      if (type === MSG_SUCCESS) {
-        // cannot serialize provider, pass through window object
-        const provider = window.PicketProvider;
-        resolve({
-          ...(data as Omit<PicketConnectResponse, "provider">),
-          provider,
-        });
-      }
+        // pass data
+        if (type === MSG_SUCCESS) {
+          // cannot serialize provider, pass through window object
+          const provider = window.PicketProvider;
+          resolve({
+            ...(data as Omit<PicketConnectResponse, "provider">),
+            provider,
+          });
+        }
+      });
     });
   });
