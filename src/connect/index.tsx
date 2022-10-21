@@ -54,7 +54,6 @@ const mount = async (props: ConnectModalProps) => {
     const root = createRoot(container!);
     root.render(<ConnectModal {...props} />);
   } catch (err) {
-    console.log("falling back to react <18", err);
     // React <18
     render(<ConnectModal {...props} />, container);
   }
