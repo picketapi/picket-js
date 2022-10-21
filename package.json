@@ -24,6 +24,7 @@
   "scripts": {
     "build": "npx parcel build",
     "prepare": "npm run build",
+    "watch": "npx parcel watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
