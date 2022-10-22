@@ -18,6 +18,7 @@ import SuccessScreen from "./SuccessScreen";
 import TokenGateFailureScreen from "./TokenGateFailureScreen";
 import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
+
 const displayWalletAddress = (address: string) => {
   return (
     address.substring(0, 5) + "..." + address.substring(address.length - 3)
@@ -257,6 +258,8 @@ const ConnectModal = ({
   const [error, setError] = useState("");
   const [connectState, setConnectState] = useState<ConnectState>(null);
 
+  const [darkMode, setDarkMode] = useState(false);
+
   const [displayAddress, setDisplayAddress] = useState<string>();
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
@@ -264,6 +267,11 @@ const ConnectModal = ({
   const [qrCodeURI, setQRCodeURI] = useState<string>("");
 
   useEffect(() => {
+
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setDarkMode(true);
+    }
+
     if (!chain) {
       setWalletOptions(defaultWalletOptions);
       setSelectedChain(defaultWalletOptions[0].slug);
@@ -679,6 +687,7 @@ const ConnectModal = ({
             connect={connect}
             error={error}
             warning={warning}
+            darkMode={darkMode}
           />
         ) : (
           <>

@@ -15,6 +15,7 @@ interface QRCodeConnectScreenProps {
   error?: string;
   warning?: boolean;
   connect: (wallet: Wallet) => void;
+  darkMode: boolean;
 }
 
 const getConnectMessage = (state: ConnectState, error?: string) => {
@@ -65,6 +66,7 @@ const QRCodeConnectScreen = ({
   error,
   warning,
   connect,
+  darkMode,
 }: QRCodeConnectScreenProps) => {
   return (
     <>
@@ -132,6 +134,7 @@ const QRCodeConnectScreen = ({
               logoColor={selectedWallet.color}
               logo={selectedWallet.Icon}
               disabled={connectState !== "connect"}
+              darkMode={darkMode}
             />
             <div
               className={tw`bg-white dark:bg-[#26293B] dark:text-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
