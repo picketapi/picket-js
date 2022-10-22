@@ -118,7 +118,7 @@ const TokenGateFailureScreen = ({
             fill="currentColor"
           />
         </svg>
-        <p className={tw`text-sm text-center font-semibold text-gray-600 mb-2`}>
+        <p className={tw`text-sm text-center font-semibold text-gray-600 dark:text-white mb-2`}>
           Your wallet {displayAddress} doesn't hold the necessary tokens
         </p>
         <a

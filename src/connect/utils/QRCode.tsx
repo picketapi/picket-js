@@ -4,6 +4,8 @@ import { tw } from "twind";
 
 import { WalletIcon } from "../wallets";
 
+const darkmode = false;
+
 // Adapted from https://github.com/rainbow-me/rainbowkit/blob/main/packages/rainbowkit/src/components/QRCode/QRCode.tsx
 
 const generateMatrix = (
@@ -52,7 +54,7 @@ const generateDots = ({
     for (let i = 0; i < 3; i++) {
       dots.push(
         <rect
-          fill={i % 2 !== 0 ? "white" : logoColor}
+          fill={ darkmode ? i % 2 !== 0 ? "#26293B" : "white" : i % 2 !== 0 ? "white" : logoColor} // Can't use logocolor in darkmode because contrast sometimes too low for qr code perf
           height={cellSize * (7 - i * 2)}
           key={`${i}-${x}-${y}`}
           rx={(i - 2) * -5 + (i === 0 ? 2 : 0)} // calculated border radius for corner squares
@@ -91,7 +93,7 @@ const generateDots = ({
               <circle
                 cx={i * cellSize + cellSize / 2}
                 cy={j * cellSize + cellSize / 2}
-                fill="black"
+                fill= {darkmode ? "white" : "black"}
                 key={`circle-${i}-${j}`}
                 r={cellSize / 3} // calculate size of single dots
               />
@@ -147,7 +149,7 @@ export default function QRCode({
 
   return (
     <div
-      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white p-[${padding}px] rounded-xl`}
+      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white dark:bg-[#26293B] p-[${padding}px] rounded-xl`}
       style={{
         filter: disabled ? "blur(4px)" : "none",
       }}

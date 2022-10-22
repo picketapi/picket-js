@@ -21,7 +21,7 @@ const SuccessScreen = ({
   return (
     <>
       <h1
-        className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
+        className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
       >
         Welcome {displayAddress}
       </h1>

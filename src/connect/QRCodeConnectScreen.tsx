@@ -69,7 +69,7 @@ const QRCodeConnectScreen = ({
   return (
     <>
       <h1
-        className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
+        className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
       >
         Connect to {selectedWallet.name}
       </h1>
@@ -134,7 +134,7 @@ const QRCodeConnectScreen = ({
               disabled={connectState !== "connect"}
             />
             <div
-              className={tw`bg-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
+              className={tw`bg-white dark:bg-[#26293B] dark:text-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
             >
               {getConnectMessage(connectState, error)}
             </div>

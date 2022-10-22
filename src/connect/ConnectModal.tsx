@@ -615,10 +615,10 @@ const ConnectModal = ({
       }}
       className={tw`z-50 fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
         isOpen ? "visible backdrop-filter backdrop-blur-sm" : "invisible"
-      }`}
+      }`} 
     >
       <div
-        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
+        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] dark:bg-[#040825] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
       >
         {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
@@ -628,7 +628,7 @@ const ConnectModal = ({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
+              className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
             >
               <path
                 strokeLinecap="round"
@@ -641,7 +641,7 @@ const ConnectModal = ({
         <button onClick={close} className={tw`absolute top-3 right-3`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
+            className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -683,7 +683,7 @@ const ConnectModal = ({
         ) : (
           <>
             <h1
-              className={tw`mb-6 text-xl font-semibold break-words text-left`}
+              className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-left`}
             >
               Log In With Your Wallet
             </h1>
@@ -789,7 +789,7 @@ const ConnectModal = ({
                     outlineOffset: "4px",
                   }}
                   disabled={!!connectState}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
+                  className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:text-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 dark:hover:bg-[#181B2E] disabled:cursor-not-allowed ${
                     selectedWallet?.id === wallet.id
                       ? "bg-gray-100"
                       : "disabled:bg-white"
