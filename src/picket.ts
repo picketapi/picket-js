@@ -38,6 +38,8 @@ export interface PicketOptions {
 
 const DEFAULT_LOCALE = "en";
 
+const CURRENT_THEME = "light";
+
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
 
@@ -66,14 +68,17 @@ export class Picket {
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
   #isAuthorizing = false;
+  static theme = CURRENT_THEME;
 
-  constructor(apiKey: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
+  constructor(apiKey: string, theme: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
     }
     this.#apiKey = apiKey;
 
     this.baseURL = baseURL;
+
+    Picket.theme = theme;
 
     if (typeof window !== "undefined") {
       window.picket = this;

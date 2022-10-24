@@ -18,6 +18,10 @@ import SuccessScreen from "./SuccessScreen";
 import TokenGateFailureScreen from "./TokenGateFailureScreen";
 import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
+import { setTheme, getTheme } from "./utils/theme";
+
+import classNames from "classnames";
+
 
 const displayWalletAddress = (address: string) => {
   return (
@@ -265,6 +269,9 @@ const ConnectModal = ({
   const [qrCodeURI, setQRCodeURI] = useState<string>("");
 
   useEffect(() => {
+
+    setTheme()
+
     if (!chain) {
       setWalletOptions(defaultWalletOptions);
       setSelectedChain(defaultWalletOptions[0].slug);
@@ -614,9 +621,9 @@ const ConnectModal = ({
         fontFamily:
           'Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
       }}
-      className={tw`z-50 fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
+      className={classNames("main", tw`z-50 fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
         isOpen ? "visible backdrop-filter backdrop-blur-sm" : "invisible"
-      }`} 
+      }`)} 
     >
       <div
         className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] dark:bg-[#040825] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}

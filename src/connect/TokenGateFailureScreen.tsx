@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { tw } from "twind";
 
 import { AuthRequirements } from "../types";
@@ -6,6 +6,7 @@ import { AuthRequirements } from "../types";
 import { Wallet } from "./wallets";
 
 import PoweredByPicket from "./PoweredByPicket";
+import { setTheme } from "./utils/theme";
 
 interface TokenGateFailureScreenProps {
   chain: string;
@@ -71,8 +72,14 @@ const TokenGateFailureScreen = ({
   requirements,
   back,
 }: TokenGateFailureScreenProps) => {
+
+  useEffect(() => {
+    setTheme();
+  }, []);
+
   return (
-    <>
+    <main 
+    className="main">
       <h1
         className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
       >
@@ -137,7 +144,7 @@ const TokenGateFailureScreen = ({
         </button>
       </div>
       <PoweredByPicket />
-    </>
+    </main>
   );
 };
 export default TokenGateFailureScreen;
