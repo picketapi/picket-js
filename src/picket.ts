@@ -32,7 +32,6 @@ import {
 } from "./types";
 
 export interface PicketOptions {
-  connectProviderOptions?: any;
   baseURL?: string;
 }
 
@@ -70,7 +69,11 @@ export class Picket {
   #isAuthorizing = false;
   static theme = CURRENT_THEME;
 
-  constructor(apiKey: string, theme: string, { baseURL = BASE_API_URL }: PicketOptions = {}) {
+  constructor(
+    apiKey: string,
+    theme: string,
+    { baseURL = BASE_API_URL }: PicketOptions = {}
+  ) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
     }
@@ -903,7 +906,6 @@ export class Picket {
         if (allowed) return true;
       }
     }
-
     return isGreaterThanOrEqualToOrNonZero(totalBalance, minTokenBalance);
   }
 }
