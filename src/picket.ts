@@ -31,13 +31,15 @@ import {
   SigningMessageRequestSimple,
 } from "./types";
 
+export type PicketTheme = "light" | "dark" | "auto";
+
 export interface PicketOptions {
+  theme?: PicketTheme;
   baseURL?: string;
 }
 
 const DEFAULT_LOCALE = "en";
-
-const CURRENT_THEME = "light";
+const DEFAULT_THEME = "light";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
@@ -63,16 +65,15 @@ const isGreaterThanOrEqualToOrNonZero = (a: BigNumber, b: BigNumber) => {
 // TODO: Connect Provider Options
 export class Picket {
   baseURL = BASE_API_URL;
+  theme = DEFAULT_THEME;
   #apiKey;
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
   #isAuthorizing = false;
-  static theme = CURRENT_THEME;
 
   constructor(
     apiKey: string,
-    theme: string,
-    { baseURL = BASE_API_URL }: PicketOptions = {}
+    { baseURL = BASE_API_URL, theme = DEFAULT_THEME }: PicketOptions = {}
   ) {
     if (!apiKey) {
       throw new Error("Missing publishable API Key");
@@ -80,8 +81,7 @@ export class Picket {
     this.#apiKey = apiKey;
 
     this.baseURL = baseURL;
-
-    Picket.theme = theme;
+    this.theme = theme;
 
     if (typeof window !== "undefined") {
       window.picket = this;
