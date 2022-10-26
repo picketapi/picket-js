@@ -27,6 +27,7 @@ function rem2px(input, fontSize = 16) {
 }
 
 const conifg = {
+  darkMode: "class",
   important: true,
   theme: {
     borderRadius: rem2px(defaultTheme.borderRadius),
