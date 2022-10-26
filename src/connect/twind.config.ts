@@ -1,6 +1,9 @@
 const config = {
-  darkMode: 'class',
+  darkMode: "class",
   important: true,
+  // fake hash function to transform class names to keep them unique.
+  // Prevents conflicts with other projects using tailwind or twind.
+  hash: (name: string) => `picket-tw-${name}`,
   theme: {
     borderRadius: {
       none: "0px",
