@@ -39,7 +39,7 @@ export interface PicketOptions {
 }
 
 const DEFAULT_LOCALE = "en";
-const DEFAULT_THEME = "light";
+export const DEFAULT_THEME = "light";
 
 export const API_VERSION = "v1";
 const BASE_API_URL = `https://picketapi.com/api/${API_VERSION}`;
@@ -65,7 +65,7 @@ const isGreaterThanOrEqualToOrNonZero = (a: BigNumber, b: BigNumber) => {
 // TODO: Connect Provider Options
 export class Picket {
   baseURL = BASE_API_URL;
-  theme = DEFAULT_THEME;
+  theme: PicketTheme = DEFAULT_THEME;
   #apiKey;
   #authState?: AuthState;
   #chainCache: Record<string, ChainInfo> = {};
@@ -719,6 +719,7 @@ export class Picket {
       chain,
       doAuth,
       requirements,
+      theme: this.theme,
     });
   }
 

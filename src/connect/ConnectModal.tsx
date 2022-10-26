@@ -19,6 +19,7 @@ import TokenGateFailureScreen from "./TokenGateFailureScreen";
 import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
 import { useDarkMode } from "./utils/theme";
+import { PicketTheme, DEFAULT_THEME } from "../picket";
 
 const displayWalletAddress = (address: string) => {
   return (
@@ -118,6 +119,7 @@ export interface ConnectModalProps {
   chain?: string;
   doAuth?: boolean;
   requirements?: AuthRequirements;
+  theme?: PicketTheme;
 }
 
 const getWarningMessage = ({
@@ -251,6 +253,7 @@ const ConnectModal = ({
   chain,
   doAuth = false,
   requirements,
+  theme = DEFAULT_THEME,
 }: ConnectModalProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -265,7 +268,7 @@ const ConnectModal = ({
   const [selectedChain, setSelectedChain] = useState<string>("");
   const [qrCodeURI, setQRCodeURI] = useState<string>("");
 
-  const darkMode = useDarkMode("light");
+  const darkMode = useDarkMode(theme);
 
   useEffect(() => {
     if (!chain) {
