@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { tw } from "twind";
 
 import { Wallet } from "./wallets";
 import InjectedWallet from "./wallets/evm/Injected";
 
 import PoweredByPicket from "./PoweredByPicket";
-import { setTheme } from "./utils/theme";
 
 interface SuccessScreenProps {
   displayAddress: string;
@@ -19,14 +18,8 @@ const SuccessScreen = ({
   selectedWallet = InjectedWallet,
   hasTokenOwnershipRequirements = false,
 }: SuccessScreenProps) => {
-
-  useEffect(() => {
-    setTheme();
-  }, []);
-
   return (
-    <main 
-    className="main">
+    <>
       <h1
         className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
       >
@@ -100,7 +93,7 @@ const SuccessScreen = ({
         )}
       </div>
       <PoweredByPicket />
-    </main>
+    </>
   );
 };
 

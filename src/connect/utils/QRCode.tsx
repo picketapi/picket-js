@@ -30,7 +30,7 @@ const generateDots = ({
   size,
   logoSize,
   logoColor,
-  darkMode
+  darkMode,
 }: {
   ecl: QRCodeUtil.QRCodeErrorCorrectionLevel;
   logoSize: number;
@@ -54,7 +54,15 @@ const generateDots = ({
     for (let i = 0; i < 3; i++) {
       dots.push(
         <rect
-          fill={ darkMode ? i % 2 !== 0 ? "#26293B" : "white" : i % 2 !== 0 ? "white" : logoColor} // Can't use logocolor in darkmode because contrast sometimes too low for qr code perf
+          fill={
+            darkMode
+              ? i % 2 !== 0
+                ? "#26293B"
+                : "white"
+              : i % 2 !== 0
+              ? "white"
+              : logoColor
+          } // Can't use logocolor in darkmode because contrast sometimes too low for qr code perf
           height={cellSize * (7 - i * 2)}
           key={`${i}-${x}-${y}`}
           rx={(i - 2) * -5 + (i === 0 ? 2 : 0)} // calculated border radius for corner squares
@@ -93,7 +101,7 @@ const generateDots = ({
               <circle
                 cx={i * cellSize + cellSize / 2}
                 cy={j * cellSize + cellSize / 2}
-                fill= {darkMode ? "white" : "black"}
+                fill={darkMode ? "white" : "black"}
                 key={`circle-${i}-${j}`}
                 r={cellSize / 3} // calculate size of single dots
               />
@@ -128,7 +136,7 @@ export default function QRCode({
   size: sizeProp = 300,
   uri,
   disabled = false,
-  darkMode = false
+  darkMode = false,
 }: Props) {
   const padding: string = "10";
   // calculate size of the QRCode

@@ -1,35 +1,51 @@
-import Picket from "../../picket"
+import React, { useState, useLayoutEffect } from "react";
 
-//Warning: QR code theme is handled within the QR code component
-export function setTheme(theme?: string): void {
+import { PicketTheme } from "../../picket";
+import { MODAL_ID } from "../constants";
 
-    if (theme) {
-        Picket.theme = theme;
-    }
+type ColorSchemePreference = "light" | "dark";
 
-    if(Picket.theme == "dark" || Picket.theme == "auto" && window.matchMedia('(prefers-color-scheme: dark)').matches) { // Dark theme
-        document.getElementsByClassName('main')[0].classList.add('dark')
-    }else if(Picket.theme == "light" || Picket.theme == "auto" && !window.matchMedia('(prefers-color-scheme: dark)').matches) { // Light theme
-        document.getElementsByClassName('main')[0].classList.remove('dark')
-    }
-    
-    //Auto Theme
-    if(Picket.theme == "auto") {
-        setAutoDarkModeListener();
-    }
-  }
+const getUserColorSchemePreference = (): ColorSchemePreference =>
+  window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
-  export function getTheme(): string {
-    return Picket.theme
-  }
+const useUserColorSchemePreference = () => {
+  const [colorSchemePreference, setColorSchemePreference] =
+    useState<ColorSchemePreference>("light");
 
-  //Handling auto dark mode
-  export function setAutoDarkModeListener(){
+  useLayoutEffect(() => {
+    const handler = () =>
+      setColorSchemePreference(getUserColorSchemePreference());
     window
+      .matchMedia("(prefers-color-scheme: dark)")
+      .addEventListener("change", handler);
+    return () =>
+      window
         .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", function () {
-            if(Picket.theme == "auto") {
-                setTheme();
-            }
-        });
-  }
+        .removeEventListener("change", handler);
+  }, []);
+
+  return colorSchemePreference;
+};
+
+export const useDarkMode = (theme: PicketTheme) => {
+  const colorSchemePreference = useUserColorSchemePreference();
+
+  const darkMode =
+    theme === "dark" || (theme === "auto" && colorSchemePreference === "dark");
+
+  // add/remove tailwind class if any theme or preferences change
+  useLayoutEffect(() => {
+    const picketModalEl = document.getElementById(MODAL_ID);
+
+    // should never happen!
+    if (!picketModalEl) return;
+
+    if (darkMode) {
+      picketModalEl.classList.add("dark");
+    } else {
+      picketModalEl.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  return darkMode;
+};

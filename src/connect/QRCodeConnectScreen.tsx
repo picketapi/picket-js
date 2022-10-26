@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { tw } from "twind";
 
 import { Wallet } from "./wallets";
 
 import PoweredByPicket from "./PoweredByPicket";
 import QRCode from "./utils/QRCode";
-import { setTheme, getTheme } from "./utils/theme";
 
 type ConnectState = null | "connect" | "signature" | "auth";
 
@@ -16,6 +15,7 @@ interface QRCodeConnectScreenProps {
   error?: string;
   warning?: boolean;
   connect: (wallet: Wallet) => void;
+  darkMode: boolean;
 }
 
 const getConnectMessage = (state: ConnectState, error?: string) => {
@@ -59,7 +59,6 @@ const getWarningMessage = ({
   return `Still waiting for your signature. Open ${walletName} to approve the request.`;
 };
 
-
 const QRCodeConnectScreen = ({
   uri,
   selectedWallet,
@@ -67,28 +66,10 @@ const QRCodeConnectScreen = ({
   error,
   warning,
   connect,
+  darkMode,
 }: QRCodeConnectScreenProps) => {
-  
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-
-    setTheme();
-    
-    //Set QR Code Theme
-    //Warning: QR Code is currently not responsive to theme changes after initial render
-    if(getTheme() == "dark") {
-      setDarkMode(true);
-    }else if (getTheme() == "light") {
-      setDarkMode(false);
-    }else if (getTheme() == "auto"){
-      setDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-  }, []);
-
   return (
-    <main 
-    className="main">
+    <>
       <h1
         className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
       >
@@ -225,7 +206,7 @@ const QRCodeConnectScreen = ({
         )}
       </div>
       <PoweredByPicket />
-    </main>
+    </>
   );
 };
 export default QRCodeConnectScreen;
