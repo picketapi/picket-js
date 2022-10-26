@@ -10,7 +10,7 @@ const getUserColorSchemePreference = (): ColorSchemePreference =>
 
 const useUserColorSchemePreference = () => {
   const [colorSchemePreference, setColorSchemePreference] =
-    useState<ColorSchemePreference>("light");
+    useState<ColorSchemePreference>(() => getUserColorSchemePreference());
 
   useLayoutEffect(() => {
     const handler = () =>
