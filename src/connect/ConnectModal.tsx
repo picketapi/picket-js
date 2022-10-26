@@ -708,9 +708,9 @@ const ConnectModal = ({
                     textUnderlineOffset: "2px",
                     outlineStyle: "none",
                   }}
-                  className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] ${
+                  className={tw`font-bold dark:text-gray-400 hover:text-[#5469D4] focus:text-[#5469D4] dark:hover:text-[#5469D4] dark:focus:text-[#5469D4] ${
                     selectedChain === slug
-                      ? "underline underline-offset-2 text-[#5469D4]"
+                      ? "underline underline-offset-2 text-[#5469D4] dark:text-[#5469D4]"
                       : ""
                   }`}
                 >
