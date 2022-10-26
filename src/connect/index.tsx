@@ -44,10 +44,8 @@ const mount = async (props: ConnectModalProps) => {
   document.body.appendChild(el);
   const container = document.getElementById(MODAL_ID);
 
-  // render(<ConnectModal {...props} />, container);
-  // dynamically choose React 18 syntax is blocked on
+  // This try/catch always fails because of
   // https://github.com/parcel-bundler/parcel/issues/7268
-  //
   try {
     // React 18
     const { createRoot } = await import("react-dom/client");

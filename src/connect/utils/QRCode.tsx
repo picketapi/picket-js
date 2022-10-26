@@ -30,10 +30,12 @@ const generateDots = ({
   size,
   logoSize,
   logoColor,
+  darkMode,
 }: {
   ecl: QRCodeUtil.QRCodeErrorCorrectionLevel;
   logoSize: number;
   logoColor: string;
+  darkMode: boolean;
   size: number;
   uri: string;
 }): ReactElement[] => {
@@ -52,7 +54,15 @@ const generateDots = ({
     for (let i = 0; i < 3; i++) {
       dots.push(
         <rect
-          fill={i % 2 !== 0 ? "white" : logoColor}
+          fill={
+            darkMode
+              ? i % 2 !== 0
+                ? "#26293B"
+                : "white"
+              : i % 2 !== 0
+              ? "white"
+              : logoColor
+          } // Can't use logocolor in darkmode because contrast sometimes too low for qr code perf
           height={cellSize * (7 - i * 2)}
           key={`${i}-${x}-${y}`}
           rx={(i - 2) * -5 + (i === 0 ? 2 : 0)} // calculated border radius for corner squares
@@ -91,7 +101,7 @@ const generateDots = ({
               <circle
                 cx={i * cellSize + cellSize / 2}
                 cy={j * cellSize + cellSize / 2}
-                fill="black"
+                fill={darkMode ? "white" : "black"}
                 key={`circle-${i}-${j}`}
                 r={cellSize / 3} // calculate size of single dots
               />
@@ -114,6 +124,7 @@ type Props = {
   uri: string;
   logo: WalletIcon;
   disabled?: boolean;
+  darkMode?: boolean;
 };
 
 export default function QRCode({
@@ -125,6 +136,7 @@ export default function QRCode({
   size: sizeProp = 300,
   uri,
   disabled = false,
+  darkMode = false,
 }: Props) {
   const padding: string = "10";
   // calculate size of the QRCode
@@ -139,6 +151,7 @@ export default function QRCode({
         logoColor,
         size,
         uri,
+        darkMode,
       }),
     [ecl, logoSize, size, uri]
   );
@@ -147,7 +160,7 @@ export default function QRCode({
 
   return (
     <div
-      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white p-[${padding}px] rounded-xl`}
+      className={tw`relative w-full h-full flex-1 flex items-center justify-center bg-white dark:bg-[#26293B] p-[${padding}px] rounded-xl`}
       style={{
         filter: disabled ? "blur(4px)" : "none",
       }}

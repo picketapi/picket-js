@@ -18,6 +18,9 @@ import SuccessScreen from "./SuccessScreen";
 import TokenGateFailureScreen from "./TokenGateFailureScreen";
 import QRCodeConnectScreen from "./QRCodeConnectScreen";
 
+import { useDarkMode } from "./utils/theme";
+import { PicketTheme, DEFAULT_THEME } from "../picket";
+
 const displayWalletAddress = (address: string) => {
   return (
     address.substring(0, 5) + "..." + address.substring(address.length - 3)
@@ -116,6 +119,7 @@ export interface ConnectModalProps {
   chain?: string;
   doAuth?: boolean;
   requirements?: AuthRequirements;
+  theme?: PicketTheme;
 }
 
 const getWarningMessage = ({
@@ -249,6 +253,7 @@ const ConnectModal = ({
   chain,
   doAuth = false,
   requirements,
+  theme = DEFAULT_THEME,
 }: ConnectModalProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -262,6 +267,8 @@ const ConnectModal = ({
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
   const [selectedChain, setSelectedChain] = useState<string>("");
   const [qrCodeURI, setQRCodeURI] = useState<string>("");
+
+  const darkMode = useDarkMode(theme);
 
   useEffect(() => {
     if (!chain) {
@@ -618,7 +625,7 @@ const ConnectModal = ({
       }`}
     >
       <div
-        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
+        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] dark:bg-[#040825] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
       >
         {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
@@ -628,7 +635,7 @@ const ConnectModal = ({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
+              className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
             >
               <path
                 strokeLinecap="round"
@@ -641,7 +648,7 @@ const ConnectModal = ({
         <button onClick={close} className={tw`absolute top-3 right-3`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={tw`w-8 h-8 bg-white text-gray-400 rounded-lg hover:shadow`}
+            className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -679,11 +686,12 @@ const ConnectModal = ({
             connect={connect}
             error={error}
             warning={warning}
+            darkMode={darkMode}
           />
         ) : (
           <>
             <h1
-              className={tw`mb-6 text-xl font-semibold break-words text-left`}
+              className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-left`}
             >
               Log In With Your Wallet
             </h1>
@@ -700,9 +708,9 @@ const ConnectModal = ({
                     textUnderlineOffset: "2px",
                     outlineStyle: "none",
                   }}
-                  className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] ${
+                  className={tw`font-bold dark:text-gray-400 hover:text-[#5469D4] focus:text-[#5469D4] dark:hover:text-[#5469D4] dark:focus:text-[#5469D4] ${
                     selectedChain === slug
-                      ? "underline underline-offset-2 text-[#5469D4]"
+                      ? "underline underline-offset-2 text-[#5469D4] dark:text-[#5469D4]"
                       : ""
                   }`}
                 >
@@ -789,7 +797,7 @@ const ConnectModal = ({
                     outlineOffset: "4px",
                   }}
                   disabled={!!connectState}
-                  className={tw`p-2.5 w-full bg-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 disabled:cursor-not-allowed ${
+                  className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:text-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 dark:hover:bg-[#181B2E] disabled:cursor-not-allowed ${
                     selectedWallet?.id === wallet.id
                       ? "bg-gray-100"
                       : "disabled:bg-white"
