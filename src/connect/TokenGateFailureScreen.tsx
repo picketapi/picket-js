@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { tw } from "twind";
 
 import { AuthRequirements } from "../types";
@@ -6,7 +6,6 @@ import { AuthRequirements } from "../types";
 import { Wallet } from "./wallets";
 
 import PoweredByPicket from "./PoweredByPicket";
-import { setTheme } from "./utils/theme";
 
 interface TokenGateFailureScreenProps {
   chain: string;
@@ -72,14 +71,8 @@ const TokenGateFailureScreen = ({
   requirements,
   back,
 }: TokenGateFailureScreenProps) => {
-
-  useEffect(() => {
-    setTheme();
-  }, []);
-
   return (
-    <main 
-    className="main">
+    <>
       <h1
         className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
       >
@@ -125,7 +118,9 @@ const TokenGateFailureScreen = ({
             fill="currentColor"
           />
         </svg>
-        <p className={tw`text-sm text-center font-semibold text-gray-600 dark:text-white mb-2`}>
+        <p
+          className={tw`text-sm text-center font-semibold text-gray-600 dark:text-white mb-2`}
+        >
           Your wallet {displayAddress} doesn't hold the necessary tokens
         </p>
         <a
@@ -144,7 +139,7 @@ const TokenGateFailureScreen = ({
         </button>
       </div>
       <PoweredByPicket />
-    </main>
+    </>
   );
 };
 export default TokenGateFailureScreen;
