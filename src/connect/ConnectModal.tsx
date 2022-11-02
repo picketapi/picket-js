@@ -781,9 +781,7 @@ const ConnectModal = ({
                     </svg>
                   </div>
                   <div className={tw`ml-3`}>
-                    <div className={tw`text-sm text-red-700`}>
-                      <p>{error}</p>
-                    </div>
+                    <div className={tw`text-sm text-red-700`}>{error}</div>
                   </div>
                 </div>
               </div>
