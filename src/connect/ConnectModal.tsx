@@ -787,39 +787,44 @@ const ConnectModal = ({
               </div>
             )}
             <div className={tw`flex-1 flex flex-col min-h-[350px] space-y-2`}>
-              {currentWalletOptions?.wallets.map((wallet) => (
-                <button
-                  key={wallet.id}
-                  onClick={() => connect(wallet)}
-                  style={{
-                    outlineOffset: "4px",
-                  }}
-                  disabled={!!connectState}
-                  className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:text-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 dark:hover:bg-[#181B2E] disabled:cursor-not-allowed ${
-                    selectedWallet?.id === wallet.id
-                      ? "bg-gray-100"
-                      : "disabled:bg-white"
-                  }`}
-                >
-                  <div className={tw`mr-8 rounded-lg overflow-hidden`}>
-                    <wallet.Icon />
-                  </div>
-                  {selectedWallet?.id === wallet.id
-                    ? connectStateMessage[connectState || "connect"]
-                    : wallet.name}
-                </button>
-              ))}
-              <div className={tw`flex-grow flex flex-col`}>
+              <div
+                id="_picketWallets"
+                className={tw`flex-1 flex flex-col space-y-2 max-h-[300px] overflow-auto py-2 px-2`}
+              >
+                {currentWalletOptions?.wallets.map((wallet) => (
+                  <button
+                    key={wallet.id}
+                    onClick={() => connect(wallet)}
+                    style={{
+                      outlineOffset: "4px",
+                    }}
+                    disabled={!!connectState}
+                    className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:text-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 dark:hover:bg-[#181B2E] disabled:cursor-not-allowed ${
+                      selectedWallet?.id === wallet.id
+                        ? "bg-gray-100"
+                        : "disabled:bg-white"
+                    }`}
+                  >
+                    <div className={tw`mr-8 rounded-lg overflow-hidden`}>
+                      <wallet.Icon />
+                    </div>
+                    {selectedWallet?.id === wallet.id
+                      ? connectStateMessage[connectState || "connect"]
+                      : wallet.name}
+                  </button>
+                ))}
+              </div>
+              <div className={tw`flex flex-col px-2`}>
                 <div className={tw`w-full flex-grow flex flex-col-reverse`}>
                   <div
                     className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
                   >
                     <div
-                      className={tw`block flex-grow border-t h-px mr-6`}
+                      className={tw`block flex-grow border-solid border-t h-px mr-6`}
                     ></div>
                     <div className={tw`block`}>or</div>
                     <div
-                      className={tw`block flex-grow border-t h-px ml-6`}
+                      className={tw`block flex-grow border-solid border-t h-px ml-6`}
                     ></div>
                   </div>
                 </div>
@@ -844,6 +849,12 @@ const ConnectModal = ({
         dangerouslySetInnerHTML={{
           __html: `
   #_picketWalletOptions::-webkit-scrollbar {
+    -webkit-appearance: none;
+    height: 0px;
+    width: 0px;
+    background: transparent; /* make scrollbar transparent */
+  }
+  #_picketWallets::-webkit-scrollbar {
     -webkit-appearance: none;
     height: 0px;
     width: 0px;
