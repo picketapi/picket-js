@@ -820,11 +820,11 @@ const ConnectModal = ({
                     className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
                   >
                     <div
-                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px mr-6`}
+                      className={tw`block flex-grow border-solid border-gray-400 border border-t border-b-0 border-x-0 h-px mr-6`}
                     ></div>
                     <div className={tw`block`}>or</div>
                     <div
-                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px ml-6`}
+                      className={tw`block flex-grow border-solid border-gray-400 border border-t border-b-0 border-x-0 h-px ml-6`}
                     ></div>
                   </div>
                 </div>
