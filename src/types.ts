@@ -8,6 +8,7 @@ export interface ErrorResponse {
 export enum ChainTypes {
   ETH = "ethereum",
   SOL = "solana",
+  FLOW = "flow",
 }
 
 export type ChainType = `${ChainTypes}`;
