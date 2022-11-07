@@ -13,7 +13,7 @@ import bs58 from "bs58";
 import { Connector } from "@wagmi/core";
 
 // Flow
-// TODO
+import * as fcl from "@onflow/fcl";
 
 export const WALLET_ICON_SIZE = 28;
 
@@ -211,6 +211,63 @@ export class SolanaWalletAdpaterWallet implements Wallet {
     const messageBytes = new TextEncoder().encode(message);
     const signatureBytes = await this.adapter.signMessage(messageBytes);
     const signature = bs58.encode(signatureBytes);
+    return signature;
+  }
+}
+
+export class FlowWallet implements Wallet {
+  id: string;
+  name: string;
+  color: string;
+  Icon: WalletIcon;
+  service: any;
+
+  constructor({ service }: { service: any }) {
+    this.service = service;
+
+    const { name, color, icon, address } = service.provider;
+
+    this.id = address;
+    this.name = name;
+    this.Icon = ({
+      height = WALLET_ICON_SIZE,
+      width = WALLET_ICON_SIZE,
+    }: WalletIconProps) => (
+      <img
+        className={tw`rounded-md`}
+        alt={name}
+        src={icon}
+        height={height}
+        width={width}
+      />
+    );
+
+    this.color = color;
+  }
+
+  get ready() {
+    return Boolean(this.service);
+  }
+
+  // for now, ignore chainId on Solana
+  async connect({}: ConnectOpts = {}) {
+    await fcl.authenticate({ service: this.service });
+
+    const walletAddress = fcl.currentUser.addr;
+
+    return {
+      walletAddress,
+      provider: this.service.provider,
+    };
+  }
+
+  async disconnect() {
+    return fcl.unauthenticate();
+  }
+
+  async signMessage(message: string) {
+    const messageHex = Buffer.from(message).toString("hex");
+    const signature = await fcl.currentUser.signUserMessage(messageHex);
     return signature;
   }
 }

@@ -3,32 +3,35 @@ import React from "react";
 import { config } from "@onflow/fcl";
 import * as fcl from "@onflow/fcl";
 
+import { Wallet, FlowWallet } from "../";
+
 config({
-  "accessNode.api": "https://rest-testnet.onflow.org",
-  "discovery.authn.endpoint":
-    "https://fcl-discovery.onflow.org/api/testnet/authn",
+  "accessNode.api": "https://rest.onflow.org",
+  "discovery.authn.endpoint": "https://fcl-discovery.onflow.org/api/authn",
+  // Wallet list
+  // https://github.com/onflow/fcl-discovery/blob/master/data/services.json
+  // support dapper and ledger
+  "discovery.authn.include": ["0xead892083b3e2c6c", "0xe5cd26afebe62781"],
 });
 
-// Wallet list
-// https://github.com/onflow/fcl-discovery/blob/master/data/services.json
-export let wallets = [];
+let walletsPromise: Promise<Wallet[]> | null = null;
 
-// Service	Testnet	Mainnet
-// Dapper Wallet	0x82ec283f88a62e65	0xead892083b3e2c6c
-// Ledger	0x9d2e44203cb13051	0xe5cd26afebe62781
-// config({
-// "discovery.authn.endpoint": "https://fcl-discovery.onflow.org/api/testnet/authn", // Endpoint set to Testnet
-// "discovery.authn.include": ["0x9d2e44203cb13051"] // Ledger wallet address on Testnet set to be included
-// })
+export const loadWallets = async () => {
+  if (walletsPromise) return walletsPromise;
 
-export const getWallets = async () =>
-  new Promise((resolve) => {
-    fcl.discovery.authn.subscribe((res) => {
+  walletsPromise = new Promise((resolve) => {
+    fcl.discovery.authn.subscribe((res: any) => {
       if (!res || !Object.keys(res).length) return;
-      console.log("here", res);
 
-      resolve(res.results);
+      const wallets = res.results.map(
+        (service: any) => new FlowWallet({ service })
+      );
+
+      return resolve(wallets);
     });
   });
 
-export default wallets;
+  return walletsPromise;
+};
+
+export default loadWallets;

@@ -11,6 +11,7 @@ import { isMobile } from "./utils/device";
 import { Wallet } from "./wallets";
 import loadEVMWallets from "./wallets/evm";
 import loadSolanaWallets from "./wallets/solana";
+import loadFlowWallets from "./wallets/flow";
 
 import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
@@ -35,6 +36,7 @@ const HAS_CONNECTED_SESSION_KEY = "_picket_has_connected";
 const METAMASK_DOWNLOAD_URL = "https://metamask.io/download/";
 const RAINBOW_DOWNLOAD_URL = "https://rainbow.me/";
 const PHANTOM_DOWNLOAD_URL = "https://phantom.app/download";
+const DAPPER_DOWNLOAD_URL = "https://www.meetdapper.com/";
 
 const NOT_ENOUGH_TOKENS_ERROR =
   "Your wallet doesn't hold the necessary tokens to login.";
@@ -61,6 +63,13 @@ const defaultWalletOptions: ChainOptions[] = [
     loadWallets: loadSolanaWallets,
     desktopPreferredWalletLink: PHANTOM_DOWNLOAD_URL,
     mobilePreferredWalletLink: PHANTOM_DOWNLOAD_URL,
+  },
+  {
+    slug: "flow",
+    name: "Flow",
+    loadWallets: loadFlowWallets,
+    desktopPreferredWalletLink: DAPPER_DOWNLOAD_URL,
+    mobilePreferredWalletLink: DAPPER_DOWNLOAD_URL,
   },
   {
     slug: "polygon",
