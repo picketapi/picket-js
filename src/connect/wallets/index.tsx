@@ -12,6 +12,9 @@ import bs58 from "bs58";
 // EVM
 import { Connector } from "@wagmi/core";
 
+// Flow
+// TODO
+
 export const WALLET_ICON_SIZE = 28;
 
 export interface WalletIconProps {

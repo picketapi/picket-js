@@ -2,7 +2,6 @@ import React from "react";
 import { tw } from "twind";
 
 import { Wallet } from "./wallets";
-import InjectedWallet from "./wallets/evm/Injected";
 
 import PoweredByPicket from "./PoweredByPicket";
 
@@ -14,8 +13,7 @@ interface SuccessScreenProps {
 
 const SuccessScreen = ({
   displayAddress,
-  // default to injected wallet if we end up here with no selected wallet
-  selectedWallet = InjectedWallet,
+  selectedWallet,
   hasTokenOwnershipRequirements = false,
 }: SuccessScreenProps) => {
   return (

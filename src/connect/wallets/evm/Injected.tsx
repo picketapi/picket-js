@@ -21,10 +21,11 @@ const Icon = ({
   </svg>
 );
 
-const wallet = new WagmiWallet({
-  connector: new InjectedConnector(),
-  color: "#5469d4",
-  Icon,
-});
+export const createWallet = () =>
+  new WagmiWallet({
+    connector: new InjectedConnector(),
+    color: "#5469d4",
+    Icon,
+  });
 
-export default wallet;
+export default createWallet;

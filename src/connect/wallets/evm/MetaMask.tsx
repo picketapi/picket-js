@@ -6,6 +6,8 @@ import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 import { isAndroid } from "../../utils/device";
 
+const color = "#F6851B";
+
 const Icon = ({
   height = WALLET_ICON_SIZE,
   width = WALLET_ICON_SIZE,
@@ -289,36 +291,39 @@ const isMetaMaskInjected =
 
 const shouldUseWalletConnect = !isMetaMaskInjected;
 
-const wallet = new WagmiWallet({
-  id: "metamask",
-  name: "MetaMask",
-  connector: shouldUseWalletConnect
-    ? new WalletConnectConnector({
-        chains: allChains,
-        options: {
-          qrcode: false,
-        },
-      })
-    : new MetaMaskConnector({
-        chains: allChains,
-      }),
-  color: "#F6851B",
-  Icon,
-  // show QR code if using wallet connect
-  ...(shouldUseWalletConnect
-    ? {
-        getQRCodeURI: async (provider: any) => {
-          const { uri } = provider.connector;
-          const android = isAndroid();
+export const createWallet = () =>
+  new WagmiWallet({
+    id: "metamask",
+    name: "MetaMask",
+    connector: shouldUseWalletConnect
+      ? new WalletConnectConnector({
+          chains: allChains,
+          options: {
+            qrcode: false,
+          },
+        })
+      : new MetaMaskConnector({
+          chains: allChains,
+        }),
+    color,
+    Icon,
+    // show QR code if using wallet connect
+    ...(shouldUseWalletConnect
+      ? {
+          getQRCodeURI: async (provider: any) => {
+            const { uri } = provider.connector;
+            const android = isAndroid();
 
-          // android devices can use the default QR code
-          if (android) return uri;
+            // android devices can use the default QR code
+            if (android) return uri;
 
-          // non-android, use the deep link
-          return `https://metamask.app.link/wc?uri=${encodeURIComponent(uri)}`;
-        },
-      }
-    : {}),
-});
+            // non-android, use the deep link
+            return `https://metamask.app.link/wc?uri=${encodeURIComponent(
+              uri
+            )}`;
+          },
+        }
+      : {}),
+  });
 
-export default wallet;
+export default createWallet;

@@ -9,8 +9,8 @@ import { addOrSwitchEVMChain } from "./utils/chains";
 import { isMobile } from "./utils/device";
 
 import { Wallet } from "./wallets";
-import evmWallets from "./wallets/evm";
-import solanaWallets from "./wallets/solana";
+import loadEVMWallets from "./wallets/evm";
+import loadSolanaWallets from "./wallets/solana";
 
 import NewWalletButton from "./NewWalletButton";
 import PoweredByPicket from "./PoweredByPicket";
@@ -39,54 +39,54 @@ const PHANTOM_DOWNLOAD_URL = "https://phantom.app/download";
 const NOT_ENOUGH_TOKENS_ERROR =
   "Your wallet doesn't hold the necessary tokens to login.";
 
-type WalletOption = {
+type ChainOptions = {
   slug: string;
   name: string;
-  wallets: Wallet[];
+  loadWallets: () => Promise<Wallet[]>;
   desktopPreferredWalletLink?: string;
   mobilePreferredWalletLink?: string;
 };
 
-const defaultWalletOptions: WalletOption[] = [
+const defaultWalletOptions: ChainOptions[] = [
   {
     slug: "ethereum",
     name: "Ethereum",
-    wallets: evmWallets,
+    loadWallets: loadEVMWallets,
     desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
     mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "solana",
     name: "Solana",
-    wallets: solanaWallets,
+    loadWallets: loadSolanaWallets,
     desktopPreferredWalletLink: PHANTOM_DOWNLOAD_URL,
     mobilePreferredWalletLink: PHANTOM_DOWNLOAD_URL,
   },
   {
     slug: "polygon",
     name: "Polygon",
-    wallets: evmWallets,
+    loadWallets: loadEVMWallets,
     desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
     mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "optimism",
     name: "Optimism",
-    wallets: evmWallets,
+    loadWallets: loadEVMWallets,
     desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
     mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "arbitrum",
     name: "Arbitrum",
-    wallets: evmWallets,
+    loadWallets: loadEVMWallets,
     desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
     mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
   {
     slug: "avalanche",
     name: "Avalanche",
-    wallets: evmWallets,
+    loadWallets: loadEVMWallets,
     desktopPreferredWalletLink: METAMASK_DOWNLOAD_URL,
     mobilePreferredWalletLink: RAINBOW_DOWNLOAD_URL,
   },
@@ -264,16 +264,30 @@ const ConnectModal = ({
 
   const [displayAddress, setDisplayAddress] = useState<string>();
   const [selectedWallet, setSelectedWallet] = useState<Wallet>();
-  const [walletOptions, setWalletOptions] = useState<WalletOption[]>([]);
-  const [selectedChain, setSelectedChain] = useState<string>("");
+  const [chainOptions, setChainOptions] = useState<ChainOptions[]>([]);
+  const [selectedChainOption, setSelectedChainOption] =
+    useState<ChainOptions>();
+  const [walletList, setWalletList] = useState<Wallet[]>();
   const [qrCodeURI, setQRCodeURI] = useState<string>("");
+
+  const selectedChain = selectedChainOption?.slug || "";
 
   const darkMode = useDarkMode(theme);
 
+  const switchChains = (chain: string) => {
+    const options = defaultWalletOptions.filter(
+      ({ slug }) => slug === chain
+    )[0];
+    // should never happen
+    if (!options) return;
+    setSelectedChainOption(options);
+    options.loadWallets().then(setWalletList);
+  };
+
   useEffect(() => {
     if (!chain) {
-      setWalletOptions(defaultWalletOptions);
-      setSelectedChain(defaultWalletOptions[0].slug);
+      setChainOptions(defaultWalletOptions);
+      switchChains(defaultWalletOptions[0].slug);
       return;
     }
 
@@ -282,23 +296,29 @@ const ConnectModal = ({
         const { chainSlug, chainType, chainName } =
           await window.picket.chainInfo(chain);
 
-        setSelectedChain(chainSlug);
+        const options = chainOptions.filter(
+          ({ slug }) => slug === chainSlug
+        )[0];
+
+        if (!options) throw new Error("Chain not found");
+        setSelectedChainOption(options);
+
         if (chainType === ChainTypes.SOL) {
-          setWalletOptions([
+          setChainOptions([
             {
               slug: chainSlug,
               name: chainName,
-              wallets: solanaWallets,
+              loadWallets: loadSolanaWallets,
             },
           ]);
           return;
         }
         // assume EVM
-        setWalletOptions([
+        setChainOptions([
           {
             slug: chainSlug,
             name: chainName,
-            wallets: evmWallets,
+            loadWallets: loadEVMWallets,
           },
         ]);
         return;
@@ -600,10 +620,6 @@ const ConnectModal = ({
     }
   };
 
-  const currentWalletOptions = walletOptions.filter(
-    ({ slug }) => slug === selectedChain
-  )[0];
-
   const showTokenGateFailureScreen =
     hasTokenOwnershipRequirements(requirements) &&
     error === NOT_ENOUGH_TOKENS_ERROR;
@@ -699,10 +715,10 @@ const ConnectModal = ({
               className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
               id="_picketWalletOptions"
             >
-              {walletOptions.map(({ slug, name }) => (
+              {chainOptions.map(({ slug, name }) => (
                 <button
                   key={slug}
-                  onClick={() => setSelectedChain(slug)}
+                  onClick={() => switchChains(slug)}
                   // Use style for underline offset until twind supports Tailwind v3
                   style={{
                     textUnderlineOffset: "2px",
@@ -791,7 +807,7 @@ const ConnectModal = ({
                 id="_picketWallets"
                 className={tw`flex-1 flex flex-col space-y-2 max-h-[300px] overflow-auto py-2 px-2`}
               >
-                {currentWalletOptions?.wallets.map((wallet) => (
+                {walletList?.map((wallet) => (
                   <button
                     key={wallet.id}
                     onClick={() => connect(wallet)}
@@ -820,21 +836,21 @@ const ConnectModal = ({
                     className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
                   >
                     <div
-                      className={tw`block flex-grow border-solid border-gray-400 border border-t border-b-0 border-x-0 h-px mr-6`}
+                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px mr-6`}
                     ></div>
                     <div className={tw`block`}>or</div>
                     <div
-                      className={tw`block flex-grow border-solid border-gray-400 border border-t border-b-0 border-x-0 h-px ml-6`}
+                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px ml-6`}
                     ></div>
                   </div>
                 </div>
                 <NewWalletButton
                   mobilePreferredWalletLink={
-                    currentWalletOptions?.mobilePreferredWalletLink ||
+                    selectedChainOption?.mobilePreferredWalletLink ||
                     RAINBOW_DOWNLOAD_URL
                   }
                   desktopPreferredWalletLink={
-                    currentWalletOptions?.desktopPreferredWalletLink ||
+                    selectedChainOption?.desktopPreferredWalletLink ||
                     METAMASK_DOWNLOAD_URL
                   }
                 />

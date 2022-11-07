@@ -10,9 +10,11 @@ import Coinbase from "./Coinbase";
 import Trust from "./Trust";
 import Argent from "./Argent";
 
+import { Wallet } from "../";
+
 const { provider } = configureChains(allChains, [publicProvider()]);
 
-const needsInjectedWallet =
+const needsInjectedWallet = () =>
   typeof window !== "undefined" &&
   window.ethereum &&
   !isMetaMask(window.ethereum) &&
@@ -23,14 +25,29 @@ const needsInjectedWallet =
 // !window.ethereum.isBraveWallet;
 // TODO: Consider adding brave native wallet support (for icon)
 
-export const wallets = needsInjectedWallet
-  ? [Injected, MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect]
-  : [MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect];
+let walletsPromise: Promise<Wallet[]> | null = null;
 
-// this is never referenced but is needed!
-export const wagmiClient = createClient({
-  connectors: wallets.map((wallet) => wallet.connector),
-  provider,
-});
+// lazily get wallets
+export const loadWallets = async (): Promise<Wallet[]> => {
+  if (walletsPromise) return walletsPromise;
 
-export default wallets;
+  walletsPromise = new Promise(async (resolve) => {
+    const walletCreators = needsInjectedWallet()
+      ? [Injected, MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect]
+      : [MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect];
+
+    const wallets = await Promise.all(walletCreators.map((wallet) => wallet()));
+
+    // this is never referenced but is needed!
+    createClient({
+      connectors: wallets.map((wallet) => wallet.connector),
+      provider,
+    });
+
+    return resolve(wallets);
+  });
+
+  return walletsPromise;
+};
+
+export default loadWallets;

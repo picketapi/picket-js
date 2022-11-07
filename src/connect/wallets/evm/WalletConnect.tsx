@@ -28,26 +28,28 @@ const Icon = ({
   </svg>
 );
 
-const iOS = isIOS();
+export const createWallet = () => {
+  const iOS = isIOS();
 
-const wallet = new WagmiWallet({
-  connector: new WalletConnectConnector({
-    chains: allChains,
-    options: {
-      // on iOS, enable built-in WalletConnect selection modal
-      qrcode: iOS,
-    },
-  }),
-  color,
-  Icon,
-  // on iOS, disable custom QR code
-  ...(iOS
-    ? {}
-    : {
-        getQRCodeURI: async (provider: any) => {
-          return provider.connector.uri;
-        },
-      }),
-});
+  return new WagmiWallet({
+    connector: new WalletConnectConnector({
+      chains: allChains,
+      options: {
+        // on iOS, enable built-in WalletConnect selection modal
+        qrcode: iOS,
+      },
+    }),
+    color,
+    Icon,
+    // on iOS, disable custom QR code
+    ...(iOS
+      ? {}
+      : {
+          getQRCodeURI: async (provider: any) => {
+            return provider.connector.uri;
+          },
+        }),
+  });
+};
 
-export default wallet;
+export default createWallet;

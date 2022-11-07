@@ -5,9 +5,10 @@ import { SolanaWalletAdpaterWallet } from "../../wallets";
 
 const color = "#fb402e";
 
-const wallet = new SolanaWalletAdpaterWallet({
-  adapter: new SolflareWalletAdapter(),
-  color,
-});
+export const createWallet = () =>
+  new SolanaWalletAdpaterWallet({
+    adapter: new SolflareWalletAdapter(),
+    color,
+  });
 
-export default wallet;
+export default createWallet;

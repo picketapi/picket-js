@@ -30,10 +30,6 @@ const Icon = ({
   </svg>
 );
 
-const inAppBrowser = Boolean(
-  typeof window !== "undefined" && window.ethereum?.isTrust
-);
-
 const getQRCodeURI = async (provider: any) => {
   const { uri } = provider.connector;
   const android = isAndroid();
@@ -46,23 +42,29 @@ const getQRCodeURI = async (provider: any) => {
   return `https://link.trustwallet.com/wc?uri=${encodeURIComponent(uri)}`;
 };
 
-const wallet = new WagmiWallet({
-  id: "trust",
-  name: "Trust Wallet",
-  // return injected connector if in app browser
-  connector: inAppBrowser
-    ? new InjectedConnector({
-        chains: allChains,
-      })
-    : new WalletConnectConnector({
-        chains: allChains,
-        options: {
-          qrcode: false,
-        },
-      }),
-  color,
-  Icon,
-  getQRCodeURI: inAppBrowser ? undefined : getQRCodeURI,
-});
+export const createWallet = () => {
+  const inAppBrowser = Boolean(
+    typeof window !== "undefined" && window.ethereum?.isTrust
+  );
 
-export default wallet;
+  return new WagmiWallet({
+    id: "trust",
+    name: "Trust Wallet",
+    // return injected connector if in app browser
+    connector: inAppBrowser
+      ? new InjectedConnector({
+          chains: allChains,
+        })
+      : new WalletConnectConnector({
+          chains: allChains,
+          options: {
+            qrcode: false,
+          },
+        }),
+    color,
+    Icon,
+    getQRCodeURI: inAppBrowser ? undefined : getQRCodeURI,
+  });
+};
+
+export default createWallet;

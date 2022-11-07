@@ -30,25 +30,26 @@ const Icon = ({
   </svg>
 );
 
-const wallet = new WagmiWallet({
-  connector: new CoinbaseWalletConnector({
-    chains: allChains,
-    options: {
-      appName: "Picket",
-      // headlessMode => means we show our own QR code
-      headlessMode: true,
-    },
-  }),
-  color,
-  Icon,
-  // on iOS, disable custom QR code because it will automatically deep link
-  ...(isIOS()
-    ? {}
-    : {
-        getQRCodeURI: async (provider: any) => {
-          return provider.qrUrl;
-        },
-      }),
-});
+export const createWallet = () =>
+  new WagmiWallet({
+    connector: new CoinbaseWalletConnector({
+      chains: allChains,
+      options: {
+        appName: "Picket",
+        // headlessMode => means we show our own QR code
+        headlessMode: true,
+      },
+    }),
+    color,
+    Icon,
+    // on iOS, disable custom QR code because it will automatically deep link
+    ...(isIOS()
+      ? {}
+      : {
+          getQRCodeURI: async (provider: any) => {
+            return provider.qrUrl;
+          },
+        }),
+  });
 
-export default wallet;
+export default createWallet;

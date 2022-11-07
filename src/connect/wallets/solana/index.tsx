@@ -4,6 +4,18 @@ import Solflare from "./Solflare";
 import Glow from "./Glow";
 import Backpack from "./Backpack";
 
-export const wallets = [Phantom, Solflare, Glow, Backpack];
+import { Wallet } from "../";
 
-export default wallets;
+export const walletCreators = [Phantom, Solflare, Glow, Backpack];
+
+let walletsPromise: Promise<Wallet[]> | null = null;
+
+// lazily get wallets
+export const loadWallets = async () => {
+  if (!walletsPromise) {
+    walletsPromise = Promise.all(walletCreators.map((wallet) => wallet()));
+  }
+  return walletsPromise;
+};
+
+export default loadWallets;
