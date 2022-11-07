@@ -291,6 +291,8 @@ const ConnectModal = ({
     if (!options) return;
     setSelectedChainOption(options);
     options.loadWallets().then(setWalletList);
+    // clear wallet
+    setSelectedWallet(undefined);
   };
 
   useEffect(() => {
