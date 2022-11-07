@@ -1,12 +1,12 @@
 import React from "react";
 
-import { config } from "@onflow/fcl";
 import * as fcl from "@onflow/fcl";
 
 import { Wallet, FlowWallet } from "../";
 
-config({
-  "accessNode.api": "https://rest.onflow.org",
+fcl.config({
+  "flow.network": "mainnet",
+  "accessNode.api": "https://rest-mainnet.onflow.org",
   "discovery.authn.endpoint": "https://fcl-discovery.onflow.org/api/authn",
   // Wallet list
   // https://github.com/onflow/fcl-discovery/blob/master/data/services.json

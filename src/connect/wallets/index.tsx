@@ -251,12 +251,13 @@ export class FlowWallet implements Wallet {
 
   // for now, ignore chainId on Solana
   async connect({}: ConnectOpts = {}) {
-    await fcl.authenticate({ service: this.service });
+    const { addr } = await fcl.authenticate({ service: this.service });
 
-    const walletAddress = fcl.currentUser.addr;
+    // set this wallet as the chosen wallet for signature call
+    fcl.config().put("discovery.wallet", this.service.endpoint);
 
     return {
-      walletAddress,
+      walletAddress: addr,
       provider: this.service.provider,
     };
   }
@@ -266,8 +267,11 @@ export class FlowWallet implements Wallet {
   }
 
   async signMessage(message: string) {
+    const { signUserMessage } = await fcl.currentUser();
     const messageHex = Buffer.from(message).toString("hex");
-    const signature = await fcl.currentUser.signUserMessage(messageHex);
+    const [compositeSignature] = await signUserMessage(messageHex);
+    const { signature } = compositeSignature;
+
     return signature;
   }
 }
