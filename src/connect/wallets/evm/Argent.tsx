@@ -40,18 +40,19 @@ const getQRCodeURI = async (provider: any) => {
   return `https://argent.link/app/wc?uri=${encodeURIComponent(uri)}`;
 };
 
-const wallet = new WagmiWallet({
-  id: "argent",
-  name: "Argent",
-  connector: new WalletConnectConnector({
-    chains: allChains,
-    options: {
-      qrcode: false,
-    },
-  }),
-  color,
-  Icon,
-  getQRCodeURI: getQRCodeURI,
-});
+const createWallet = () =>
+  new WagmiWallet({
+    id: "argent",
+    name: "Argent",
+    connector: new WalletConnectConnector({
+      chains: allChains,
+      options: {
+        qrcode: false,
+      },
+    }),
+    color,
+    Icon,
+    getQRCodeURI: getQRCodeURI,
+  });
 
-export default wallet;
+export default createWallet;

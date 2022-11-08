@@ -166,29 +166,30 @@ const Icon = ({
   </svg>
 );
 
-const wallet = new WagmiWallet({
-  id: "rainbow",
-  name: "Rainbow",
-  connector: new WalletConnectConnector({
-    chains: allChains,
-    options: {
-      qrcode: false,
+export const createWallet = () =>
+  new WagmiWallet({
+    id: "rainbow",
+    name: "Rainbow",
+    connector: new WalletConnectConnector({
+      chains: allChains,
+      options: {
+        qrcode: false,
+      },
+    }),
+    color,
+    Icon,
+    // on iOS, disable custom QR code
+    getQRCodeURI: async (provider: any) => {
+      const { uri } = provider.connector;
+      const android = isAndroid();
+      const desktop = !isMobile();
+
+      // android devices can use the default QR code
+      if (android || desktop) return uri;
+
+      // non-android, use the deep link
+      return `https://rnbwapp.com/wc?uri=${encodeURIComponent(uri)}`;
     },
-  }),
-  color,
-  Icon,
-  // on iOS, disable custom QR code
-  getQRCodeURI: async (provider: any) => {
-    const { uri } = provider.connector;
-    const android = isAndroid();
-    const desktop = !isMobile();
+  });
 
-    // android devices can use the default QR code
-    if (android || desktop) return uri;
-
-    // non-android, use the deep link
-    return `https://rnbwapp.com/wc?uri=${encodeURIComponent(uri)}`;
-  },
-});
-
-export default wallet;
+export default createWallet;

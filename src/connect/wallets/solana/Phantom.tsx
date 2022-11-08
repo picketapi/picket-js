@@ -5,10 +5,11 @@ import { SolanaWalletAdpaterWallet } from "../../wallets";
 
 const color = "#5520f4";
 
-const wallet = new SolanaWalletAdpaterWallet({
-  // @ts-ignore There is an incorrect type issue on Parcel build
-  adapter: new PhantomWalletAdapter(),
-  color,
-});
+export const createWallet = () =>
+  new SolanaWalletAdpaterWallet({
+    // @ts-ignore There is an incorrect type issue on Parcel build
+    adapter: new PhantomWalletAdapter(),
+    color,
+  });
 
-export default wallet;
+export default createWallet;

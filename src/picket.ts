@@ -702,6 +702,10 @@ export class Picket {
       // Solana doesn't use the SIWE standard, so modifying the message is OK
       signingMessage = signingMessage.replaceAll("Ethereum", "Solana");
     }
+    if (chainType === ChainTypes.FLOW) {
+      // Flow doesn't use the SIWE standard, so modifying the message is OK
+      signingMessage = signingMessage.replaceAll("Ethereum", "Flow");
+    }
 
     return signingMessage;
   }
