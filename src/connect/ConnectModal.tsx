@@ -180,6 +180,10 @@ const getErrorMessage = ({
     if (err.msg.toLowerCase().includes("invalid project key")) {
       return "Invalid API key. Copy your project's publishable key from your Picket dashboard: https://picketapi.com/dashboard";
     }
+    // @ts-ignore TS isn't respecting "msg" in err
+    if (err.msg.toLowerCase().includes("invalid signature")) {
+      return "Signature expired. Please try again.";
+    }
   }
 
   // auth state specific errors
