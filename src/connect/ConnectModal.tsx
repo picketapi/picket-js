@@ -49,7 +49,7 @@ type ChainOptions = {
   mobilePreferredWalletLink?: string;
 };
 
-const defaultWalletOptions: ChainOptions[] = [
+const defaultChainOptions: ChainOptions[] = [
   {
     slug: "ethereum",
     name: "Ethereum",
@@ -288,9 +288,7 @@ const ConnectModal = ({
   const darkMode = useDarkMode(theme);
 
   const switchChains = (chain: string) => {
-    const options = defaultWalletOptions.filter(
-      ({ slug }) => slug === chain
-    )[0];
+    const options = defaultChainOptions.filter(({ slug }) => slug === chain)[0];
     // should never happen
     if (!options) return;
     setSelectedChainOption(options);
@@ -301,8 +299,8 @@ const ConnectModal = ({
 
   useEffect(() => {
     if (!chain) {
-      setChainOptions(defaultWalletOptions);
-      switchChains(defaultWalletOptions[0].slug);
+      setChainOptions(defaultChainOptions);
+      switchChains(defaultChainOptions[0].slug);
       return;
     }
 
@@ -311,12 +309,12 @@ const ConnectModal = ({
         const { chainSlug, chainType, chainName } =
           await window.picket.chainInfo(chain);
 
-        const options = chainOptions.filter(
+        const options = defaultChainOptions.filter(
           ({ slug }) => slug === chainSlug
         )[0];
 
         if (!options) throw new Error("Chain not found");
-        setSelectedChainOption(options);
+        switchChains(chainSlug);
 
         if (chainType === ChainTypes.SOL) {
           setChainOptions([
@@ -327,6 +325,16 @@ const ConnectModal = ({
             },
           ]);
           return;
+        }
+
+        if (chainType === ChainTypes.FLOW) {
+          setChainOptions([
+            {
+              slug: chainSlug,
+              name: chainName,
+              loadWallets: loadFlowWallets,
+            },
+          ]);
         }
         // assume EVM
         setChainOptions([
