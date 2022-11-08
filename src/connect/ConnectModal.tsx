@@ -765,12 +765,10 @@ const ConnectModal = ({
                   </div>
                   <div className={tw`ml-3 text-sm text-yellow-700`}>
                     <div>
-                      <p>
-                        {getWarningMessage({
-                          wallet: selectedWallet,
-                          state: connectState,
-                        })}
-                      </p>
+                      {getWarningMessage({
+                        wallet: selectedWallet,
+                        state: connectState,
+                      })}
                     </div>
                     {selectedWallet && (
                       <div className={tw`mt-2 text-xs`}>
