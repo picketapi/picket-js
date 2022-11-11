@@ -842,7 +842,9 @@ const ConnectModal = ({
                         : "disabled:bg-white"
                     }`}
                   >
-                    <div className={tw`mr-8 rounded-lg overflow-hidden`}>
+                    <div
+                      className={tw`mr-8 rounded-lg overflow-hidden flex items-center`}
+                    >
                       <wallet.Icon />
                     </div>
                     {selectedWallet?.id === wallet.id
