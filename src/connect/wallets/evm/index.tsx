@@ -33,8 +33,8 @@ export const loadWallets = async (): Promise<Wallet[]> => {
 
   walletsPromise = new Promise(async (resolve) => {
     const walletCreators = needsInjectedWallet()
-      ? [Injected, MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect]
-      : [MetaMask, Rainbow, Coinbase, Trust, Argent, WalletConnect];
+      ? [Injected, MetaMask, Rainbow, Coinbase, WalletConnect, Trust, Argent]
+      : [MetaMask, Rainbow, Coinbase, WalletConnect, Trust, Argent];
 
     const wallets = await Promise.all(walletCreators.map((wallet) => wallet()));
 
