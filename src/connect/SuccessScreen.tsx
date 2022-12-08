@@ -19,19 +19,19 @@ const SuccessScreen = ({
   return (
     <>
       <h1
-        className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
+        className={tw`mb-6 break-words px-7  text-center text-xl font-semibold text-[#414552] dark:text-white`}
       >
         Welcome {displayAddress}
       </h1>
       <div
-        className={tw`flex-1 flex flex-col min-h-[350px] ${
+        className={tw`flex min-h-[350px] flex-1 flex-col ${
           hasTokenOwnershipRequirements ? "space-y-4" : "space-y-0"
         } mt-0 mb-0`}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           // default color to Picket purple
-          className={tw`pt-0 h-full w-full text-[${
+          className={tw`h-full w-full pt-0 text-[${
             selectedWallet?.color || "#5469d4"
           }]`}
           viewBox="0 0 20 20"
@@ -47,14 +47,14 @@ const SuccessScreen = ({
           className={tw`flex items-center ${
             hasTokenOwnershipRequirements
               ? "flex-row space-x-4"
-              : "flex-col text-center space-y-2"
+              : "flex-col space-y-2 text-center"
           }`}
         >
-          <div className={tw`w-7 h-7`}>
+          <div className={tw`h-7 w-7`}>
             <selectedWallet.Icon />
           </div>
           <p
-            className={tw`text-sm sm:text-base font-base w-45 text-gray-400 break-normal ${
+            className={tw`font-base w-45 break-normal text-sm text-gray-400 sm:text-base ${
               hasTokenOwnershipRequirements ? "text-left" : "text-center"
             }`}
           >
@@ -67,7 +67,7 @@ const SuccessScreen = ({
         {hasTokenOwnershipRequirements && (
           <div className={tw`flex flex-row items-center space-x-4`}>
             <div
-              className={tw`w-7 h-7 bg-[${selectedWallet.color}] rounded-full flex justify-center items-center`}
+              className={tw`h-7 w-7 bg-[${selectedWallet.color}] flex items-center justify-center rounded-full`}
             >
               <svg
                 // scaled to wallet icon size (28/24 -> 1.166667)
@@ -83,7 +83,7 @@ const SuccessScreen = ({
               </svg>
             </div>
             <p
-              className={tw`text-sm sm:text-base font-base w-45 text-gray-400 break-normal`}
+              className={tw`font-base w-45 break-normal text-sm text-gray-400 sm:text-base`}
             >
               Your wallet holds the necessary tokens
             </p>

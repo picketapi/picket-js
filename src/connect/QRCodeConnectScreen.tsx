@@ -71,13 +71,13 @@ const QRCodeConnectScreen = ({
   return (
     <>
       <h1
-        className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-center px-7`}
+        className={tw`mb-6 break-words px-7 text-center text-xl font-semibold text-[#414552] dark:text-white`}
       >
         Connect to {selectedWallet.name}
       </h1>
       {warning && !error && connectState !== "auth" && (
         <div
-          className={tw`absolute left-0 bottom-0 bg-yellow-100 w-full h-[120px] py-6 px-6 text-center text-sm text-yellow-700 flex flex-col rounded-b-xl`}
+          className={tw`absolute left-0 bottom-0 flex h-[120px] w-full flex-col rounded-b-xl bg-yellow-100 py-6 px-6 text-center text-sm text-yellow-700`}
         >
           <div className="flex-1">
             <p>
@@ -104,7 +104,7 @@ const QRCodeConnectScreen = ({
       )}
       {error && (
         <div
-          className={tw`absolute left-0 bottom-0 bg-[#EE4870] w-full h-[120px] py-6 px-6 text-center text-sm text-white flex flex-col rounded-b-xl`}
+          className={tw`absolute left-0 bottom-0 flex h-[120px] w-full flex-col rounded-b-xl bg-[#EE4870] py-6 px-6 text-center text-sm text-white`}
         >
           <div className="flex-1 font-semibold">
             <p>{error}</p>
@@ -125,7 +125,7 @@ const QRCodeConnectScreen = ({
         </div>
       )}
       <div
-        className={tw`flex-1 flex flex-col items-center min-h-[350px] space-y-4`}
+        className={tw`flex min-h-[350px] flex-1 flex-col items-center space-y-4`}
       >
         {uri ? (
           <>
@@ -137,12 +137,12 @@ const QRCodeConnectScreen = ({
               darkMode={darkMode}
             />
             <div
-              className={tw`bg-white dark:bg-[#26293B] dark:text-white px-4 py-2 text-center font-semibold text-sm rounded-xl`}
+              className={tw`rounded-xl bg-white px-4 py-2 text-center text-sm font-semibold dark:bg-[#26293B] dark:text-white`}
             >
               {getConnectMessage(connectState, error)}
             </div>
             <div
-              className={tw`flex flex-col justify-center items-center text-gray-500 space-y-2`}
+              className={tw`flex flex-col items-center justify-center space-y-2 text-gray-500`}
             >
               <svg
                 width="22"
@@ -171,7 +171,7 @@ const QRCodeConnectScreen = ({
                   fill="currentColor"
                 />
               </svg>
-              <div className={tw`font-semibold text-sm`}>
+              <div className={tw`text-sm font-semibold`}>
                 Signing in is free. It costs no gas.
               </div>
             </div>
@@ -179,11 +179,11 @@ const QRCodeConnectScreen = ({
         ) : (
           <div
             role="status"
-            className={`flex-1 flex flex-col justify-center items-center`}
+            className={`flex flex-1 flex-col items-center justify-center`}
           >
             <svg
               aria-hidden="true"
-              className={tw`mr-2 w-12 h-12 text-gray-200 animate-spin`}
+              className={tw`mr-2 h-12 w-12 animate-spin text-gray-200`}
               style={{
                 // tw doesn't support fill-* property yet
                 fill: selectedWallet.color,

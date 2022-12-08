@@ -74,16 +74,16 @@ const TokenGateFailureScreen = ({
   return (
     <>
       <h1
-        className={tw`mb-6 text-xl font-semibold break-words text-center px-7`}
+        className={tw`mb-6 break-words px-7 text-center text-xl font-semibold text-[#414552] dark:text-white`}
       >
         Almost There
       </h1>
-      <div className={tw`flex-1 flex flex-col min-h-[350px] space-y-4`}>
+      <div className={tw`flex min-h-[350px] flex-1 flex-col space-y-4`}>
         <svg
           width="197"
           height="187"
           viewBox="0 0 197 187"
-          className={tw`text-[${selectedWallet.color}] self-center my-8`}
+          className={tw`text-[${selectedWallet.color}] my-8 self-center`}
           fill="currentColor"
           xmlns="http://www.w3.org/2000/svg"
         >
@@ -119,7 +119,7 @@ const TokenGateFailureScreen = ({
           />
         </svg>
         <p
-          className={tw`text-sm text-center font-semibold text-gray-600 dark:text-white mb-2`}
+          className={tw`mb-2 text-center text-sm font-semibold text-gray-600 dark:text-white`}
         >
           Your wallet {displayAddress} doesn't hold the necessary tokens
         </p>
@@ -127,12 +127,12 @@ const TokenGateFailureScreen = ({
           href={getPurchaseLink(chain, requirements)}
           target="_blank"
           rel="noreferrer"
-          className={tw`py-3 bg-[${selectedWallet.color}] text-white font-semibold text-center rounded-lg`}
+          className={tw`py-3 bg-[${selectedWallet.color}] rounded-lg text-center font-semibold text-white`}
         >
           Buy Tokens
         </a>
         <button
-          className={tw`py-3 bg-gray-300 text-gray-600 font-semibold text-center rounded-lg`}
+          className={tw`rounded-lg bg-gray-300 py-3 text-center font-semibold text-gray-600`}
           onClick={back}
         >
           Try Other Wallet

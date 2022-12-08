@@ -20,7 +20,7 @@ const NewWalletButton = ({
       style={{
         outlineOffset: "4px",
       }}
-      className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:hover:bg-[#181B2E] dark:text-white rounded-lg shadow text-center font-semibold text-sm sm:text-base hover:bg-gray-100`}
+      className={tw`w-full rounded-lg bg-white p-2.5 text-center text-sm font-semibold shadow hover:bg-gray-100 dark:bg-[#26293B] dark:text-white dark:hover:bg-[#181B2E] sm:text-base`}
     >
       New Wallet
     </a>

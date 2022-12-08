@@ -659,12 +659,12 @@ const ConnectModal = ({
         fontFamily:
           'Inter,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"',
       }}
-      className={tw`z-50 fixed top-0 left-0 right-0 h-full w-full flex flex-col justify-center items-center flex-1${
-        isOpen ? "visible backdrop-filter backdrop-blur-sm" : "invisible"
+      className={tw`fixed top-0 left-0 right-0 z-50 flex h-full w-full flex-col items-center justify-center flex-1${
+        isOpen ? "visible backdrop-blur-sm backdrop-filter" : "invisible"
       }`}
     >
       <div
-        className={tw`w-96 pt-4 pb-4 px-6 bg-[#FAFAFA] dark:bg-[#040825] relative rounded-xl shadow-lg min-h-[600px] flex flex-col`}
+        className={tw`text=[#414552] relative flex min-h-[600px] w-96 flex-col rounded-xl bg-[#FAFAFA] px-6 pt-4 pb-4 shadow-lg dark:bg-[#040825]`}
       >
         {showBackButton && (
           <button onClick={reset} className={tw`absolute top-3 left-3`}>
@@ -674,7 +674,7 @@ const ConnectModal = ({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
+              className={tw`h-8 w-8 rounded-lg bg-white text-gray-400 hover:shadow dark:bg-[#26293B]`}
             >
               <path
                 strokeLinecap="round"
@@ -687,7 +687,7 @@ const ConnectModal = ({
         <button onClick={close} className={tw`absolute top-3 right-3`}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className={tw`w-8 h-8 bg-white dark:bg-[#26293B] text-gray-400 rounded-lg hover:shadow`}
+            className={tw`h-8 w-8 rounded-lg bg-white text-gray-400 hover:shadow dark:bg-[#26293B]`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -730,12 +730,12 @@ const ConnectModal = ({
         ) : (
           <>
             <h1
-              className={tw`mb-6 text-xl dark:text-white font-semibold break-words text-left`}
+              className={tw`mb-6 break-words text-left text-xl font-semibold text-[#414552] dark:text-white`}
             >
               Log In With Your Wallet
             </h1>
             <div
-              className={tw`mb-4 flex flex-row flex-nowrap space-x-4 text-sm sm:text-base overflow-x-auto`}
+              className={tw`mb-4 flex flex-row flex-nowrap space-x-4 overflow-x-auto text-sm sm:text-base`}
               id="_picketWalletOptions"
             >
               {chainOptions.map(({ slug, name }) => (
@@ -747,9 +747,9 @@ const ConnectModal = ({
                     textUnderlineOffset: "2px",
                     outlineStyle: "none",
                   }}
-                  className={tw`font-bold dark:text-gray-400 hover:text-[#5469D4] focus:text-[#5469D4] dark:hover:text-[#5469D4] dark:focus:text-[#5469D4] ${
+                  className={tw`font-bold hover:text-[#5469D4] focus:text-[#5469D4] dark:text-gray-400 dark:hover:text-[#5469D4] dark:focus:text-[#5469D4] ${
                     selectedChain === slug
-                      ? "underline underline-offset-2 text-[#5469D4] dark:text-[#5469D4]"
+                      ? "text-[#5469D4] underline underline-offset-2 dark:text-[#5469D4]"
                       : ""
                   }`}
                 >
@@ -758,7 +758,7 @@ const ConnectModal = ({
               ))}
             </div>
             {warning && connectState !== "auth" && (
-              <div className={tw`rounded-lg bg-yellow-100 p-4 mb-4`}>
+              <div className={tw`mb-4 rounded-lg bg-yellow-100 p-4`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -800,7 +800,7 @@ const ConnectModal = ({
               </div>
             )}
             {error && (
-              <div className={tw`rounded-lg bg-red-100 p-4 mb-4`}>
+              <div className={tw`mb-4 rounded-lg bg-red-100 p-4`}>
                 <div className={tw`flex`}>
                   <div className={tw`flex-shrink-0`}>
                     <svg
@@ -823,10 +823,10 @@ const ConnectModal = ({
                 </div>
               </div>
             )}
-            <div className={tw`flex-1 flex flex-col min-h-[350px] space-y-2`}>
+            <div className={tw`flex min-h-[350px] flex-1 flex-col space-y-2`}>
               <div
                 id="_picketWallets"
-                className={tw`flex-1 flex flex-col space-y-2 max-h-[300px] overflow-auto py-2 px-2`}
+                className={tw`flex max-h-[300px] flex-1 flex-col space-y-2 overflow-auto py-2 px-2`}
               >
                 {walletList?.map((wallet) => (
                   <button
@@ -836,14 +836,14 @@ const ConnectModal = ({
                       outlineOffset: "4px",
                     }}
                     disabled={!!connectState}
-                    className={tw`p-2.5 w-full bg-white dark:bg-[#26293B] dark:text-white rounded-lg shadow flex items-center font-semibold text-sm sm:text-base hover:bg-gray-100 dark:hover:bg-[#181B2E] disabled:cursor-not-allowed ${
+                    className={tw`flex w-full items-center rounded-lg bg-white p-2.5 text-sm font-semibold shadow hover:bg-gray-100 disabled:cursor-not-allowed dark:bg-[#26293B] dark:text-white dark:hover:bg-[#181B2E] sm:text-base ${
                       selectedWallet?.id === wallet.id
                         ? "bg-gray-100"
                         : "disabled:bg-white"
                     }`}
                   >
                     <div
-                      className={tw`mr-8 rounded-lg overflow-hidden flex items-center`}
+                      className={tw`mr-8 flex items-center overflow-hidden rounded-lg`}
                     >
                       <wallet.Icon />
                     </div>
@@ -854,16 +854,16 @@ const ConnectModal = ({
                 ))}
               </div>
               <div className={tw`flex flex-col px-2`}>
-                <div className={tw`w-full flex-grow flex flex-col-reverse`}>
+                <div className={tw`flex w-full flex-grow flex-col-reverse`}>
                   <div
-                    className={tw`flex flex-row my-2 font-light items-center text-gray-400`}
+                    className={tw`my-2 flex flex-row items-center font-light text-gray-400`}
                   >
                     <div
-                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px mr-6`}
+                      className={tw`mr-6 block h-px flex-grow border border-x-0 border-t border-b-0 border-solid border-gray-200`}
                     ></div>
                     <div className={tw`block`}>or</div>
                     <div
-                      className={tw`block flex-grow border-solid border-gray-200 border border-t border-b-0 border-x-0 h-px ml-6`}
+                      className={tw`ml-6 block h-px flex-grow border border-x-0 border-t border-b-0 border-solid border-gray-200`}
                     ></div>
                   </div>
                 </div>
