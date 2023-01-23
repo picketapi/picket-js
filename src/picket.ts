@@ -408,7 +408,12 @@ export class Picket {
       url.searchParams.set("minTokenBalance", String(minTokenBalance));
 
     // START: Solana-specific
-    collection && url.searchParams.set("collection", collection);
+    if (collection) {
+      const collections = Array.isArray(collection) ? collection : [collection];
+      for (const c of collections) {
+        url.searchParams.append("collection", c);
+      }
+    }
     creatorAddress && url.searchParams.set("creatorAddress", creatorAddress);
 
     if (tokenIds) {
@@ -867,18 +872,21 @@ export class Picket {
     const { collection, tokenIds, creatorAddress } = requirements;
 
     if (collection && tokenBalances.collection) {
-      const balance = tokenBalances.collection[collection];
+      const collections = Array.isArray(collection) ? collection : [collection];
+      for (const c of collections) {
+        const balance = tokenBalances.collection[c];
 
-      if (balance) {
-        totalBalance = totalBalance.plus(balance);
+        if (balance) {
+          totalBalance = totalBalance.plus(balance);
+        }
+
+        const allowed = isGreaterThanOrEqualToOrNonZero(
+          totalBalance,
+          minTokenBalance
+        );
+
+        if (allowed) return true;
       }
-
-      const allowed = isGreaterThanOrEqualToOrNonZero(
-        totalBalance,
-        minTokenBalance
-      );
-
-      if (allowed) return true;
     }
 
     if (creatorAddress && tokenBalances.creatorAddress) {

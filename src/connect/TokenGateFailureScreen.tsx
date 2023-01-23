@@ -18,7 +18,7 @@ interface TokenGateFailureScreenProps {
 // TOOD: Distinguish between ERC20 and NFT, NFT SPL and fungible SPL
 const getPurchaseLink = (chain: string, requirements: AuthRequirements) => {
   // case 1 Solana
-  // don't have a great way to surface the collectioon as of right now, so send to the marketplace
+  // don't have a great way to surface the collection as of right now, so send to the marketplace
   if (chain === "solana") {
     return "https://magiceden.io/";
   }

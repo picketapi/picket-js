@@ -45,7 +45,7 @@ export interface AuthRequirements {
   allowedWallets?: string[];
   // Solana specific auth requirement options
   tokenIds?: string[];
-  collection?: string;
+  collection?: string | string[];
   creatorAddress?: string;
 }
 
