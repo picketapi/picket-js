@@ -1,6 +1,6 @@
 import React from "react";
-import { InjectedConnector } from "@wagmi/core";
 
+import { InjectedConnector } from "@wagmi/connectors/injected";
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 
 const Icon = ({

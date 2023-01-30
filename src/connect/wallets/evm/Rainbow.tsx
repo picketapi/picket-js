@@ -1,10 +1,12 @@
 import React from "react";
 import { tw } from "twind";
-import { allChains } from "@wagmi/core";
-import { WalletConnectConnector } from "@wagmi/core/connectors/walletConnect";
+import { mainnet, polygon, optimism, arbitrum, avalanche } from "@wagmi/chains";
+import { WalletConnectConnector } from "@wagmi/connectors/walletConnect";
 
 import { WagmiWallet, WALLET_ICON_SIZE, WalletIconProps } from "../../wallets";
 import { isAndroid, isMobile } from "../../utils/device";
+
+const allChains = [mainnet, polygon, optimism, arbitrum, avalanche];
 
 const color = "#0C2F78";
 
