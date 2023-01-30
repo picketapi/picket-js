@@ -1,5 +1,6 @@
 import React from "react";
-import { createClient, configureChains, allChains } from "@wagmi/core";
+import { createClient, configureChains } from "@wagmi/core";
+import { mainnet, polygon, optimism, arbitrum, avalanche } from "@wagmi/chains";
 import { publicProvider } from "@wagmi/core/providers/public";
 
 import MetaMask, { isMetaMask } from "./MetaMask";
@@ -11,6 +12,8 @@ import Trust from "./Trust";
 import Argent from "./Argent";
 
 import { Wallet } from "../";
+
+const allChains = [mainnet, polygon, optimism, arbitrum, avalanche];
 
 const { provider } = configureChains(allChains, [publicProvider()]);
 

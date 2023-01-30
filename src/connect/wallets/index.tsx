@@ -10,7 +10,7 @@ import {
 import bs58 from "bs58";
 
 // EVM
-import { Connector } from "@wagmi/core";
+import { Connector } from "@wagmi/connectors";
 
 // Flow
 import * as fcl from "@onflow/fcl";
