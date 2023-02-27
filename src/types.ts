@@ -16,7 +16,7 @@ export type ChainType = `${ChainTypes}`;
 export type ChainInfo = {
   chainSlug: string;
   chainId: number;
-  chainType: ChainTypes;
+  chainType: ChainType;
   chainName: string;
   publicRPC: string;
   authorizationSupported: boolean;
@@ -83,7 +83,7 @@ export interface AccessTokenPayload extends AuthenticatedUser {
 // and needed to be passed to the server to regenerate the signed message.
 // For more details, see https://docs.login.xyz/general-information/siwe-overview/eip-4361#message-field-descriptions
 export interface SigningMessageContext {
-  // Exlcude version because it is always 1
+  // Exclude version because it is always 1
   // version: 1;
   domain: string;
   uri: string;
