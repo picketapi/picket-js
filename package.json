@@ -1,6 +1,6 @@
 {
   "name": "@picketapi/picket-js",
-  "version": "0.0.98",
+  "version": "0.0.99",
   "description": "Javascript client for the Picket API",
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
