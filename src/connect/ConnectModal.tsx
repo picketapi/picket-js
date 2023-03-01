@@ -189,7 +189,7 @@ const getErrorMessage = ({
     if (
       err.msg.toLowerCase().includes("required to create a signing message")
     ) {
-      return "Missing required parameters to creaet a signing message";
+      return "Missing required parameters to create a signing message";
     }
     // @ts-ignore TS isn't respecting "msg" in err
     if (err.msg.toLowerCase().includes("invalid signature")) {
