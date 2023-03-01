@@ -179,6 +179,18 @@ const getErrorMessage = ({
     if (err.msg.toLowerCase().includes("invalid project key")) {
       return "Invalid API key. Copy your project's publishable key from your Picket dashboard: https://picketapi.com/dashboard";
     }
+    if (
+      err.msg
+        .toLowerCase()
+        .includes("required to create a SIWE signing message")
+    ) {
+      return "Missing required context parameters for SIWE";
+    }
+    if (
+      err.msg.toLowerCase().includes("required to create a signing message")
+    ) {
+      return "Missing required parameters to creaet a signing message";
+    }
     // @ts-ignore TS isn't respecting "msg" in err
     if (err.msg.toLowerCase().includes("invalid signature")) {
       return "Signature expired. Please try again.";

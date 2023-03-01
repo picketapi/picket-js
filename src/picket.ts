@@ -719,7 +719,7 @@ export class Picket {
       );
     }
     if (!chainId) {
-      throw new Error("'chainId' is required to create a signing message");
+      throw new Error("'chainId' is required to create a SIWE signing message");
     }
 
     const message = new SiweMessage({
