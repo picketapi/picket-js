@@ -703,16 +703,20 @@ export class Picket {
 
     // validate parameters
     if (!statement) {
-      throw new Error("'statement' is required to create a signing message");
+      throw new Error(
+        "'statement' is required to create a SIWE signing message"
+      );
     }
     if (!domain) {
-      throw new Error("'domain' is required to create a signing message");
+      throw new Error("'domain' is required to create a SIWE signing message");
     }
     if (!uri) {
-      throw new Error("'uri' is required to create a signing message");
+      throw new Error("'uri' is required to create a SIWE signing message");
     }
     if (!issuedAt) {
-      throw new Error("'issuedAt' is required to create a signing message");
+      throw new Error(
+        "'issuedAt' is required to create a SIWE signing message"
+      );
     }
     if (!chainId) {
       throw new Error("'chainId' is required to create a signing message");
