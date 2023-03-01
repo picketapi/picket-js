@@ -673,6 +673,17 @@ export class Picket {
 
   static createSigningMessage(args: SigningMessageRequest) {
     const { format = SigningMessageFormat.SIMPLE } = args;
+
+    if (!args.nonce) {
+      throw new Error("'nonce' is required to create a signing message");
+    }
+
+    if (!args.walletAddress) {
+      throw new Error(
+        "'walletAddress' is required to create a signing message"
+      );
+    }
+
     if (format === SigningMessageFormat.SIMPLE) {
       const { statement, walletAddress, nonce } =
         args as SigningMessageRequestSimple;
@@ -689,6 +700,27 @@ export class Picket {
       chainId,
       chainType,
     } = args as SigningMessageRequestSIWE;
+
+    // validate parameters
+    if (!statement) {
+      throw new Error(
+        "'statement' is required to create a SIWE signing message"
+      );
+    }
+    if (!domain) {
+      throw new Error("'domain' is required to create a SIWE signing message");
+    }
+    if (!uri) {
+      throw new Error("'uri' is required to create a SIWE signing message");
+    }
+    if (!issuedAt) {
+      throw new Error(
+        "'issuedAt' is required to create a SIWE signing message"
+      );
+    }
+    if (!chainId) {
+      throw new Error("'chainId' is required to create a SIWE signing message");
+    }
 
     const message = new SiweMessage({
       address: walletAddress,
