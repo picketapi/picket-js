@@ -271,17 +271,23 @@ export const isMetaMask = (
 
   // Brave tries to make itself look like MetaMask
   // Could also try RPC `web3_clientVersion` if following is unreliable
-  if (ethereum.isBraveWallet && !ethereum._events && !ethereum._state) {
-    return false;
-  }
+  try {
+    if (ethereum.isBraveWallet && !ethereum._events && !ethereum._state) {
+      return false;
+    }
+  } catch {}
 
-  if (ethereum.isTokenPocket) {
-    return false;
-  }
+  try {
+    if (ethereum.isTokenPocket) {
+      return false;
+    }
+  } catch {}
 
-  if (ethereum.isTokenary) {
-    return false;
-  }
+  try {
+    if (ethereum.isTokenary) {
+      return false;
+    }
+  } catch {}
 
   return true;
 };
