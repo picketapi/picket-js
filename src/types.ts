@@ -158,6 +158,7 @@ export interface AuthorizationURLRequest extends AuthRequirements {
   signature?: string;
   responseMode: AuthorizationResponseMode;
   locale?: string;
+  context?: SigningMessageContext;
 }
 
 export interface AuthorizationServerWebResponse {

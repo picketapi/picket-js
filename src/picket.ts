@@ -388,6 +388,7 @@ export class Picket {
     state,
     responseMode,
     locale = DEFAULT_LOCALE,
+    context,
   }: AuthorizationURLRequest): string {
     const url = new URL(`${this.baseURL}/oauth2/authorize`);
     url.searchParams.set("client_id", this.#apiKey);
@@ -429,6 +430,13 @@ export class Picket {
       }
     }
 
+    if (context) {
+      url.searchParams.set("locale", context.locale || locale);
+      url.searchParams.set("domain", context.domain);
+      url.searchParams.set("uri", context.uri);
+      url.searchParams.set("issuedAt", context.issuedAt);
+    }
+
     return url.toString();
   }
 
@@ -445,6 +453,7 @@ export class Picket {
       contractAddress,
       minTokenBalance,
       allowedWallets,
+      context,
     }: LoginRequest = {},
     { redirectURI = window.location.href, appState = {} }: LoginOptions = {
       redirectURI: window.location.href,
@@ -456,6 +465,7 @@ export class Picket {
       const info = await this.connect({ chain });
       walletAddress = info.walletAddress;
       signature = info.signature;
+      context = info.context;
     }
 
     const state = randomState();
@@ -485,6 +495,7 @@ export class Picket {
       state,
       codeChallenge: code_challenge,
       responseMode: "code",
+      context,
     });
 
     // 4. redirect user
@@ -601,6 +612,7 @@ export class Picket {
       tokenIds,
       minTokenBalance,
       allowedWallets,
+      context,
     }: LoginRequest = {},
     { redirectURI = window.location.href }: LoginOptions = {
       redirectURI: window.location.href,
@@ -611,6 +623,7 @@ export class Picket {
       const info = await this.connect({ chain });
       walletAddress = info.walletAddress;
       signature = info.signature;
+      context = info.context;
     }
 
     const state = randomState();
@@ -631,6 +644,7 @@ export class Picket {
       codeChallenge: code_challenge,
       redirectURI,
       responseMode: "web_message",
+      context,
     });
 
     // 4. Open popup
